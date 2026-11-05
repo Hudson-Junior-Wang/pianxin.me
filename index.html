@@ -74,16 +74,26 @@
   }
 
   .domain {
+    font-family: ui-rounded, "SF Pro Rounded", "Yuanti SC", -apple-system, sans-serif;
+    font-weight: 600;
     font-size: 12px; letter-spacing: .55em; text-indent: .55em;
     text-transform: uppercase; color: var(--ink-soft); margin-bottom: 22px;
   }
 
   h1 {
-    font-family: "Songti SC", "STSong", "Noto Serif SC", "SimSun", serif;
+    font-family: "Yuanti SC", "YouYuan", "Hiragino Maru Gothic ProN", "PingFang SC", "Noto Sans SC", sans-serif;
     font-weight: 700;
     font-size: clamp(56px, 13vw, 120px);
-    letter-spacing: .08em; text-indent: .08em;
-    line-height: 1.15;
+    letter-spacing: .04em;
+    line-height: 1.2;
+  }
+  h1 .ch { display: inline-block; }
+  h1 .c1 { transform: rotate(-5deg); }
+  h1 .c2 { transform: rotate(4deg) translateY(-4px); }
+  h1 .c3 { transform: rotate(-3deg); }
+  h1 .ch:hover { animation: wiggle .5s ease-in-out; }
+  @keyframes wiggle {
+    0%,100% { scale: 1; } 50% { scale: 1.15; }
   }
   h1 .xin {
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
@@ -95,6 +105,8 @@
     opacity: .5; margin: 34px 0 26px; }
 
   .tagline {
+    font-family: "Yuanti SC", "YouYuan", "PingFang SC", sans-serif;
+    font-weight: 500;
     font-size: clamp(15px, 2.6vw, 18px);
     letter-spacing: .18em; text-indent: .18em;
     color: var(--ink); opacity: .85;
@@ -157,7 +169,7 @@
     </svg>
 
     <div class="domain rise d1">pianxin.me</div>
-    <h1 class="rise d2">偏<span class="xin">心</span>我</h1>
+    <h1 class="rise d2"><span class="ch c1">偏</span><span class="ch c2 xin">心</span><span class="ch c3">我</span></h1>
     <div class="rule rise d3"></div>
     <p class="tagline rise d3">世界再大，也要偏心我一个。</p>
     <p class="soon rise d4">正在准备一份偏爱，敬请期待<i>.</i><i>.</i><i>.</i></p>
