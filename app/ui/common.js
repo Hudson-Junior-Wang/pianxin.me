@@ -1,0 +1,246 @@
+// 偏心我 · shared UI pieces
+import { html, render } from './h.js?v=efe89b71a3';
+import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
+import { app, avatarOf, nameOf, setReaction, useCols, toast } from '../lib/ctx.js?v=efe89b71a3';
+import { compressPair, cx } from '../lib/util.js?v=efe89b71a3';
+
+export function Avatar({ who, size = 34, cls = '' }) {
+  return html`<span class=${cx('av', 'p-' + who, cls)} style=${`--s:${size}px`} title=${nameOf(who)}>${avatarOf(who)}</span>`;
+}
+
+export function Who({ who }) {
+  return html`<span class=${'who p-' + who}><span class="who-av">${avatarOf(who)}</span>${nameOf(who)}</span>`;
+}
+
+export function Dot({ on }) {
+  return html`<i class=${cx('dot', on && 'on')} aria-label=${on ? '在线' : '不在线'}></i>`;
+}
+
+export function Empty({ icon = '🌱', text, children }) {
+  return html`<div class="empty"><div class="empty-i">${icon}</div><p>${text}</p>${children}</div>`;
+}
+
+export function Seg({ value, options, onChange, cls }) {
+  return html`<div class=${cx('seg', cls)} role="tablist">
+    ${options.map(
+      (o) => html`<button type="button" role="tab" aria-selected=${o.value === value} class=${cx(o.value === value && 'on')} onClick=${() => onChange(o.value)}>
+        ${o.icon ? html`<span class="seg-i">${o.icon}</span>` : null}${o.label}
+      </button>`,
+    )}
+  </div>`;
+}
+
+export function Chips({ value, options, onChange, cls }) {
+  return html`<div class=${cx('chips', cls)}>
+    ${options.map(
+      (o) => html`<button type="button" class=${cx('chip', o.value === value && 'on')} onClick=${() => onChange(o.value)}>
+        ${o.icon ? html`<span class="chip-i">${o.icon}</span>` : null}${o.label}
+      </button>`,
+    )}
+  </div>`;
+}
+
+/** Renders children into document.body (keeps parent state & closures). */
+export function Portal({ children }) {
+  const ref = useRef(null);
+  if (!ref.current) ref.current = document.createElement('div');
+  useLayoutEffect(() => {
+    const el = ref.current;
+    document.body.appendChild(el);
+    return () => {
+      render(null, el);
+      el.remove();
+    };
+  }, []);
+  useLayoutEffect(() => {
+    render(children, ref.current);
+  });
+  return null;
+}
+
+let openModals = 0;
+export function Modal({ title, onClose, children, cls }) {
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const k = (e) => {
+      if (e.key === 'Escape') close.current();
+    };
+    addEventListener('keydown', k);
+    openModals++;
+    document.body.classList.add('noscroll');
+    return () => {
+      removeEventListener('keydown', k);
+      if (--openModals <= 0) document.body.classList.remove('noscroll');
+    };
+  }, []);
+  return html`<${Portal}>
+    <div class="modal-bg" onMouseDown=${(e) => e.target === e.currentTarget && close.current()}>
+      <div class=${cx('modal', cls)} role="dialog" aria-modal="true">
+        <div class="modal-hd"><h3>${title}</h3><button class="icon-btn" aria-label="关闭" onClick=${() => close.current()}>✕</button></div>
+        <div class="modal-bd">${children}</div>
+      </div>
+    </div>
+  <//>`;
+}
+
+// ---------- images ----------
+const urls = new Map();
+export function blobUrl(id) {
+  let p = urls.get(id);
+  if (!p) {
+    p = app.sync.fetchBlob(id).then((v) => (v ? URL.createObjectURL(new Blob([v.b], { type: v.m || 'image/jpeg' })) : null));
+    urls.set(id, p);
+    p.then((u) => {
+      if (!u) urls.delete(id);
+    });
+  }
+  return p;
+}
+
+export function Img({ id, cls, onClick, alt = '' }) {
+  const [src, setSrc] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let live = true;
+    setSrc(null);
+    setFailed(false);
+    blobUrl(id).then((u) => {
+      if (!live) return;
+      if (u) setSrc(u);
+      else setFailed(true);
+    });
+    return () => {
+      live = false;
+    };
+  }, [id, n]);
+  if (failed)
+    return html`<button type="button" class=${cx('img ph fail', cls)} onClick=${(e) => { e.stopPropagation(); setN(n + 1); }}>
+      图片还在路上<br />点我重试
+    </button>`;
+  if (!src) return html`<div class=${cx('img ph', cls)}></div>`;
+  return html`<img class=${cx('img', cls)} src=${src} alt=${alt} onClick=${onClick} draggable="false" />`;
+}
+
+export function Lightbox({ list, index, onClose }) {
+  const [i, setI] = useState(index);
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const k = (e) => {
+      if (e.key === 'Escape') close.current();
+      if (e.key === 'ArrowRight') setI((v) => Math.min(list.length - 1, v + 1));
+      if (e.key === 'ArrowLeft') setI((v) => Math.max(0, v - 1));
+    };
+    addEventListener('keydown', k);
+    return () => removeEventListener('keydown', k);
+  }, []);
+  return html`<${Portal}>
+    <div class="lightbox" onClick=${() => close.current()}>
+      <${Img} id=${list[i].id} cls="lb-img" onClick=${(e) => e.stopPropagation()} />
+      ${list.length > 1 &&
+      html`<div class="lb-nav" onClick=${(e) => e.stopPropagation()}>
+        <button disabled=${i === 0} onClick=${() => setI(i - 1)}>‹</button>
+        <span>${i + 1} / ${list.length}</span>
+        <button disabled=${i === list.length - 1} onClick=${() => setI(i + 1)}>›</button>
+      </div>`}
+      <button class="lb-x" aria-label="关闭">✕</button>
+    </div>
+  <//>`;
+}
+
+export function Photos({ list }) {
+  const [open, setOpen] = useState(-1);
+  if (!list || !list.length) return null;
+  return html`<div class=${'photos n' + Math.min(list.length, 4)}>
+    ${list.map((p, i) => html`<${Img} key=${p.id} id=${p.th || p.id} cls="ph-i" onClick=${() => setOpen(i)} />`)}
+    ${open >= 0 && html`<${Lightbox} list=${list} index=${open} onClose=${() => setOpen(-1)} />`}
+  </div>`;
+}
+
+export async function uploadPhotos(files, onProgress, local = false) {
+  const out = [];
+  let i = 0;
+  for (const f of files) {
+    i++;
+    if (!f.type || !f.type.startsWith('image/')) continue;
+    if (onProgress) onProgress(i, files.length);
+    try {
+      const { big, small } = await compressPair(f);
+      const id = await app.sync.putBlob(big.bytes, big.mime, local);
+      const th = await app.sync.putBlob(small.bytes, small.mime, local);
+      out.push(local ? { id, th, w: big.w, h: big.h, loc: 1 } : { id, th, w: big.w, h: big.h });
+    } catch (e) {
+      console.error(e);
+      toast('有一张图片没处理好，换一张试试', { icon: '😵' });
+    }
+  }
+  return out;
+}
+
+export function PhotoPicker({ value, onChange, max = 9, local = false }) {
+  const [busy, setBusy] = useState('');
+  const inp = useRef();
+  const pick = async (e) => {
+    const files = [...e.target.files].slice(0, Math.max(0, max - value.length));
+    e.target.value = '';
+    if (!files.length) return;
+    const got = await uploadPhotos(files, (i, n) => setBusy(`${i}/${n}`), local);
+    setBusy('');
+    onChange([...value, ...got]);
+  };
+  return html`<div class="pp">
+    ${value.map(
+      (p, i) => html`<div class="pp-i" key=${p.id}>
+        <${Img} id=${p.th || p.id} />
+        <button type="button" class="pp-x" aria-label="移除" onClick=${() => onChange(value.filter((_, j) => j !== i))}>✕</button>
+      </div>`,
+    )}
+    ${value.length < max &&
+    html`<button type="button" class="pp-add" disabled=${!!busy} onClick=${() => inp.current.click()}>
+      ${busy ? html`<span class="spin"></span><small>${busy}</small>` : html`<span>📷</span><small>加图片</small>`}
+    </button>`}
+    <input ref=${inp} type="file" accept="image/*" multiple hidden onChange=${pick} />
+  </div>`;
+}
+
+// ---------- reactions ----------
+export function Reacts({ target, opts = ['❤️', '🫂', '😂', '🥺', '👏'] }) {
+  useCols('react');
+  const [open, setOpen] = useState(false);
+  const mine = app.store.get('react', `${target}~${app.me}`);
+  const ta = app.store.get('react', `${target}~${app.partner}`);
+  const choose = (e) => {
+    setOpen(false);
+    setReaction(target, e);
+  };
+  return html`<div class="reacts">
+    ${ta && html`<span class=${'rx p-' + app.partner} title=${nameOf(app.partner)}><b>${ta.e}</b><i>${avatarOf(app.partner)}</i></span>`}
+    ${mine &&
+    html`<button type="button" class=${'rx mine p-' + app.me} title="再点一下取消" onClick=${() => choose(mine.e)}><b>${mine.e}</b><i>${avatarOf(app.me)}</i></button>`}
+    ${open
+      ? html`<span class="rx-pick">${opts.map((e) => html`<button type="button" onClick=${() => choose(e)}>${e}</button>`)}
+          <button type="button" class="rx-close" onClick=${() => setOpen(false)}>✕</button></span>`
+      : html`<button type="button" class="rx-add" aria-label="回应" onClick=${() => setOpen(true)}>＋ 回应</button>`}
+  </div>`;
+}
+
+export function AutoText({ value, onInput, placeholder, rows = 3, maxLength = 4000, cls, onKeyDown, autoFocus }) {
+  const ref = useRef();
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(480, el.scrollHeight + 2) + 'px';
+  }, [value]);
+  useEffect(() => {
+    if (autoFocus && ref.current) ref.current.focus();
+  }, []);
+  return html`<textarea ref=${ref} class=${cx('inp', 'ta', cls)} rows=${rows} maxlength=${maxLength} placeholder=${placeholder} value=${value}
+    onInput=${(e) => onInput(e.target.value)} onKeyDown=${onKeyDown}></textarea>`;
+}
+
+export function confirmDel(text = '确定删除吗？') {
+  return window.confirm(text);
+}

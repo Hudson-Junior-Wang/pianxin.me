@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>偏心我 · pianxin.me</title>
-<meta name="description" content="偏心我 pianxin.me — 世界再大，也要偏心我一个。即将上线。">
+<meta name="description" content="偏心我 pianxin.me — 世界再大，也要偏心我一个。">
 <meta name="theme-color" content="#fff6f1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f472a0' d='M12 21s-7.5-4.9-10-9.3C.4 8.6 2.2 5 5.7 5c2 0 3.6 1.1 4.3 2.7h4c.7-1.6 2.3-2.7 4.3-2.7 3.5 0 5.3 3.6 3.7 6.7C19.5 16.1 12 21 12 21z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap&text=%20.026AEIMNPXaeimnpx%C2%A9%E3%80%82%E4%B8%80%E4%B8%8B%E4%B8%96%E4%B8%AA%E4%B9%9F%E4%BB%BD%E5%81%8F%E5%86%8D%E5%87%86%E5%9C%A8%E5%A4%87%E5%A4%A7%E5%B0%8F%E5%BE%85%E5%BF%83%E6%88%91%E6%95%AC%E6%9C%89%E6%9C%9F%E6%AD%A3%E7%82%B9%E7%88%B1%E7%95%8C%E8%A6%81%E8%AF%B7%EF%BC%8C">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap&text=%20.026AEIMNPXaeghimnopwxz%C2%A9%E3%80%82%E4%B8%80%E4%B8%8B%E4%B8%96%E4%B8%AA%E4%B9%9F%E4%BB%BD%E5%81%8F%E5%86%8D%E5%87%86%E5%9C%A8%E5%A4%87%E5%A4%A7%E5%B0%8F%E5%BE%85%E5%BF%83%E6%88%91%E6%95%AC%E6%9C%89%E6%9C%9F%E6%AD%A3%E7%82%B9%E7%88%B1%E7%95%8C%E8%A6%81%E8%AF%B7%EF%BC%8C">
 <style>
   :root {
     --ink: #43282f;
@@ -114,15 +114,23 @@
     letter-spacing: .18em; text-indent: .18em;
     color: var(--ink); opacity: .85;
   }
-  .soon {
-    font-family: "ZCOOL KuaiLe", "Yuanti SC", "PingFang SC", sans-serif;
-    margin-top: 16px; font-size: 12px; letter-spacing: .3em; text-indent: .3em;
-    color: var(--ink-soft);
+  .doors { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
+  .door {
+    display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);
+    font-family: "ZCOOL KuaiLe", ui-rounded, -apple-system, sans-serif;
+    padding: 12px 22px 12px 14px; border-radius: 999px; font-size: 16px; letter-spacing: .06em;
+    background: rgba(255, 255, 255, .6); border: 1px solid rgba(67, 40, 47, .08);
+    box-shadow: 0 6px 24px rgba(214, 120, 150, .12); transition: transform .2s, box-shadow .2s;
   }
-  .soon i { font-style: normal; animation: dots 1.8s infinite; display: inline-block; }
-  .soon i:nth-child(2) { animation-delay: .3s; }
-  .soon i:nth-child(3) { animation-delay: .6s; }
-  @keyframes dots { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+  .door:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(214, 120, 150, .22); }
+  .door-e { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; }
+  .door.zw .door-e { background: #e5edff; }
+  .door.xh .door-e { background: #ffe4ee; }
+  @media (prefers-color-scheme: dark) {
+    .door { background: rgba(40, 27, 34, .7); border-color: rgba(249, 232, 238, .1); }
+    .door.zw .door-e { background: #22304f; }
+    .door.xh .door-e { background: #4a2333; }
+  }
 
   footer {
     position: fixed; bottom: 22px; left: 0; right: 0;
@@ -177,7 +185,10 @@
     <h1 class="rise d2"><span class="ch c1">偏</span><span class="ch c2 xin">心</span><span class="ch c3">我</span></h1>
     <div class="rule rise d3"></div>
     <p class="tagline rise d3">世界再大，也要偏心我一个。</p>
-    <p class="soon rise d4">正在准备一份偏爱，敬请期待<i>.</i><i>.</i><i>.</i></p>
+    <nav class="doors rise d4">
+      <a class="door zw" href="/zhengwang/"><span class="door-e">🐻</span><span>zhengwang</span></a>
+      <a class="door xh" href="/xiaoha/"><span class="door-e">🐰</span><span>xiaoha</span></a>
+    </nav>
   </main>
 
   <div class="hint" id="hint">点一下，有小心心</div>
@@ -190,7 +201,7 @@
   let hinted = false;
 
   addEventListener('pointerdown', e => {
-    if (reduced) return;
+    if (reduced || e.target.closest('a')) return;
     for (let i = 0; i < 5; i++) {
       const el = document.createElement('div');
       el.className = 'fly';

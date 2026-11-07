@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>偏心我</title>
+<meta name="robots" content="noindex">
+<script>
+  // pianxin.me/ZhengWang, /xiaoha/anything … → the right room
+  (function () {
+    var p = location.pathname.toLowerCase();
+    var m = p.match(/^\/(zhengwang|xiaoha)(\/|$)/);
+    location.replace(m ? '/' + m[1] + '/' + location.hash : '/');
+  })();
+</script>
+</head>
+<body style="background:#fff6f1;font-family:system-ui;text-align:center;padding-top:30vh;color:#43282f">
+  <a href="/" style="color:#d94f82">回到偏心我 ♥</a>
+</body>
+</html>

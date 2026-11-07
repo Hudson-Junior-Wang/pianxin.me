@@ -1,0 +1,206 @@
+// 偏心我 · 记录 — 日历形式的生活点滴：图片、文字、对自己说、对 TA 说
+import { html } from '../h.js?v=efe89b71a3';
+import { useState, useEffect } from '../../vendor/hooks.js';
+import { app, useCols, nameOf, avatarOf, MOODS, toast } from '../../lib/ctx.js?v=efe89b71a3';
+import { uid, today, parseDay, dayKey, addMonths, pad2, WEEK, fmtDayFull, fmtHM, cx } from '../../lib/util.js?v=efe89b71a3';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Modal, Empty, confirmDel, Img } from '../common.js?v=efe89b71a3';
+import { strip } from './home.js?v=efe89b71a3';
+
+const TO = {
+  day: { label: '生活点滴', icon: '📔', hint: '两个人都能看到' },
+  ta: { label: '对 TA 说', icon: '💌', hint: 'TA 会收到一个小提示' },
+  me: { label: '对自己说', icon: '🌙', hint: '只有自己看得到，悄悄存在这台设备上' },
+};
+
+/** private notes (对自己说) live in a local-only collection and never leave this device */
+const colOf = (to) => (to === 'me' ? '_journal' : 'journal');
+
+function entriesFor(day) {
+  const shared = app.store.list('journal', (x) => x.day === day);
+  const mine = app.store.list('_journal', (x) => x.day === day && x.who === app.me).map((x) => ({ ...x, _local: true }));
+  return [...shared, ...mine].sort((a, b) => (a.at || a._t) - (b.at || b._t));
+}
+
+function monthIndex(ym) {
+  const idx = new Map();
+  const add = (x, local) => {
+    if (!x.day || !x.day.startsWith(ym)) return;
+    let v = idx.get(x.day);
+    if (!v) idx.set(x.day, (v = { n: 0, photo: null, who: new Set(), toMe: false, mood: null }));
+    v.n++;
+    v.who.add(x.who);
+    if (!v.photo && x.photos && x.photos.length) v.photo = x.photos[0];
+    if (x.to === 'ta' && x.who === app.partner) v.toMe = true;
+    if (x.mood && !v.mood) v.mood = x.mood;
+    if (local) v.self = true;
+  };
+  for (const x of app.store.list('journal')) add(x, false);
+  for (const x of app.store.list('_journal', (x) => x.who === app.me)) add(x, true);
+  return idx;
+}
+
+function Calendar({ ym, setYm, sel, onPick }) {
+  const idx = monthIndex(ym);
+  const [y, m] = ym.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const lead = (first.getDay() + 6) % 7;
+  const days = new Date(y, m, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(null);
+  for (let d = 1; d <= days; d++) cells.push(`${ym}-${pad2(d)}`);
+  while (cells.length % 7) cells.push(null);
+  const t = today();
+  return html`<section class="card cal">
+    <div class="cal-hd">
+      <button class="icon-btn" aria-label="上个月" onClick=${() => setYm(addMonths(ym, -1))}>‹</button>
+      <b>${y} 年 ${m} 月</b>
+      <button class="icon-btn" aria-label="下个月" onClick=${() => setYm(addMonths(ym, 1))}>›</button>
+      ${ym !== t.slice(0, 7) && html`<button class="btn xs ghost" onClick=${() => { setYm(t.slice(0, 7)); onPick(t); }}>回到今天</button>`}
+    </div>
+    <div class="cal-grid">
+      ${['一', '二', '三', '四', '五', '六', '日'].map((w) => html`<div class="cal-w">${w}</div>`)}
+      ${cells.map((d) => {
+        if (!d) return html`<div class="cal-c empty"></div>`;
+        const v = idx.get(d);
+        return html`<button type="button" class=${cx('cal-c', d === t && 'today', d === sel && 'sel', v && 'has', d > t && 'future')} onClick=${() => onPick(d)}>
+          ${v?.photo && html`<${Img} id=${v.photo.th || v.photo.id} cls="cal-ph" />`}
+          <span class="cal-n">${Number(d.slice(8))}</span>
+          ${v && html`<span class="cal-dots">${[...v.who].map((w) => html`<i class=${'p-' + w}></i>`)}${v.toMe ? html`<em>💌</em>` : null}</span>`}
+          ${v?.mood && !v.photo && html`<span class="cal-mood">${v.mood}</span>`}
+        </button>`;
+      })}
+    </div>
+  </section>`;
+}
+
+function Comments({ target }) {
+  useCols('cmt');
+  const list = app.store.list('cmt', (x) => x.t === target).sort((a, b) => a.at - b.at);
+  const [text, setText] = useState('');
+  const send = (e) => {
+    e.preventDefault();
+    const t = text.trim();
+    if (!t) return;
+    app.store.put('cmt', uid(), { t: target, who: app.me, text: t.slice(0, 500), at: Date.now() });
+    setText('');
+  };
+  return html`<div class="cmts">
+    ${list.map((c) => html`<div class="cmt" key=${c.id}><span class=${'cmt-who p-' + c.who}>${avatarOf(c.who)}</span><span class="cmt-t">${c.text}</span>
+      ${c.who === app.me && html`<button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删除这条回复？') && app.store.del('cmt', c.id)}>✕</button>`}</div>`)}
+    <form class="cmt-in" onSubmit=${send}><input class="inp sm" maxlength="500" placeholder="回一句…" value=${text} onInput=${(e) => setText(e.target.value)} />${text.trim() && html`<button class="btn xs">回复</button>`}</form>
+  </div>`;
+}
+
+function Entry({ x, onEdit }) {
+  const mine = x.who === app.me;
+  const to = TO[x.to] || TO.day;
+  const target = `journal/${x.id}`;
+  return html`<article class=${cx('entry', 'p-' + x.who, 'to-' + (x.to || 'day'))}>
+    <header class="entry-hd">
+      <${Avatar} who=${x.who} size=${30} />
+      <div class="entry-meta">
+        <b>${nameOf(x.who)}</b>
+        <small class="muted">${fmtHM(x.at || x._t)} · ${to.icon} ${x.to === 'ta' ? (mine ? `对 ${nameOf(app.partner)} 说` : '对你说') : to.label}${x.mood ? ' · ' + x.mood : ''}</small>
+      </div>
+      ${mine && html`<span class="entry-ops"><button class="btn xs ghost" onClick=${() => onEdit(x)}>编辑</button>
+        <button class="btn xs ghost" onClick=${() => confirmDel('删除这条记录？') && app.store.del(x._local ? '_journal' : 'journal', x.id)}>删除</button></span>`}
+    </header>
+    ${x.text && html`<div class="entry-t">${x.text}</div>`}
+    <${Photos} list=${x.photos} />
+    ${!x._local && html`<${Reacts} target=${target} />`}
+    ${!x._local && html`<${Comments} target=${target} />`}
+  </article>`;
+}
+
+function Composer({ day, edit, onDone }) {
+  const [to, setTo] = useState(edit ? edit.to || 'day' : 'day');
+  const [text, setText] = useState(edit ? edit.text || '' : '');
+  const [photos, setPhotos] = useState(edit ? edit.photos || [] : []);
+  const [mood, setMood] = useState(edit ? edit.mood || '' : '');
+  const [moodOpen, setMoodOpen] = useState(false);
+  const save = () => {
+    if (!text.trim() && !photos.length) return;
+    let ph = photos;
+    if (to !== 'me') {
+      // photos picked while writing a private note were kept on this device; share them now
+      ph = photos.map((p) => {
+        if (!p.loc) return p;
+        app.sync.shareBlob(p.id);
+        app.sync.shareBlob(p.th);
+        const { loc, ...rest } = p;
+        return rest;
+      });
+    }
+    const data = { who: app.me, day, to, text: text.trim().slice(0, 5000), photos: ph, mood, at: edit ? edit.at || edit._t : Date.now() };
+    if (edit) {
+      const oldCol = edit._local ? '_journal' : 'journal';
+      const newCol = colOf(to);
+      if (oldCol !== newCol) {
+        app.store.del(oldCol, edit.id);
+        app.store.put(newCol, uid(), data);
+      } else {
+        app.store.put(newCol, edit.id, { ...strip(edit), ...data });
+      }
+    } else {
+      app.store.put(colOf(to), uid(), data);
+      toast(to === 'ta' ? `已经悄悄告诉 ${nameOf(app.partner)} 啦` : to === 'me' ? '收好啦，只有你看得到' : '记下来啦', { icon: TO[to].icon });
+    }
+    setText('');
+    setPhotos([]);
+    setMood('');
+    onDone && onDone();
+  };
+  return html`<div class=${cx('card composer', 'to-' + to)}>
+    <div class="seg">
+      ${Object.entries(TO).map(([k, v]) => html`<button type="button" class=${cx(to === k && 'on')} onClick=${() => setTo(k)}><span class="seg-i">${v.icon}</span>${k === 'ta' ? `对 ${nameOf(app.partner)} 说` : v.label}</button>`)}
+    </div>
+    <${AutoText} value=${text} onInput=${setText} rows=${3} maxLength=${5000}
+      placeholder=${to === 'me' ? '今天想对自己说…' : to === 'ta' ? `想对 ${nameOf(app.partner)} 说…` : '今天发生了什么小事？'} />
+    <${PhotoPicker} value=${photos} onChange=${setPhotos} local=${to === 'me'} />
+    <div class="composer-ft">
+      <button type="button" class="chip" onClick=${() => setMoodOpen(!moodOpen)}>${mood || '🙂'} 心情</button>
+      <small class="muted">${TO[to].hint}</small>
+      <span class="sp"></span>
+      ${onDone && edit && html`<button type="button" class="btn ghost sm" onClick=${onDone}>取消</button>`}
+      <button type="button" class="btn sm" disabled=${!text.trim() && !photos.length} onClick=${save}>${edit ? '保存' : '记下来'}</button>
+    </div>
+    ${moodOpen && html`<div class="mood-row">${MOODS.map(([e, l]) => html`<button type="button" title=${l} class=${cx(mood === e && 'on')} onClick=${() => { setMood(mood === e ? '' : e); setMoodOpen(false); }}>${e}</button>`)}</div>`}
+  </div>`;
+}
+
+export function Journal({ param }) {
+  useCols(['journal', '_journal', 'react', 'cmt', 'profile']);
+  const initial = /^\d{4}-\d{2}-\d{2}$/.test(param || '') ? param : today();
+  const [sel, setSel] = useState(initial);
+  const [ym, setYm] = useState(initial.slice(0, 7));
+  const [editing, setEditing] = useState(null);
+  useEffect(() => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(param || '')) {
+      setSel(param);
+      setYm(param.slice(0, 7));
+    }
+  }, [param]);
+  const pick = (d) => {
+    setSel(d);
+    setEditing(null);
+    history.replaceState(null, '', '#/journal/' + d);
+  };
+  const list = entriesFor(sel);
+  return html`<div class="page journal">
+    <div class="journal-wrap">
+      <div class="journal-cal">
+        <${Calendar} ym=${ym} setYm=${setYm} sel=${sel} onPick=${pick} />
+        <p class="hint">日历上的小圆点：<i class=${'dot-p p-' + app.me}></i> 我　<i class=${'dot-p p-' + app.partner}></i> ${nameOf(app.partner)}　💌 TA 对你说的话</p>
+      </div>
+      <div class="journal-day">
+        <h2 class="day-title">${fmtDayFull(sel)}${sel === today() ? html` <small class="badge">今天</small>` : null}</h2>
+        ${editing
+          ? html`<${Composer} key=${'e' + editing.id} day=${sel} edit=${editing} onDone=${() => setEditing(null)} />`
+          : html`<${Composer} key=${'n' + sel} day=${sel} />`}
+        ${list.length
+          ? list.map((x) => html`<${Entry} key=${x.id} x=${x} onEdit=${setEditing} />`)
+          : html`<${Empty} icon="🌼" text=${sel > today() ? '这一天还没到，可以先给未来的这天写点什么' : '这一天还是空白的，写点什么吧'} />`}
+      </div>
+    </div>
+  </div>`;
+}
