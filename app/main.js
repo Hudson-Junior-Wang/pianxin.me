@@ -1,26 +1,25 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=4f26e408d1';
+import { html, render } from './ui/h.js?v=b9727bb22b';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=4f26e408d1';
-import { Store } from './lib/store.js?v=4f26e408d1';
-import { initViewport } from './lib/viewport.js?v=4f26e408d1';
-import { Sync } from './lib/sync.js?v=4f26e408d1';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=4f26e408d1';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=4f26e408d1';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=4f26e408d1';
-import { cx, fmtClock } from './lib/util.js?v=4f26e408d1';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=4f26e408d1';
-import { Icon } from './ui/icons.js?v=4f26e408d1';
-import { Chat } from './ui/chat.js?v=4f26e408d1';
-import { Home } from './ui/pages/home.js?v=4f26e408d1';
-import { Learn } from './ui/pages/learn.js?v=4f26e408d1';
-import { Together } from './ui/pages/together.js?v=4f26e408d1';
-import { Journal } from './ui/pages/journal.js?v=4f26e408d1';
-import { Life } from './ui/pages/food.js?v=4f26e408d1';
-import { Cal } from './ui/pages/cal.js?v=4f26e408d1';
-import { Me } from './ui/pages/me.js?v=4f26e408d1';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=b9727bb22b';
+import { Store } from './lib/store.js?v=b9727bb22b';
+import { initViewport } from './lib/viewport.js?v=b9727bb22b';
+import { Sync } from './lib/sync.js?v=b9727bb22b';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=b9727bb22b';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=b9727bb22b';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=b9727bb22b';
+import { cx, fmtClock } from './lib/util.js?v=b9727bb22b';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=b9727bb22b';
+import { Icon } from './ui/icons.js?v=b9727bb22b';
+import { Chat } from './ui/chat.js?v=b9727bb22b';
+import { Home } from './ui/pages/home.js?v=b9727bb22b';
+import { Learn } from './ui/pages/learn.js?v=b9727bb22b';
+import { Together } from './ui/pages/together.js?v=b9727bb22b';
+import { Journal } from './ui/pages/journal.js?v=b9727bb22b';
+import { Life } from './ui/pages/food.js?v=b9727bb22b';
+import { Me } from './ui/pages/me.js?v=b9727bb22b';
 
 initViewport();
 
@@ -29,11 +28,10 @@ const NAV = [
   { k: 'learn', label: '学习', icon: 'learn', C: Learn },
   { k: 'journal', label: '记录', icon: 'journal', C: Journal },
   { k: 'life', label: '生活', icon: 'life', C: Life },
-  { k: 'cal', label: '日历', icon: 'cal', C: Cal },
 ];
 const PAGES = Object.fromEntries([...NAV.map((n) => [n.k, n]), ['me', { k: 'me', label: '设置', icon: 'gear', C: Me }], ['together', { k: 'together', label: '专注小工具', icon: 'clock', C: Together }]]);
 // old links keep working
-const ALIAS = { food: ['life', null], fit: ['life', 'fit'] };
+const ALIAS = { food: ['life', null], fit: ['life', 'fit'], cal: ['life', 'cal'] };
 
 function parseHash() {
   let h = location.hash.replace(/^#\/?/, '');

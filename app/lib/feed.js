@@ -2,9 +2,10 @@
 // plus the "一起模式" watcher (phase changes, quiet state, auto-logging).
 // Nothing here keeps score: no streaks, no read receipts, no comparisons.
 
-import { app, bus, toast, chime, vibrate, notify, nameOf, needOf, moodOf, stId, stLabel, isSt } from './ctx.js?v=4f26e408d1';
-import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=4f26e408d1';
-import { pick } from './util.js?v=4f26e408d1';
+import { app, bus, toast, chime, vibrate, notify, nameOf, needOf, moodOf, stId, stLabel, isSt } from './ctx.js?v=b9727bb22b';
+import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=b9727bb22b';
+import { pick } from './util.js?v=b9727bb22b';
+import { planScope } from './plans.js?v=b9727bb22b';
 
 const short = (s, n = 18) => {
   s = String(s || '').replace(/\s+/g, ' ').trim();
@@ -154,14 +155,14 @@ function onLive(r, prev) {
       break;
     case 'idea':
       if (!px) toast(`${ta()} 往点子罐里放了一个点子（先不偷看）`, { icon: taSt('idea'), kind: 'soft' });
-      else if (x.drawn && !px.drawn) toast(`${ta()} 从点子罐里摇出了「${short(x.text, 14)}」`, { icon: taSt('cheer'), action: { label: '看看', fn: go('#/cal') } });
+      else if (x.drawn && !px.drawn) toast(`${ta()} 从点子罐里摇出了「${short(x.text, 14)}」`, { icon: taSt('cheer'), action: { label: '看看', fn: go('#/life/cal') } });
       break;
     case 'anniv':
     case 'meet':
     case 'plan':
       if (!px) {
         const label = r.c === 'meet' ? `见面：${x.date}` : short(x.title, 14);
-        toast(`${ta()} 在日历上加了「${label}」`, { icon: taSt(r.c === 'meet' ? 'hi' : 'idea'), action: { label: '看看', fn: go('#/cal') } });
+        toast(`${ta()} 在日历上加了「${label}」`, { icon: taSt(r.c === 'meet' ? 'hi' : 'idea'), action: { label: '看看', fn: go(r.c === 'plan' && planScope(x) === 'personal' ? '#/life/cal-personal' : '#/life/cal') } });
       }
       break;
     case 'react': {
@@ -224,7 +225,7 @@ function summarize(since, countUnread) {
   if (!c.size) return;
   const parts = [];
   for (const k of Object.keys(AWAY)) if (c.has(k)) parts.push(AWAY[k](c.get(k)));
-  const fn = c.has('learn') ? go('#/learn') : c.has('journalTa') || c.has('journal') ? go('#/journal') : c.has('chat') ? () => bus.emit('chat:open') : c.has('cal') ? go('#/cal') : null;
+  const fn = c.has('learn') ? go('#/learn') : c.has('journalTa') || c.has('journal') ? go('#/journal') : c.has('chat') ? () => bus.emit('chat:open') : c.has('cal') ? go('#/life/cal') : null;
   toast(`欢迎回来～你不在的时候，${ta()} ${parts.join('、')}`, { icon: taSt('hi'), ms: 9000, action: fn ? { label: '去看看', fn } : null });
 }
 

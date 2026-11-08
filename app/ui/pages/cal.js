@@ -1,11 +1,12 @@
 // 偏心我 · 日历 — 下次见面、重要的日子、一起的计划、点子罐
-import { html } from '../h.js?v=4f26e408d1';
+import { html } from '../h.js?v=b9727bb22b';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=4f26e408d1';
-import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=4f26e408d1';
-import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=4f26e408d1';
-import { Icon } from '../icons.js?v=4f26e408d1';
-import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=4f26e408d1';
+import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=b9727bb22b';
+import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=b9727bb22b';
+import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=b9727bb22b';
+import { Icon } from '../icons.js?v=b9727bb22b';
+import { planScope, planOwner, canEditPlan } from '../../lib/plans.js?v=b9727bb22b';
+import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=b9727bb22b';
 
 const DAY_EMOJI = ['🎂', '🎓', '📝', '✈️', '🎉', '🏠', '🐾', '⭐', '🍰', '📅'];
 
@@ -116,22 +117,42 @@ function Days() {
   </section>`;
 }
 
-// ---------- shared plans ----------
-function PlanForm({ edit, date0, onClose }) {
+// ---------- personal and shared plans ----------
+function PlanForm({ edit, date0, scope0, onClose, onSaved }) {
+  const [id] = useState(() => edit?.id || uid());
   const [title, setTitle] = useState(edit ? edit.title : '');
   const [date, setDate] = useState(edit ? edit.date || '' : date0 || '');
   const [note, setNote] = useState(edit ? edit.note || '' : '');
-  const save = () => {
-    if (!title.trim()) return;
-    const data = { title: title.trim().slice(0, 60), date, note: note.trim().slice(0, 500), who: edit ? edit.who : app.me, done: edit ? !!edit.done : false };
-    app.store.put('plan', edit ? edit.id : uid(), edit ? { ...strip(edit), ...data } : data);
-    onClose();
+  const [scope, setScope] = useState(edit ? planScope(edit) : scope0 || 'together');
+  const [err, setErr] = useState('');
+  const [saving, setSaving] = useState(false);
+  const save = async (e) => {
+    e.preventDefault();
+    if (!title.trim() || saving) return;
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return setErr('请确认计划日期。');
+    const current = edit && app.store.get('plan', id);
+    if (edit && !current) return setErr('这条计划已被删除，请关闭后重新添加。');
+    if (edit && !canEditPlan(current, app.me)) return setErr('这条个人计划由本人修改。');
+    if (edit && current.who !== app.me && scope !== planScope(current)) return setErr('计划类型由创建者修改。');
+    setSaving(true); setErr('');
+    try {
+      const data = { ...(current || {}), title: title.trim().slice(0, 60), date, note: note.trim().slice(0, 500), who: current?.who || app.me, scope, owner: scope === 'personal' ? planOwner(current) || app.me : '', done: current ? !!current.done : false };
+      app.store.put('plan', id, data);
+      if (await app.store.flush() === false) throw new Error('local save failed');
+      onSaved(scope);
+    } catch { setSaving(false); setErr('保存遇到了问题，内容还在这里，请再试一次。'); }
   };
-  return html`<${Modal} title=${edit ? '改计划' : '一起的计划'} onClose=${onClose}>
-    <label class="lbl">想做的事</label><input class="inp" maxlength="60" placeholder="计划名称" value=${title} onInput=${(e) => setTitle(e.target.value)} />
-    <label class="lbl">哪天（选填，不填就是“总有一天”）</label><input class="inp" type="date" value=${date} onInput=${(e) => setDate(e.target.value)} />
-    <label class="lbl">备注（选填）</label><${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${500} placeholder="计划备注" />
-    <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!title.trim()} onClick=${save}>好</button></div>
+  const close = () => { if (!saving) onClose(); };
+  return html`<${Modal} title=${edit ? '改计划' : scope === 'personal' ? '我的计划' : '一起的计划'} cls="plan-editor" onClose=${close}>
+    <form onSubmit=${save}>
+      <label class="lbl" for="plan-scope">计划类型</label><select id="plan-scope" class="inp" value=${scope} disabled=${saving || !!edit && edit.who !== app.me} onChange=${(e) => setScope(e.target.value)}><option value="personal">个人计划</option><option value="together">一起的计划</option></select>
+      <p class="hint">${scope === 'personal' ? '双方可见，由本人修改。' : '两个人都可以修改和标记完成。'}</p>
+      <label class="lbl" for="plan-title">想做的事</label><input id="plan-title" class="inp" maxlength="60" placeholder="计划名称" value=${title} disabled=${saving} onInput=${(e) => setTitle(e.target.value)} />
+      <label class="lbl" for="plan-date">哪天（选填，不填就是“总有一天”）</label><input id="plan-date" class="inp" type="date" value=${date} disabled=${saving} onInput=${(e) => setDate(e.target.value)} />
+      <label class="lbl" for="plan-note">备注（选填）</label><${AutoText} id="plan-note" value=${note} onInput=${setNote} rows=${2} maxLength=${500} placeholder="计划备注" />
+      ${err && html`<p class="err" role="alert">${err}</p>`}
+      <div class="modal-ft"><button type="button" class="btn ghost" disabled=${saving} onClick=${close}>取消</button><button type="submit" class="btn" disabled=${!title.trim() || saving}>${saving ? '保存中…' : '好'}</button></div>
+    </form>
   <//>`;
 }
 
@@ -160,14 +181,14 @@ function MonthGrid({ ym, setYm, marks, onPick }) {
   </div>`;
 }
 
-function Plans() {
-  useCols(['plan', 'meet', 'anniv']);
+function Plans({ scope = 'together' }) {
+  useCols(['plan', 'meet', 'anniv', 'profile']);
   useNow(30000);
   const [form, setForm] = useState(null);
   const [ym, setYm] = useState(today().slice(0, 7));
+  const [person, setPerson] = useState('');
   const [showDone, setShowDone] = useState(false);
-  const t = today();
-  const plans = app.store.list('plan');
+  const plans = app.store.list('plan').filter((p) => planScope(p) === scope && (scope !== 'personal' || !person || planOwner(p) === person));
   const marks = new Map();
   const mark = (d, k) => {
     if (!d) return;
@@ -182,28 +203,39 @@ function Plans() {
       if (ym.slice(5) === mm) mark(`${ym}-${dd}`, 'day');
     } else mark(a.date, 'day');
   }
-  const todo = plans.filter((p) => !p.done).sort((a, b) => ((a.date || '9999') > (b.date || '9999') ? 1 : -1));
+  const todo = plans.filter((p) => !p.done).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a._t || 0) - (b._t || 0));
   const done = plans.filter((p) => p.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
-  const toggle = (p) => app.store.put('plan', p.id, { ...strip(p), done: !p.done, doneAt: p.done ? 0 : Date.now() });
+  const toggle = (p) => {
+    const current = app.store.get('plan', p.id);
+    if (!current || !canEditPlan(current, app.me)) return;
+    app.store.put('plan', p.id, { ...current, done: !current.done, doneAt: current.done ? 0 : Date.now() });
+  };
+  const remove = (p) => {
+    const current = app.store.get('plan', p.id);
+    if (current && canEditPlan(current, app.me) && confirmDel(`删除「${current.title}」？`)) app.store.del('plan', p.id);
+  };
+  const row = (p) => {
+    const editable = canEditPlan(p, app.me);
+    const owner = planOwner(p);
+    return html`<li key=${p.id} class=${cx('plan', p.done && 'done', scope === 'personal' && 'p-' + owner)} data-plan=${p.id}>
+      <label class="ck"><input type="checkbox" aria-label=${`完成计划：${p.title}`} checked=${!!p.done} disabled=${!editable} onChange=${() => toggle(p)} /><span class="ck-box"></span></label>
+      <button type="button" class="plan-m" disabled=${!editable} aria-label=${editable ? `编辑计划：${p.title}` : `个人计划：${p.title}`} onClick=${() => { if (editable) setForm({ edit: p }); }}>
+        <b>${p.title}</b><small class="muted">${scope === 'personal' ? nameOf(owner) + ' · ' : ''}${p.date ? fmtDay(p.date) : '总有一天'}${p.note ? ' · ' + p.note : ''}${p.doneAt ? ' · 完成于 ' + fmtDay(dayKey(p.doneAt)) : ''}</small>
+      </button>
+      <${Avatar} who=${scope === 'personal' ? owner : p.who} size=${24} />
+      ${editable && html`<button type="button" class="icon-btn xs" aria-label="删除计划" onClick=${() => remove(p)}><${Icon} n="x" size=${14} /></button>`}
+    </li>`;
+  };
   return html`<section class="card plans">
-    <div class="card-hd"><h3>一起的计划</h3><button class="btn xs" onClick=${() => setForm({})}><${Icon} n="plus" size=${14} /> 计划</button></div>
-    <p class="hint">仅显示倒数，不提供到时推送。</p>
-    <${MonthGrid} ym=${ym} setYm=${setYm} marks=${marks} onPick=${(d) => setForm({ date: d })} />
-    ${todo.length ? html`<ul class="plan-ul">${todo.map((p) => html`<li key=${p.id} class="plan">
-      <label class="ck"><input type="checkbox" checked=${false} onChange=${() => toggle(p)} /><span class="ck-box"></span></label>
-      <div class="plan-m" onClick=${() => setForm({ edit: p })}>
-        <b>${p.title}</b>
-        <small class="muted">${p.date ? fmtDay(p.date) : '总有一天'}${p.note ? ' · ' + p.note : ''}</small>
-      </div>
-      <${Avatar} who=${p.who} size=${24} />
-      <button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel(`删除「${p.title}」？`) && app.store.del('plan', p.id)}><${Icon} n="x" size=${14} /></button>
-    </li>`)}</ul>` : html`<p class="hint">点日历上的某一天，就能加一个一起的计划。</p>`}
-    ${done.length > 0 && html`<button class="link sm" onClick=${() => setShowDone(!showDone)}>${showDone ? '收起' : `一起做到的 ${done.length} 件事`}</button>`}
-    ${showDone && html`<ul class="plan-ul done">${done.map((p) => html`<li key=${p.id}>
-      <label class="ck"><input type="checkbox" checked=${true} onChange=${() => toggle(p)} /><span class="ck-box"></span></label>
-      <div class="plan-m"><b>${p.title}</b><small class="muted">${p.doneAt ? fmtDay(dayKey(p.doneAt)) : ''}</small></div>
-    </li>`)}</ul>`}
-    ${form && html`<${PlanForm} edit=${form.edit} date0=${form.date} onClose=${() => setForm(null)} />`}
+    <div class="card-hd"><h3>计划与日历</h3><button type="button" class="btn xs" onClick=${() => setForm({ scope })}><${Icon} n="plus" size=${14} /> ${scope === 'personal' ? '我的计划' : '计划'}</button></div>
+    <div class="chips plan-tabs" role="group" aria-label="计划类型">${[['personal', '各自的计划'], ['together', '一起的计划']].map(([value, label]) => html`<button type="button" class=${cx('chip', scope === value && 'on')} aria-pressed=${scope === value} onClick=${() => { location.hash = value === 'personal' ? '#/life/cal-personal' : '#/life/cal'; setShowDone(false); }}>${label}</button>`)}</div>
+    ${scope === 'personal' && html`<div class="chips plan-people" role="group" aria-label="个人计划筛选">${[['', '两个人的'], [app.me, '我的'], [app.partner, nameOf(app.partner) + ' 的']].map(([value, label]) => html`<button type="button" class=${cx('chip', person === value && 'on')} aria-pressed=${person === value} onClick=${() => setPerson(value)}>${label}</button>`)}</div>`}
+    <p class="hint">${scope === 'personal' ? '双方可见，由本人修改。' : '两个人都可以修改和标记完成。'}仅显示日期，不提供到时推送。</p>
+    <${MonthGrid} ym=${ym} setYm=${setYm} marks=${marks} onPick=${(d) => setForm({ date: d, scope })} />
+    ${todo.length ? html`<ul class="plan-ul">${todo.map(row)}</ul>` : html`<p class="hint">${scope === 'personal' ? '暂无个人计划' : '暂无一起的计划'}</p>`}
+    ${done.length > 0 && html`<button type="button" class="link sm plan-done-toggle" onClick=${() => setShowDone(!showDone)}>${showDone ? '收起' : `已完成 ${done.length} 件`}</button>`}
+    ${showDone && html`<ul class="plan-ul done">${done.map(row)}</ul>`}
+    ${form && html`<${PlanForm} edit=${form.edit} date0=${form.date} scope0=${form.scope} onClose=${() => setForm(null)} onSaved=${(value) => { setForm(null); setPerson(''); setShowDone(false); location.hash = value === 'personal' ? '#/life/cal-personal' : '#/life/cal'; }} />`}
   </section>`;
 }
 
@@ -245,7 +277,7 @@ function IdeaJar() {
       <div class="jar-side">
         ${drawn
           ? html`<div class="jar-note"><small class="muted">${nameOf(drawn.who)} 写的：</small><b>${drawn.text}</b>
-              <div class="row"><button class="btn xs" onClick=${() => { app.store.put('plan', uid(), { title: drawn.text, date: '', note: '从点子罐里摇出来的', who: app.me, done: false }); toast('放进一起的计划啦', { icon: stId(app.me, 'ok') }); setDrawn(null); }}>加进计划</button>
+              <div class="row"><button class="btn xs" onClick=${() => { app.store.put('plan', uid(), { title: drawn.text, date: '', note: '从点子罐里摇出来的', who: app.me, scope: 'together', owner: '', done: false }); toast('放进一起的计划啦', { icon: stId(app.me, 'ok') }); setDrawn(null); }}>加进计划</button>
               <button class="btn xs ghost" onClick=${() => { app.store.put('idea', drawn.id, { ...strip(drawn), drawn: false, drawnAt: 0 }); setDrawn(null); }}>放回去</button></div></div>`
           : html`<div class="jar-tip"><${St} id=${stId(app.me, inJar.length ? 'idea' : 'what')} size=${64} title="" /><p class="muted">${inJar.length ? '点击罐子随机抽取' : '暂无点子'}</p></div>`}
       </div>
@@ -262,13 +294,12 @@ function IdeaJar() {
   </section>`;
 }
 
-export function Cal() {
-  return html`<div class="page calpage">
-    <div class="page-hd"><h2>日历</h2></div>
+export function Cal({ scope = 'together' }) {
+  return html`<div class="calpage">
     <div class="cols">
       <div class="col-a">
         <${MeetCard} />
-        <${Plans} />
+        <${Plans} scope=${scope} />
       </div>
       <div class="col-b">
         <${Days} />

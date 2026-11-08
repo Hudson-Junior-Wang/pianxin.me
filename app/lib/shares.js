@@ -1,4 +1,5 @@
 // Explicit shared-content allowlist. Never scan private collections, drafts or chat.
+import { planScope } from './plans.js?v=b9727bb22b';
 export const SHARE_TYPES = {
   learn: { label: '学习', icon: 'learn', group: 'learn' },
   journal: { label: '生活记录', icon: 'journal', group: 'life' },
@@ -36,9 +37,10 @@ export function sharePreview(col, x) {
   return x.note || x.where || x.date || '';
 }
 export function shareRoute(col, x) {
+  if (col === 'plan' && planScope(x) === 'personal') return '#/life/cal-personal';
   if (col === 'learn') return '#/learn/' + encodeURIComponent(x.id);
   if (col === 'journal') return /^\d{4}-\d{2}-\d{2}$/.test(x.day || '') ? '#/journal/' + x.day : '#/journal';
-  return ({meal:'#/life/meal',recipe:'#/life/recipe',workout:'#/life/fit',wish:'#/life/wish'})[col] || '#/cal';
+  return ({meal:'#/life/meal',recipe:'#/life/recipe',workout:'#/life/fit',wish:'#/life/wish'})[col] || '#/life/cal';
 }
 export function recentShares(store, { group = 'all', who = '', query = '' } = {}) {
   const q = line(query).toLocaleLowerCase();

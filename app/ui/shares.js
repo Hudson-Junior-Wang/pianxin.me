@@ -1,11 +1,12 @@
 // Shared content reader used by Home Recent and the Learning shelf.
-import { html } from './h.js?v=4f26e408d1';
+import { html } from './h.js?v=b9727bb22b';
 import { useState } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=4f26e408d1';
-import { uid, cx } from '../lib/util.js?v=4f26e408d1';
-import { SHARE_TYPES, safeLink, shareTitle, shareRoute } from '../lib/shares.js?v=4f26e408d1';
-import { Avatar, Modal, Photos, Reacts, confirmDel } from './common.js?v=4f26e408d1';
-import { Icon } from './icons.js?v=4f26e408d1';
+import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=b9727bb22b';
+import { uid, cx } from '../lib/util.js?v=b9727bb22b';
+import { SHARE_TYPES, safeLink, shareTitle, shareRoute } from '../lib/shares.js?v=b9727bb22b';
+import { planScope, planOwner } from '../lib/plans.js?v=b9727bb22b';
+import { Avatar, Modal, Photos, Reacts, confirmDel } from './common.js?v=b9727bb22b';
+import { Icon } from './icons.js?v=b9727bb22b';
 
 export function Comments({ target }) {
   useCols('cmt');
@@ -40,11 +41,12 @@ export function ShareDetail({ col, id, onClose }) {
     ${x.note && html`<div class="entry-t">${x.note}</div>`}
     ${col === 'wish' && x.where && html`<p class="hint">地点：${x.where}</p>`}
     ${col === 'recipe' && html`<h4>食材</h4><div class="entry-t">${x.ing}</div><h4>做法</h4><div class="entry-t">${x.steps}</div>`}
+    ${col === 'plan' && html`<p class="hint">${planScope(x) === 'personal' ? nameOf(planOwner(x)) + ' 的个人计划' : '一起的计划'}</p>`}
     ${(col === 'plan' || col === 'meet' || col === 'anniv') && html`<p class="hint">${x.date || '日期待定'}${x.time ? ' '+x.time : ''}${x.where ? ' · '+x.where : ''}</p>`}
     ${link && html`<a class="share-link" href=${link} target="_blank" rel="noopener noreferrer"><${Icon} n="link" size=${18} />${link}</a>`}
     <${Photos} list=${x.photos} />
     <${Reacts} target=${col+'/'+id} set=${col === 'meal' || col === 'recipe' ? 'food' : col === 'workout' ? 'fit' : 'def'} />
     <${Comments} target=${col+'/'+id} />
-    <div class="row end"><a class="btn ghost sm" href=${col === 'learn' ? '#/learn' : shareRoute(col,x)} onClick=${(e) => { e.preventDefault(); onClose(); location.hash = col === 'learn' ? '#/learn' : shareRoute(col,x); }}>${col === 'learn' ? '回到学习分享' : '在'+(col === 'journal' ? '记录' : SHARE_TYPES[col].group === 'life' ? '生活' : '日历')+'中打开'} <${Icon} n="right" size=${16} /></a></div>
+    <div class="row end"><a class="btn ghost sm" href=${col === 'learn' ? '#/learn' : shareRoute(col,x)} onClick=${(e) => { e.preventDefault(); onClose(); location.hash = col === 'learn' ? '#/learn' : shareRoute(col,x); }}>${col === 'learn' ? '回到学习分享' : '在'+(col === 'journal' ? '记录' : '生活')+'中打开'} <${Icon} n="right" size=${16} /></a></div>
   <//>`;
 }
