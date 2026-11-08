@@ -339,6 +339,7 @@ button.rx { cursor: pointer; }
 .sc-note { word-break: break-word; }
 .sc-need { display: flex; flex-direction: column; line-height: 1.35; margin-top: 4px; padding: 8px 12px; border-radius: 12px; background: var(--soft); }
 .sc-need small { color: var(--ink-2); }
+.sc-need b, .sc-need small { overflow-wrap: anywhere; }
 .need-chat .sc-need { background: #e7f3ff; }
 .need-quiet .sc-need { background: var(--focus-soft); }
 .need-comfort .sc-need { background: var(--xh-soft); }
@@ -346,6 +347,12 @@ button.rx { cursor: pointer; }
 @media (prefers-color-scheme: dark) { .need-chat .sc-need { background: #1f3346; } .need-vent .sc-need { background: #45331d; } }
 .sc-edit { position: relative; }
 .need-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; position: relative; }
+.need-row .chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+.need-tag-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.need-tag-item { display: flex; align-items: center; gap: 6px; }
+.need-tag-item .inp { flex: 1; min-width: 0; }
+.need-tag-item .icon-btn { flex: none; }
+.need-tag-tools { margin-top: 12px; }
 .need-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .ta-glance { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
 .tg-row { font-size: 13.5px; color: var(--ink-2); background: var(--soft); border-radius: 10px; padding: 6px 10px; display: flex; align-items: center; gap: 6px; }

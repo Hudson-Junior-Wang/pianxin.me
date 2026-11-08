@@ -1,12 +1,12 @@
 // 偏心我 · 首页 — 最近分享为主，状态和打招呼轻轻放在后面
-import { html } from '../h.js?v=dc6ea19a10';
+import { html } from '../h.js?v=4f26e408d1';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=dc6ea19a10';
-import { poke, POKE_KINDS } from '../../lib/feed.js?v=dc6ea19a10';
-import { uid, today, cx, fmtDayFull } from '../../lib/util.js?v=dc6ea19a10';
-import { Recent } from '../recent.js?v=dc6ea19a10';
-import { Avatar, Dot, Modal, St, strip } from '../common.js?v=dc6ea19a10';
-import { Icon } from '../icons.js?v=dc6ea19a10';
+import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, needOf, needTagsOf, NEED_TAG_LIMIT, NEED_TAG_LENGTH, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=4f26e408d1';
+import { poke, POKE_KINDS } from '../../lib/feed.js?v=4f26e408d1';
+import { uid, today, cx, fmtDayFull } from '../../lib/util.js?v=4f26e408d1';
+import { Recent } from '../recent.js?v=4f26e408d1';
+import { Avatar, Dot, Modal, St, strip } from '../common.js?v=4f26e408d1';
+import { Icon } from '../icons.js?v=4f26e408d1';
 
 // ---------- status card ----------
 function StatusCard({ who }) {
@@ -16,8 +16,10 @@ function StatusCard({ who }) {
   const mine = who === app.me;
   const st = app.store.get('status', who);
   const mood = st && moodOf(st.mood);
-  const need = st && NEEDS.find((n) => n.k === st.need);
+  const need = needOf(st);
+  const tags = needTagsOf(st);
   const [edit, setEdit] = useState(false);
+  const [editTags, setEditTags] = useState(false);
   const on = app.sync.isOnline(who);
   const clock = timeOf(who);
   const face = need ? need.st : mood ? mood.st : 'hi';
@@ -31,14 +33,18 @@ function StatusCard({ who }) {
           ${mood ? html`<span class="tag mood">${mood.label}</span>` : null}
           ${st?.note ? html`<span class="sc-note">${st.note}</span>` : !mood && html`<span class="muted">${mine ? '还没写现在的状态' : '还没有状态'}</span>`}
         </div>
-        ${need && html`<div class="sc-need"><b>${need.label}</b><small>${mine ? need.hint : need.ta}</small></div>`}
+        ${need && html`<div class="sc-need"><b>${need.label}</b>${(mine ? need.hint : need.ta) && html`<small>${mine ? need.hint : need.ta}</small>`}</div>`}
       </div>
       ${mine && html`<button class="btn sm ghost sc-edit" onClick=${() => setEdit(true)}>改状态</button>`}
     </div>
-    ${mine && !need && html`<div class="need-row">${NEEDS.map((n) => html`<button class="chip" onClick=${() => app.store.patch('status', app.me, { need: n.k, at: Date.now() })}>${n.label}</button>`)}</div>`}
-    ${mine && need && html`<div class="need-row"><button class="chip" onClick=${() => app.store.patch('status', app.me, { need: null })}>不需要了</button></div>`}
-    ${!mine && need && need.k !== 'quiet' && html`<${NeedActions} need=${need.k} />`}
+    ${mine && html`<div class="need-row">
+      ${tags.map((n) => html`<button type="button" class=${cx('chip', need?.k === n.k && 'on')} key=${n.k} aria-pressed=${need?.k === n.k} onClick=${() => app.store.patch('status', app.me, { need: st?.need === n.k ? null : n.k, at: Date.now() })}>${n.label}</button>`)}
+      ${need && html`<button type="button" class="chip" onClick=${() => app.store.patch('status', app.me, { need: null, at: Date.now() })}>不需要了</button>`}
+      <button type="button" class="chip ghost need-customize" onClick=${() => setEditTags(true)}>自定义标签</button>
+    </div>`}
+    ${!mine && need && !need.custom && need.k !== 'quiet' && html`<${NeedActions} need=${need.k} />`}
     ${edit && html`<${StatusEditor} onClose=${() => setEdit(false)} />`}
+    ${editTags && html`<${NeedTagsEditor} onClose=${() => setEditTags(false)} />`}
   </section>`;
 }
 
@@ -50,26 +56,68 @@ function NeedActions({ need }) {
   return null;
 }
 
+function NeedTagsEditor({ onClose }) {
+  const [initial] = useState(() => needTagsOf(app.store.get('status', app.me)));
+  const [tags, setTags] = useState(initial);
+  const [err, setErr] = useState('');
+  const [saving, setSaving] = useState(false);
+  const change = (k, label) => { setTags(tags.map((n) => n.k === k ? { ...n, label } : n)); setErr(''); };
+  const save = async (e) => {
+    e.preventDefault();
+    if (saving) return;
+    const cleaned = tags.map((n) => ({ k: n.k, label: n.label.replace(/\s+/g, ' ').trim().slice(0, NEED_TAG_LENGTH) }));
+    if (cleaned.some((n) => !n.label)) return setErr('填好标签文字，或删除空白标签。');
+    if (new Set(cleaned.map((n) => n.label.toLowerCase())).size !== cleaned.length) return setErr('标签文字重复了，换一个吧。');
+    setSaving(true); setErr('');
+    try {
+      const current = app.store.get('status', app.me) || {};
+      const removed = initial.some((n) => n.k === current.need) && !cleaned.some((n) => n.k === current.need);
+      app.store.patch('status', app.me, { needTags: cleaned, ...(removed ? { need: null } : {}) });
+      if (await app.store.flush() === false) throw new Error('local save failed');
+      onClose();
+    } catch { setSaving(false); setErr('保存遇到了问题，标签还在这里，请再试一次。'); }
+  };
+  return html`<${Modal} title="自定义标签" cls="need-tags-editor" onClose=${() => { if (!saving) onClose(); }}>
+    <form onSubmit=${save}>
+      <p class="hint">编辑自己的常用标签，最多 ${NEED_TAG_LIMIT} 个，每个 ${NEED_TAG_LENGTH} 字。</p>
+      <div class="need-tag-list">${tags.map((n, i) => html`<div class="need-tag-item" key=${n.k}>
+        <input class="inp" aria-label=${`标签 ${i + 1}`} maxlength=${NEED_TAG_LENGTH} value=${n.label} disabled=${saving} onInput=${(e) => change(n.k, e.target.value)} />
+        <button type="button" class="icon-btn" aria-label=${`删除标签 ${i + 1}`} disabled=${saving} onClick=${() => { setTags(tags.filter((x) => x.k !== n.k)); setErr(''); }}><${Icon} n="x" size=${18} /></button>
+      </div>`)}</div>
+      <div class="row wrap need-tag-tools">
+        <button type="button" class="btn sm ghost" disabled=${saving || tags.length >= NEED_TAG_LIMIT} onClick=${() => { setTags([...tags, { k: 'custom-' + uid(), label: '' }]); setErr(''); }}><${Icon} n="plus" size=${16} /> 添加标签</button>
+        <button type="button" class="btn sm ghost" disabled=${saving} onClick=${() => { setTags(NEEDS.map(({ k, label }) => ({ k, label }))); setErr(''); }}>恢复默认</button>
+      </div>
+      ${err && html`<p class="err" role="alert">${err}</p>`}
+      <div class="modal-ft"><button type="button" class="btn ghost" disabled=${saving} onClick=${onClose}>取消</button><button type="submit" class="btn" disabled=${saving}>${saving ? '保存中…' : '保存标签'}</button></div>
+    </form>
+  <//>`;
+}
+
 function StatusEditor({ onClose }) {
+  useCols(['status']);
   const st = app.store.get('status', app.me) || {};
+  const tags = needTagsOf(st);
+  const current = needOf(st);
   const [mood, setMood] = useState(moodOf(st.mood)?.k || '');
   const [note, setNote] = useState(st.note || '');
   const [need, setNeed] = useState(st.need || null);
   const save = () => {
-    app.store.put('status', app.me, { ...st, mood, note: note.trim().slice(0, 40), need, at: Date.now() });
+    app.store.patch('status', app.me, { mood, note: note.trim().slice(0, 40), need, at: Date.now() });
     onClose();
   };
-  return html`<${Modal} title="现在的我" onClose=${onClose}>
+  return html`<${Modal} title="现在的我" cls="status-editor" onClose=${onClose}>
     <label class="lbl">心情</label>
     <div class="mood-grid">${MOODS.map((m) => html`<button class=${cx('mood-b', mood === m.k && 'on')} onClick=${() => setMood(mood === m.k ? '' : m.k)}><${St} id=${stId(app.me, m.st)} size=${48} title="" /><small>${m.label}</small></button>`)}</div>
     <label class="lbl">一句话（选填）</label>
     <input class="inp" maxlength="40" placeholder="比如：在图书馆三楼 / 今天有点累" value=${note} onInput=${(e) => setNote(e.target.value)} />
-    <label class="lbl">现在需要</label>
+    <label class="lbl">状态标签</label>
     <div class="chips">
-      <button class=${cx('chip', !need && 'on')} onClick=${() => setNeed(null)}>都可以</button>
-      ${NEEDS.map((n) => html`<button class=${cx('chip', need === n.k && 'on')} onClick=${() => setNeed(n.k)}>${n.label}</button>`)}
+      <button type="button" class=${cx('chip', !need && 'on')} onClick=${() => setNeed(null)}>不选标签</button>
+      ${tags.map((n) => html`<button type="button" class=${cx('chip', need === n.k && 'on')} onClick=${() => setNeed(n.k)}>${n.label}</button>`)}
+      ${current && !tags.some((n) => n.k === current.k) && html`<button type="button" class=${cx('chip', need === current.k && 'on')} onClick=${() => setNeed(current.k)}>${current.label}</button>`}
     </div>
-    <p class="hint">选了「想安静」，消息和戳一下就不会响，只是安静地出现在边上。</p>
+    ${need === 'quiet' && html`<p class="hint">消息和戳一下不会响。</p>`}
     <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" onClick=${save}>好啦</button></div>
   <//>`;
 }

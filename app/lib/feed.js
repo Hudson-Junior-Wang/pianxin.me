@@ -2,9 +2,9 @@
 // plus the "一起模式" watcher (phase changes, quiet state, auto-logging).
 // Nothing here keeps score: no streaks, no read receipts, no comparisons.
 
-import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=dc6ea19a10';
-import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=dc6ea19a10';
-import { pick } from './util.js?v=dc6ea19a10';
+import { app, bus, toast, chime, vibrate, notify, nameOf, needOf, moodOf, stId, stLabel, isSt } from './ctx.js?v=4f26e408d1';
+import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=4f26e408d1';
+import { pick } from './util.js?v=4f26e408d1';
 
 const short = (s, n = 18) => {
   s = String(s || '').replace(/\s+/g, ' ').trim();
@@ -90,12 +90,10 @@ function onLive(r, prev) {
       if (x.done && !(px && px.done)) toast(`${ta()} 勾掉了「${short(x.text)}」`, { icon: taSt('done'), kind: 'soft' });
       break;
     case 'status': {
-      if (x.need && x.need !== (px && px.need)) {
-        const n = NEEDS.find((v) => v.k === x.need);
-        if (n) {
-          toast(`${ta()} 现在「${n.label}」`, { icon: taSt(n.st), ms: 5200, action: x.need === 'chat' ? { label: '去聊天', fn: () => bus.emit('chat:open') } : null });
-          notify('偏心我', `${ta()} 现在「${n.label}」`);
-        }
+      const n = needOf(x), prevNeed = needOf(px);
+      if (n && (n.k !== prevNeed?.k || n.label !== prevNeed?.label)) {
+        toast(`${ta()} 现在「${n.label}」`, { icon: taSt(n.st), ms: 5200, action: n.k === 'chat' && !n.custom ? { label: '去聊天', fn: () => bus.emit('chat:open') } : null });
+        notify('偏心我', `${ta()} 现在「${n.label}」`);
       } else if (x.mood && x.mood !== (px && px.mood)) {
         const m = moodOf(x.mood);
         if (m) toast(`${ta()} 的心情：${m.label}`, { icon: taSt(m.st), kind: 'soft', ms: 3200 });

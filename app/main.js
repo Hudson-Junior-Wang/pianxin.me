@@ -1,26 +1,26 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=dc6ea19a10';
+import { html, render } from './ui/h.js?v=4f26e408d1';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=dc6ea19a10';
-import { Store } from './lib/store.js?v=dc6ea19a10';
-import { initViewport } from './lib/viewport.js?v=dc6ea19a10';
-import { Sync } from './lib/sync.js?v=dc6ea19a10';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=dc6ea19a10';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=dc6ea19a10';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=dc6ea19a10';
-import { cx, fmtClock } from './lib/util.js?v=dc6ea19a10';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=dc6ea19a10';
-import { Icon } from './ui/icons.js?v=dc6ea19a10';
-import { Chat } from './ui/chat.js?v=dc6ea19a10';
-import { Home } from './ui/pages/home.js?v=dc6ea19a10';
-import { Learn } from './ui/pages/learn.js?v=dc6ea19a10';
-import { Together } from './ui/pages/together.js?v=dc6ea19a10';
-import { Journal } from './ui/pages/journal.js?v=dc6ea19a10';
-import { Life } from './ui/pages/food.js?v=dc6ea19a10';
-import { Cal } from './ui/pages/cal.js?v=dc6ea19a10';
-import { Me } from './ui/pages/me.js?v=dc6ea19a10';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=4f26e408d1';
+import { Store } from './lib/store.js?v=4f26e408d1';
+import { initViewport } from './lib/viewport.js?v=4f26e408d1';
+import { Sync } from './lib/sync.js?v=4f26e408d1';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=4f26e408d1';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=4f26e408d1';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=4f26e408d1';
+import { cx, fmtClock } from './lib/util.js?v=4f26e408d1';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=4f26e408d1';
+import { Icon } from './ui/icons.js?v=4f26e408d1';
+import { Chat } from './ui/chat.js?v=4f26e408d1';
+import { Home } from './ui/pages/home.js?v=4f26e408d1';
+import { Learn } from './ui/pages/learn.js?v=4f26e408d1';
+import { Together } from './ui/pages/together.js?v=4f26e408d1';
+import { Journal } from './ui/pages/journal.js?v=4f26e408d1';
+import { Life } from './ui/pages/food.js?v=4f26e408d1';
+import { Cal } from './ui/pages/cal.js?v=4f26e408d1';
+import { Me } from './ui/pages/me.js?v=4f26e408d1';
 
 initViewport();
 
@@ -69,7 +69,7 @@ function PartnerMini() {
   useCols(['status', 'profile']);
   useSyncEvent('presence');
   const st = app.store.get('status', app.partner);
-  const need = st && NEEDS.find((n) => n.k === st.need);
+  const need = needOf(st);
   const mood = st && moodOf(st.mood);
   const on = app.sync.isOnline(app.partner);
   return html`<a class=${cx('partner-mini', 'p-' + app.partner)} href="#/">

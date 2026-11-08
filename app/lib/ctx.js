@@ -1,7 +1,7 @@
 // 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
-import { localZone, validZone, zoneParts } from './time.js?v=dc6ea19a10';
+import { localZone, validZone, zoneParts } from './time.js?v=4f26e408d1';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
@@ -216,11 +216,38 @@ const OLD_MOODS = [
 export const moodOf = (k) => MOODS.find((m) => m.k === k) || OLD_MOODS.find((m) => m.k === k);
 
 export const NEEDS = [
-  { k: 'chat', label: '想聊天', st: 'hi', hint: '想找人说说话', ta: '想找人聊聊天，去和 TA 说说话吧' },
+  { k: 'chat', label: '想聊天', st: 'hi' },
+  { k: 'bored', label: '好无聊', st: 'yawn' },
+  { k: 'hungry', label: '我饿了', st: 'eat' },
+  { k: 'craving', label: '好馋啊', st: 'tea' },
+];
+// Keep existing selections meaningful, including the explicit quiet-mode behavior.
+const OLD_NEEDS = [
   { k: 'quiet', label: '想安静', st: 'read', hint: '想安静一会儿，消息不会响', ta: '想安静一会儿，消息不会吵到 TA' },
   { k: 'comfort', label: '求安慰', st: 'cry', hint: '需要一点安慰', ta: '现在需要一点安慰' },
   { k: 'vent', label: '只想吐槽', st: 'pout', hint: '只想吐槽，听着就好', ta: '只想吐槽，听着就好，不用讲道理' },
 ];
+export const NEED_TAG_LIMIT = 12;
+export const NEED_TAG_LENGTH = 20;
+/** Choices belong to the person's status record, so they sync atomically with the selection. */
+export function needTagsOf(status) {
+  const source = Array.isArray(status?.needTags) ? status.needTags : NEEDS;
+  const keys = new Set(), labels = new Set(), out = [];
+  for (const tag of source.slice(0, NEED_TAG_LIMIT)) {
+    if (!tag || typeof tag.k !== 'string' || !/^[a-z][a-z0-9_-]{0,80}$/i.test(tag.k) || typeof tag.label !== 'string') continue;
+    const label = tag.label.replace(/\s+/g, ' ').trim().slice(0, NEED_TAG_LENGTH);
+    if (!label || keys.has(tag.k) || labels.has(label.toLowerCase())) continue;
+    keys.add(tag.k); labels.add(label.toLowerCase()); out.push({ k: tag.k, label });
+  }
+  return out;
+}
+export function needOf(status) {
+  if (!status?.need) return null;
+  const choice = needTagsOf(status).find((n) => n.k === status.need);
+  const known = NEEDS.find((n) => n.k === status.need) || OLD_NEEDS.find((n) => n.k === status.need);
+  if (choice) return known?.label === choice.label ? known : { ...choice, st: 'hi', custom: true };
+  return known || null;
+}
 
 // ---------- local clocks: IANA zone handles DST even while the other person is offline ----------
 export function syncTimezone() {
