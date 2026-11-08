@@ -1,12 +1,12 @@
 // Recent shared moments: people first, content next, newest updated first.
-import { html } from './h.js?v=84b24374a3';
+import { html } from './h.js?v=5e2c5948d8';
 import { useState, useEffect } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel, stId } from '../lib/ctx.js?v=84b24374a3';
-import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=84b24374a3';
-import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=84b24374a3';
-import { Img, Empty, Modal, St, Avatar } from './common.js?v=84b24374a3';
-import { ShareDetail } from './shares.js?v=84b24374a3';
-import { Icon } from './icons.js?v=84b24374a3';
+import { app, useCols, nameOf, localDayLabel, stId } from '../lib/ctx.js?v=5e2c5948d8';
+import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=5e2c5948d8';
+import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=5e2c5948d8';
+import { Img, Empty, Modal, St, Avatar } from './common.js?v=5e2c5948d8';
+import { ShareDetail } from './shares.js?v=5e2c5948d8';
+import { Icon } from './icons.js?v=5e2c5948d8';
 
 const SHARE_CHOICES = [
   { key: 'journal', label: '生活点滴', hint: '文字、照片或留言', st: 'read', route: '#/journal' },
@@ -35,7 +35,7 @@ export function Recent() {
   useEffect(()=>setLimit(20),[group,who,query]);
   const list=recentShares(app.store,{group,who,query});
   return html`<section class="recent-shares">
-    <div class="recent-heading"><div><h3><${Icon} n="folder" /> 最近分享 <small>Recent</small></h3></div><button type="button" class="btn sm share-launch" aria-haspopup="dialog" aria-expanded=${choosing} onClick=${(e) => { e.currentTarget.focus({ preventScroll: true }); setChoosing(true); }}>留点小东西 <${Icon} n="plus" size=${16} /></button></div>
+    <div class="recent-heading"><div><h3><${St} id="d-listen" size=${42} cls="recent-heading-art" title="" />最近分享</h3></div><button type="button" class="btn sm share-launch" aria-haspopup="dialog" aria-expanded=${choosing} onClick=${(e) => { e.currentTarget.focus({ preventScroll: true }); setChoosing(true); }}>留点小东西 <${Icon} n="plus" size=${16} /></button></div>
     <div class="recent-tools"><div class="chips" role="group" aria-label="分享类型">${[['all','全部'],['learn','学习'],['life','生活'],['cal','安排']].map(([k,label])=>html`<button class=${cx('chip',group===k&&'on')} aria-pressed=${group===k} onClick=${()=>setGroup(k)}>${label}</button>`)}</div><div class="row"><label class="search"><${Icon} n="search" size=${18} /><input class="inp" aria-label="搜索最近分享" placeholder="找分享过的内容…" value=${query} onInput=${(e)=>setQuery(e.target.value)} /></label><select class="inp share-who" aria-label="分享者" value=${who} onChange=${(e)=>setWho(e.target.value)}><option value="">两个人的</option><option value=${app.me}>我分享的</option><option value=${app.partner}>${nameOf(app.partner)} 分享的</option></select></div></div>
     ${list.length ? html`<div class="recent-list">${list.slice(0,limit).map(({col,x,key,updated})=>html`<button type="button" class="recent-row" key=${key} data-share=${key} onClick=${()=>setSelected({col,id:x.id})}>
       <span class="recent-head">

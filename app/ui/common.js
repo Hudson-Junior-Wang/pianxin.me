@@ -1,11 +1,11 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=84b24374a3';
+import { html, render } from './h.js?v=5e2c5948d8';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=84b24374a3';
-import { compressPair, cx } from '../lib/util.js?v=84b24374a3';
-import { useLayerClose } from './motion.js?v=84b24374a3';
-import { Pic } from './pictograms.js?v=84b24374a3';
-import { pictogramOf, emojiText } from '../lib/pictograms.js?v=84b24374a3';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=5e2c5948d8';
+import { compressPair, cx } from '../lib/util.js?v=5e2c5948d8';
+import { useLayerClose } from './motion.js?v=5e2c5948d8';
+import { Pic } from './pictograms.js?v=5e2c5948d8';
+import { pictogramOf, emojiText } from '../lib/pictograms.js?v=5e2c5948d8';
 
 /** Sticker image with presentation-only artwork for historical emoji IDs. */
 export function St({ id, size = 48, cls = '', title, onClick }) {

@@ -10,10 +10,10 @@
 //   p/<who>.<device>   presence (cleared by the broker's last-will when we drop)
 //   i                  room info
 
-import { MqttClient } from './mqtt.js?v=84b24374a3';
-import { seal, unseal, keyedHash } from './crypto.js?v=84b24374a3';
-import { STATE_COLS, LINK_MASK } from './store.js?v=84b24374a3';
-import { utcDay, sleep, uid } from './util.js?v=84b24374a3';
+import { MqttClient } from './mqtt.js?v=5e2c5948d8';
+import { seal, unseal, keyedHash } from './crypto.js?v=5e2c5948d8';
+import { STATE_COLS, LINK_MASK } from './store.js?v=5e2c5948d8';
+import { utcDay, sleep, uid } from './util.js?v=5e2c5948d8';
 
 export const LINKS = [
   { name: 'EMQX', urls: ['wss://broker.emqx.io:8084/mqtt', 'wss://broker-cn.emqx.io:8084/mqtt'], rate: 6, burst: 6 },

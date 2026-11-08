@@ -1,5 +1,5 @@
 // 偏心我 · small rounded line icons (24×24, stroke = currentColor)
-import { html } from './h.js?v=84b24374a3';
+import { html } from './h.js?v=5e2c5948d8';
 
 const P = {
   learn: '<path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zM12 6v14"/>',

@@ -828,7 +828,7 @@ body, .shell, .boot, .lock { min-height: 100svh; }
 .recent-shares { min-width: 0; }
 .recent-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 16px; flex-wrap: wrap; }
 .recent-heading h3 { display: flex; align-items: center; gap: 8px; font-size: 21px; }
-.recent-heading h3 small { font-size: 12px; font-weight: 400; color: var(--ink-3); letter-spacing: .06em; }
+.recent-heading-art { flex: none; object-fit: contain; }
 .recent-tools { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
 .recent-tools > .row { align-items: stretch; }
 .share-who { width: auto; min-width: 0; max-width: 42%; flex: 0 1 180px; text-overflow: ellipsis; }
