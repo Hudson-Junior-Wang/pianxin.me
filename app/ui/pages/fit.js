@@ -1,11 +1,11 @@
 // 偏心我 · 运动 — 各自记录，方便时再回应，不比较、不要求同时进行
-import { html } from '../h.js?v=94aaa224f0';
+import { html } from '../h.js?v=dc6ea19a10';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=94aaa224f0';
-import { localZone } from '../../lib/time.js?v=94aaa224f0';
-import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=94aaa224f0';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=94aaa224f0';
-import { Icon } from '../icons.js?v=94aaa224f0';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=dc6ea19a10';
+import { localZone } from '../../lib/time.js?v=dc6ea19a10';
+import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=dc6ea19a10';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=dc6ea19a10';
+import { Icon } from '../icons.js?v=dc6ea19a10';
 
 export const SPORTS = [
   ['🏃', '跑步'], ['🚶', '散步'], ['🚴', '骑车'], ['🏊', '游泳'], ['🧘', '瑜伽'], ['🏋️', '力量'],

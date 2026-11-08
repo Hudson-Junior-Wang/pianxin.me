@@ -829,6 +829,8 @@ body, .shell, .boot, .lock { min-height: 100svh; }
 .learn-open em .ic { display: inline-block; vertical-align: middle; }
 .learn-thumb { width: 76px; height: 86px; object-fit: cover; flex-shrink: 0; border-radius: 10px; }
 .learning-tools { margin-top: 24px; }
+.learning-tools > h3 { font-size: 14px; }
+.learning-focus { margin-top: 16px; }
 .learning-tools-hd { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; box-shadow: none; background: var(--soft); }
 .learning-tools-hd h3 { flex: 1 1 180px; font-size: 14px; }
 .learning-drafts > summary { cursor: pointer; padding: 12px 0; min-height: 44px; font-weight: 600; }

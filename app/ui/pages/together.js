@@ -1,12 +1,12 @@
 // 偏心我 · 一起模式 — 同步计时 + 互相可见的草稿栏 + 今日任务（聊天在右栏 / 底部抽屉）
-import { html } from '../h.js?v=94aaa224f0';
+import { html } from '../h.js?v=dc6ea19a10';
 import { useState, useEffect, useRef } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=94aaa224f0';
-import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=94aaa224f0';
-import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=94aaa224f0';
-import { Avatar, Dot, St, confirmDel } from '../common.js?v=94aaa224f0';
-import { Icon } from '../icons.js?v=94aaa224f0';
-import { TaskList } from './home.js?v=94aaa224f0';
+import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=dc6ea19a10';
+import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=dc6ea19a10';
+import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=dc6ea19a10';
+import { Avatar, Dot, St, confirmDel } from '../common.js?v=dc6ea19a10';
+import { Icon } from '../icons.js?v=dc6ea19a10';
+import { TaskList } from './home.js?v=dc6ea19a10';
 
 const modeSticker = (m, who = app.me) => (m.st.startsWith('d-') ? m.st : stId(who, m.st));
 
@@ -301,7 +301,7 @@ function MyDraft() {
       </div>
     </div>
     ${tab === 'text'
-      ? html`<textarea ref=${ref} class="inp pad-ta" maxlength="20000" placeholder="输入草稿（对方实时可见）" value=${text}
+      ? html`<textarea ref=${ref} class="inp pad-ta" maxlength="20000" placeholder="输入草稿" value=${text}
           onInput=${(e) => { setText(e.target.value); save.current(e.target.value); }}></textarea>`
       : html`<${InkPad} />`}
   </div>`;
@@ -363,12 +363,12 @@ export function Together({ param }) {
   const running = d.state === 'run';
   return html`<div class=${cx('page together', app.focus && 'is-focus')}>
     <div class="page-hd"><div><a class="link sm" href="#/learn">‹ 返回学习分享</a><h2>学习小工具</h2></div></div>
-    ${param === 'drafts' && !running ? null : running ? html`<${Running} />` : html`<${Setup} key=${param || 'x'} initial=${param} />`}
-    <${Drafts} />
     <div class="grid2">
       <${TaskList} who=${app.me} />
       <${TaskList} who=${app.partner} />
     </div>
+    <${Drafts} />
+    ${param === 'drafts' && !running ? null : running ? html`<${Running} />` : html`<${Setup} key=${param || 'x'} initial=${param} />`}
     ${!running && html`<${Memories} />`}
   </div>`;
 }

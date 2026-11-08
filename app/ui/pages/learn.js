@@ -1,15 +1,15 @@
 // Learning is about what we share, not elapsed time or matching progress.
-import { html } from '../h.js?v=94aaa224f0';
+import { html } from '../h.js?v=dc6ea19a10';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=94aaa224f0';
-import { uid, today, cx } from '../../lib/util.js?v=94aaa224f0';
-import { localZone } from '../../lib/time.js?v=94aaa224f0';
-import { safeLink, recentShares, shareTitle, sharePreview } from '../../lib/shares.js?v=94aaa224f0';
-import { Avatar, PhotoPicker, AutoText, Modal, Empty, Img, strip, confirmDel } from '../common.js?v=94aaa224f0';
-import { ShareDetail } from '../shares.js?v=94aaa224f0';
-import { Icon } from '../icons.js?v=94aaa224f0';
-import { Drafts } from './together.js?v=94aaa224f0';
-import { TaskList } from './home.js?v=94aaa224f0';
+import { app, useCols, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=dc6ea19a10';
+import { uid, today, cx } from '../../lib/util.js?v=dc6ea19a10';
+import { localZone } from '../../lib/time.js?v=dc6ea19a10';
+import { safeLink, recentShares, shareTitle, sharePreview } from '../../lib/shares.js?v=dc6ea19a10';
+import { Avatar, PhotoPicker, AutoText, Modal, Empty, Img, strip, confirmDel } from '../common.js?v=dc6ea19a10';
+import { ShareDetail } from '../shares.js?v=dc6ea19a10';
+import { Icon } from '../icons.js?v=dc6ea19a10';
+import { Drafts } from './together.js?v=dc6ea19a10';
+import { TaskList } from './home.js?v=dc6ea19a10';
 
 function LearningForm({ edit, onClose, onSaved }) {
   const [id] = useState(() => edit?.id || uid());
@@ -75,12 +75,13 @@ export function Learn({ param }) {
     </article>`)}</div>` : html`<${Empty} st="read" text=${query||who ? '没有匹配的学习分享' : '暂无学习分享'} />`}
     ${list.length>limit && html`<button class="btn ghost block" onClick=${()=>setLimit(limit+20)}>再看看更早的</button>`}
     <section class="learning-tools">
-      <div class="card learning-tools-hd"><h3>学习小工具</h3><a class="chip" href="#/together"><${Icon} n="clock" size=${16} /> 专注计时</a></div>
+      <h3>学习小工具</h3>
       <details class="learning-drafts" open>
-        <summary>草稿纸与待办</summary>
-        <${Drafts} />
+        <summary>待办与草稿纸</summary>
         <div class="grid2"><${TaskList} who=${app.me} /><${TaskList} who=${app.partner} /></div>
+        <${Drafts} />
       </details>
+      <div class="card learning-tools-hd learning-focus"><h3>专注</h3><a class="chip" href="#/together"><${Icon} n="clock" size=${16} /> 专注计时</a></div>
     </section>
     ${selected && html`<${ShareDetail} col="learn" id=${selected} onClose=${closeDetail} />`}
     ${form && html`<${LearningForm} key=${form.edit?.id||'new'} edit=${form.edit} onClose=${()=>{setForm(null);if(param==='new')location.hash='#/learn';}} onSaved=${saved} />`}
