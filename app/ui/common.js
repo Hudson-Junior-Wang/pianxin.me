@@ -1,40 +1,37 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=efe89b71a3';
+import { html, render } from './h.js?v=d7c13ae0f9';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, avatarOf, nameOf, setReaction, useCols, toast } from '../lib/ctx.js?v=efe89b71a3';
-import { compressPair, cx } from '../lib/util.js?v=efe89b71a3';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=d7c13ae0f9';
+import { compressPair, cx } from '../lib/util.js?v=d7c13ae0f9';
 
-export function Avatar({ who, size = 34, cls = '' }) {
-  return html`<span class=${cx('av', 'p-' + who, cls)} style=${`--s:${size}px`} title=${nameOf(who)}>${avatarOf(who)}</span>`;
+/** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
+export function St({ id, size = 48, cls = '', title, onClick }) {
+  if (!id) return null;
+  if (!isSt(id)) return html`<span class=${cx('st-emo', cls)} style=${`--s:${size}px`} onClick=${onClick}>${id}</span>`;
+  const t = title ?? stLabel(id);
+  return html`<img class=${cx('st', cls)} src=${stUrl(id)} width=${size} height=${size} alt=${t} title=${t} loading="lazy" decoding="async" draggable="false" onClick=${onClick} />`;
 }
 
-export function Who({ who }) {
-  return html`<span class=${'who p-' + who}><span class="who-av">${avatarOf(who)}</span>${nameOf(who)}</span>`;
+export function Avatar({ who, size = 40, cls = '' }) {
+  return html`<span class=${cx('av', 'p-' + who, cls)} style=${`--s:${size}px`} title=${nameOf(who)}>
+    <img src=${stUrl(avId(who))} alt=${nameOf(who)} draggable="false" />
+  </span>`;
 }
 
 export function Dot({ on }) {
   return html`<i class=${cx('dot', on && 'on')} aria-label=${on ? '在线' : '不在线'}></i>`;
 }
 
-export function Empty({ icon = '🌱', text, children }) {
-  return html`<div class="empty"><div class="empty-i">${icon}</div><p>${text}</p>${children}</div>`;
+/** empty state with a sticker of *my* character */
+export function Empty({ st = 'idea', text, children }) {
+  return html`<div class="empty"><${St} id=${stId(app.me, st)} size=${88} /><p>${text}</p>${children}</div>`;
 }
 
 export function Seg({ value, options, onChange, cls }) {
   return html`<div class=${cx('seg', cls)} role="tablist">
     ${options.map(
       (o) => html`<button type="button" role="tab" aria-selected=${o.value === value} class=${cx(o.value === value && 'on')} onClick=${() => onChange(o.value)}>
-        ${o.icon ? html`<span class="seg-i">${o.icon}</span>` : null}${o.label}
-      </button>`,
-    )}
-  </div>`;
-}
-
-export function Chips({ value, options, onChange, cls }) {
-  return html`<div class=${cx('chips', cls)}>
-    ${options.map(
-      (o) => html`<button type="button" class=${cx('chip', o.value === value && 'on')} onClick=${() => onChange(o.value)}>
-        ${o.icon ? html`<span class="chip-i">${o.icon}</span>` : null}${o.label}
+        ${o.st ? html`<${St} id=${o.st} size=${24} title="" />` : o.icon ? html`<span class="seg-i">${o.icon}</span>` : null}${o.label}${o.badge ? html`<i class="seg-badge">${o.badge}</i>` : null}
       </button>`,
     )}
   </div>`;
@@ -82,6 +79,26 @@ export function Modal({ title, onClose, children, cls }) {
       </div>
     </div>
   <//>`;
+}
+
+// ---------- stickers panel ----------
+export function StickerPanel({ onPick, size = 64 }) {
+  const own = chOf(app.me);
+  const other = own === 'bear' ? 'bunny' : 'bear';
+  const [tab, setTab] = useState(own);
+  const list = tab === 'duo' ? DUO : CHARS[tab].keys.map((k) => `${CHARS[tab].p}-${k}`);
+  return html`<div class="stp">
+    <div class="stp-tabs">
+      ${[own, other, 'duo'].map(
+        (t) => html`<button type="button" class=${cx(tab === t && 'on')} onClick=${() => setTab(t)}>
+          <${St} id=${t === 'duo' ? 'd-five' : t === 'bear' ? 'av-bear' : 'av-bunny'} size=${24} title="" />${t === 'duo' ? '一起' : CHARS[t].name}
+        </button>`,
+      )}
+    </div>
+    <div class="stp-grid">
+      ${list.map((id) => html`<button type="button" class="stp-b" key=${id} onClick=${() => onPick(id)}><${St} id=${id} size=${size} /><small>${stLabel(id)}</small></button>`)}
+    </div>
+  </div>`;
 }
 
 // ---------- images ----------
@@ -173,7 +190,7 @@ export async function uploadPhotos(files, onProgress, local = false) {
       out.push(local ? { id, th, w: big.w, h: big.h, loc: 1 } : { id, th, w: big.w, h: big.h });
     } catch (e) {
       console.error(e);
-      toast('有一张图片没处理好，换一张试试', { icon: '😵' });
+      toast('有一张图片没处理好，换一张试试', { icon: stId(app.me, 'dizzy') });
     }
   }
   return out;
@@ -199,14 +216,28 @@ export function PhotoPicker({ value, onChange, max = 9, local = false }) {
     )}
     ${value.length < max &&
     html`<button type="button" class="pp-add" disabled=${!!busy} onClick=${() => inp.current.click()}>
-      ${busy ? html`<span class="spin"></span><small>${busy}</small>` : html`<span>📷</span><small>加图片</small>`}
+      ${busy ? html`<span class="spin"></span><small>${busy}</small>` : html`<span class="pp-plus">＋</span><small>加图片</small>`}
     </button>`}
     <input ref=${inp} type="file" accept="image/*" multiple hidden onChange=${pick} />
   </div>`;
 }
 
-// ---------- reactions ----------
-export function Reacts({ target, opts = ['❤️', '🫂', '😂', '🥺', '👏'] }) {
+// ---------- reactions (stickers of each person's own character) ----------
+const REACT_SETS = {
+  def: ['cheer', 'ok', 'pat', 'thanks', 'what'],
+  food: ['eat', 'ok', 'tea', 'cheer', 'what'],
+  fit: ['cheer', 'ok', 'salute', 'pat', 'run'],
+};
+const isKey = (e) => typeof e === 'string' && Object.prototype.hasOwnProperty.call(ST_LABEL, e);
+
+function ReactBadge({ r, mine, onClick }) {
+  const pic = isKey(r.e) ? html`<${St} id=${stId(r.who, r.e)} size=${30} />` : html`<b>${r.e}</b>`;
+  return mine
+    ? html`<button type="button" class=${'rx mine p-' + r.who} title="再点一下取消" onClick=${onClick}>${pic}</button>`
+    : html`<span class=${'rx p-' + r.who} title=${nameOf(r.who)}>${pic}</span>`;
+}
+
+export function Reacts({ target, set = 'def' }) {
   useCols('react');
   const [open, setOpen] = useState(false);
   const mine = app.store.get('react', `${target}~${app.me}`);
@@ -216,13 +247,12 @@ export function Reacts({ target, opts = ['❤️', '🫂', '😂', '🥺', '👏
     setReaction(target, e);
   };
   return html`<div class="reacts">
-    ${ta && html`<span class=${'rx p-' + app.partner} title=${nameOf(app.partner)}><b>${ta.e}</b><i>${avatarOf(app.partner)}</i></span>`}
-    ${mine &&
-    html`<button type="button" class=${'rx mine p-' + app.me} title="再点一下取消" onClick=${() => choose(mine.e)}><b>${mine.e}</b><i>${avatarOf(app.me)}</i></button>`}
+    ${ta && html`<${ReactBadge} r=${ta} />`}
+    ${mine && html`<${ReactBadge} r=${mine} mine onClick=${() => choose(mine.e)} />`}
     ${open
-      ? html`<span class="rx-pick">${opts.map((e) => html`<button type="button" onClick=${() => choose(e)}>${e}</button>`)}
-          <button type="button" class="rx-close" onClick=${() => setOpen(false)}>✕</button></span>`
-      : html`<button type="button" class="rx-add" aria-label="回应" onClick=${() => setOpen(true)}>＋ 回应</button>`}
+      ? html`<span class="rx-pick">${(REACT_SETS[set] || REACT_SETS.def).map((k) => html`<button type="button" title=${ST_LABEL[k]} onClick=${() => choose(k)}><${St} id=${stId(app.me, k)} size=${38} /></button>`)}
+          <button type="button" class="rx-close" aria-label="收起" onClick=${() => setOpen(false)}>✕</button></span>`
+      : html`<button type="button" class="rx-add" onClick=${() => setOpen(true)}>＋ 回应</button>`}
   </div>`;
 }
 
@@ -244,3 +274,8 @@ export function AutoText({ value, onInput, placeholder, rows = 3, maxLength = 40
 export function confirmDel(text = '确定删除吗？') {
   return window.confirm(text);
 }
+
+export const strip = (x) => {
+  const { id, _t, _by, ...rest } = x;
+  return rest;
+};

@@ -2,24 +2,29 @@
 // plus the "一起模式" watcher (phase changes, quiet state, auto-logging).
 // Nothing here keeps score: no streaks, no read receipts, no comparisons.
 
-import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, MOODS } from './ctx.js?v=efe89b71a3';
-import { derive, session, isMember, quietOf, logSession, end, MODES, join } from './together.js?v=efe89b71a3';
-import { pick } from './util.js?v=efe89b71a3';
+import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=d7c13ae0f9';
+import { derive, session, isMember, quietOf, logSession, end, MODES, join } from './together.js?v=d7c13ae0f9';
+import { pick } from './util.js?v=d7c13ae0f9';
 
 const short = (s, n = 18) => {
   s = String(s || '').replace(/\s+/g, ' ').trim();
   return s.length > n ? s.slice(0, n) + '…' : s;
 };
 const ta = () => nameOf(app.partner);
+const taSt = (k) => stId(app.partner, k);
+const modeSt = (m, who = app.partner) => (m.st && m.st.startsWith('d-') ? m.st : stId(who, m.st || 'hi'));
 const go = (hash) => () => { location.hash = hash; };
 
+// quick, friendly nudges (each person sends their own character's sticker)
 export const POKE_KINDS = {
-  poke: { icon: '👉', label: '戳一下', texts: ['戳了戳你', '戳了戳你的脸', '戳了戳你的肩膀', '轻轻戳了你一下', '戳戳戳～', '戳了戳你的小脑袋'] },
-  hug: { icon: '🫂', label: '抱抱', texts: ['抱了抱你', '给你一个大大的拥抱', '把你抱紧紧'] },
-  listen: { icon: '👂', label: '我在听', texts: ['说：我在听，你慢慢说', '搬好小板凳听你吐槽'] },
-  heart: { icon: '💗', label: '比心', texts: ['给你比了个心', '说：在想你'] },
-  cheer: { icon: '💪', label: '加油', texts: ['给你加油打气', '说：你超棒的！'] },
+  poke: { st: 'poke', label: '戳一下', texts: ['戳了戳你', '轻轻戳了你一下', '戳戳戳～', '戳了戳你的小脑袋'] },
+  pat: { st: 'pat', label: '拍拍', texts: ['拍了拍你', '拍拍你，辛苦啦'] },
+  listen: { st: 'listen', label: '我在听', texts: ['说：我在听，你慢慢说', '搬好小板凳听你说'] },
+  cheer: { st: 'cheer', label: '加油', texts: ['给你加油打气', '说：你可以的！'] },
+  hi: { st: 'hi', label: '打招呼', texts: ['跟你打了个招呼', '说：嗨～'] },
 };
+// old records may still say "hug" / "heart"
+const pokeKind = (k) => POKE_KINDS[k] || POKE_KINDS[k === 'hug' ? 'pat' : k === 'heart' ? 'hi' : 'poke'];
 
 const lastPoke = {};
 /** returns false when the same kind is tapped too fast (keeps the brokers happy) */
@@ -27,7 +32,7 @@ export function poke(kind = 'poke') {
   const now = Date.now();
   if (now - (lastPoke[kind] || 0) < 900) return false;
   lastPoke[kind] = now;
-  const k = POKE_KINDS[kind] || POKE_KINDS.poke;
+  const k = pokeKind(kind);
   app.store.put('poke', app.me, { at: now, kind, v: pick(k.texts) });
   return true;
 }
@@ -48,6 +53,8 @@ document.addEventListener('visibilitychange', () => {
   if (chatVisible()) markChatRead();
 });
 
+const chatPreview = (x) => (x.st ? `[${stLabel(x.st) || '表情'}]` : x.emo ? x.text : short(x.text, 40));
+
 function newChat(r, live) {
   if (live) bus.emit('chat:new', r.x);
   if (chatVisible()) return;
@@ -55,7 +62,7 @@ function newChat(r, live) {
   bus.emit('unread', app.unread);
   if (!live) return;
   if (!app.quiet) chime('soft');
-  notify(`${ta()} 发来消息`, r.x.emo ? r.x.text : short(r.x.text, 40));
+  notify(`${ta()} 发来消息`, chatPreview(r.x));
 }
 
 // ---------- live toasts ----------
@@ -68,8 +75,8 @@ function onLive(r, prev) {
   if (r.c === 'poke') {
     if (!x || (px && px.at === x.at)) return;
     if (Date.now() - (x.at - (app.sync?.skew || 0)) > 180000) return;
-    const k = POKE_KINDS[x.kind] || POKE_KINDS.poke;
-    toast(`${ta()} ${x.v || k.texts[0]}`, { icon: k.icon, kind: 'poke' });
+    const k = pokeKind(x.kind);
+    toast(`${ta()} ${x.v || k.texts[0]}`, { icon: taSt(k.st), kind: 'poke' });
     if (!app.quiet) vibrate([40, 70, 40]);
     chime('poke');
     bus.emit('poked', x);
@@ -83,7 +90,7 @@ function onLive(r, prev) {
   if (!x) return;
   switch (r.c) {
     case 'task':
-      if (x.done && !(px && px.done)) toast(`${ta()} 勾掉了「${short(x.text)}」`, { icon: '✅', kind: 'soft' });
+      if (x.done && !(px && px.done)) toast(`${ta()} 勾掉了「${short(x.text)}」`, { icon: taSt('done'), kind: 'soft' });
       break;
     case 'qc': {
       const n = x.n || 0;
@@ -92,17 +99,19 @@ function onLive(r, prev) {
       const now = Date.now();
       qBurst = now - qToastAt < 15000 ? qBurst + (n - was) : n - was;
       qToastAt = now;
-      toast(qBurst > 1 ? `${ta()} 又做完 ${qBurst} 道题啦` : `${ta()} 做完一道题 ✏️`, { icon: '✏️', kind: 'soft', ms: 3200 });
+      toast(qBurst > 1 ? `${ta()} 又做完 ${qBurst} 道题啦` : `${ta()} 做完一道题`, { icon: taSt('study'), kind: 'soft', ms: 3200 });
       break;
     }
     case 'status': {
       if (x.need && x.need !== (px && px.need)) {
         const n = NEEDS.find((v) => v.k === x.need);
-        if (n) toast(`${ta()} 现在「${n.label}」`, { icon: n.icon, ms: 5200, action: x.need === 'chat' ? { label: '去聊天', fn: go('#/together') } : null });
-        if (n) notify('偏心我', `${ta()} 现在「${n.label}」`);
+        if (n) {
+          toast(`${ta()} 现在「${n.label}」`, { icon: taSt(n.st), ms: 5200, action: x.need === 'chat' ? { label: '去聊天', fn: () => bus.emit('chat:open') } : null });
+          notify('偏心我', `${ta()} 现在「${n.label}」`);
+        }
       } else if (x.mood && x.mood !== (px && px.mood)) {
-        const m = MOODS.find((v) => v[0] === x.mood);
-        toast(`${ta()} 的心情：${m ? m[1] : ''}`, { icon: x.mood, kind: 'soft', ms: 3200 });
+        const m = moodOf(x.mood);
+        if (m) toast(`${ta()} 的心情：${m.label}`, { icon: taSt(m.st), kind: 'soft', ms: 3200 });
       }
       break;
     }
@@ -110,15 +119,15 @@ function onLive(r, prev) {
       const m = MODES[x.mode] || MODES.study;
       if (x.sid && x.sid !== (px && px.sid) && !x.ended) {
         toast(`${ta()} 开始了「一起${m.label}」，要来吗？`, {
-          icon: m.emoji,
+          icon: modeSt(m),
           ms: 12000,
           action: { label: '加入', fn: () => { join(); location.hash = '#/together'; } },
         });
         notify('偏心我', `${ta()} 开始了「一起${m.label}」`);
       } else if (x.ended && !x.natural && px && !px.ended && x.sid === px.sid && isMember(x)) {
-        toast(`${ta()} 结束了这次一起${m.label}`, { icon: m.emoji, kind: 'soft' });
+        toast(`${ta()} 结束了这次一起${m.label}`, { icon: taSt('salute'), kind: 'soft' });
       } else if (px && x.sid === px.sid && x.paused !== px.paused && isMember(x)) {
-        toast(x.paused ? `${ta()} 暂停了计时` : `${ta()} 继续了计时`, { icon: x.paused ? '⏸️' : '▶️', kind: 'soft', ms: 2600 });
+        toast(x.paused ? `${ta()} 暂停了计时` : `${ta()} 继续了计时`, { icon: taSt(x.paused ? 'tea' : 'cheer'), kind: 'soft', ms: 2600 });
       }
       break;
     }
@@ -126,59 +135,61 @@ function onLive(r, prev) {
       const s = session();
       const m = (s && MODES[s.mode]) || MODES.study;
       if (x.sid && s && x.sid === s.sid && !(px && px.sid === x.sid) && isMember(s)) {
-        toast(`${ta()} 来陪你${m.label}啦`, { icon: m.emoji });
+        toast(`${ta()} 加入了，一起${m.label}`, { icon: taSt('hi') });
       } else if (!x.sid && px && px.sid && s && px.sid === s.sid && isMember(s)) {
-        toast(`${ta()} 先离开一下`, { icon: '🚪', kind: 'soft' });
+        toast(`${ta()} 先离开一下`, { icon: taSt('salute'), kind: 'soft' });
       }
       break;
     }
     case 'journal':
       if (!px) {
         const toMe = x.to === 'ta';
-        toast(toMe ? `${ta()} 对你说了一段话` : `${ta()} 记录了今天的小事`, {
-          icon: toMe ? '💌' : '📔',
+        toast(toMe ? `${ta()} 给你留了一段话` : `${ta()} 记录了今天的小事`, {
+          icon: taSt(toMe ? 'idea' : 'read'),
           action: { label: '去看看', fn: go('#/journal/' + x.day) },
         });
-        if (toMe) notify('偏心我', `${ta()} 对你说了一段话 💌`);
+        if (toMe) notify('偏心我', `${ta()} 给你留了一段话`);
       }
       break;
     case 'workout':
-      if (!px) toast(`${ta()} 运动了 ${x.min || ''} 分钟`, { icon: '💪', action: { label: '去夸夸', fn: go('#/fit') } });
+      if (!px) toast(`${ta()} 运动了 ${x.min || ''} 分钟`, { icon: taSt('run'), action: { label: '去夸夸', fn: go('#/life/fit') } });
       break;
     case 'meal':
-      if (!px) toast(`${ta()} 吃了：${short(x.text, 14)}`, { icon: '🍚', kind: 'soft', action: { label: '看看', fn: go('#/food') } });
+      if (!px) toast(`${ta()} 吃了：${short(x.text, 14)}`, { icon: taSt('eat'), kind: 'soft', action: { label: '看看', fn: go('#/life/meal') } });
       break;
     case 'recipe':
-      if (!px) toast(`${ta()} 扔上来一个菜谱「${short(x.name, 12)}」`, { icon: '📖', action: { label: '看看', fn: go('#/food/recipe') } });
+      if (!px) toast(`${ta()} 分享了一个菜谱「${short(x.name, 12)}」`, { icon: taSt('idea'), action: { label: '看看', fn: go('#/life/recipe') } });
       break;
     case 'wish':
-      if (!px) toast(`${ta()} 想吃「${short(x.name, 12)}」`, { icon: '🤤', action: { label: '看看', fn: go('#/food/wish') } });
-      else if (x.done && !px.done) toast(`${ta()} 把「${short(x.name, 12)}」标成吃到啦`, { icon: '😋', kind: 'soft' });
+      if (!px) toast(`${ta()} 想吃「${short(x.name, 12)}」`, { icon: taSt('eat'), action: { label: '看看', fn: go('#/life/wish') } });
+      else if (x.done && !px.done) toast(`${ta()} 把「${short(x.name, 12)}」标成吃到啦`, { icon: taSt('ok'), kind: 'soft' });
       break;
     case 'idea':
-      if (!px) toast(`${ta()} 往点子罐里扔了点子（先不偷看）`, { icon: '🫙', kind: 'soft' });
-      else if (x.drawn && !px.drawn) toast(`${ta()} 从点子罐里摇出了「${short(x.text, 14)}」`, { icon: '🎲', action: { label: '看看', fn: go('#/cal') } });
+      if (!px) toast(`${ta()} 往点子罐里放了一个点子（先不偷看）`, { icon: taSt('idea'), kind: 'soft' });
+      else if (x.drawn && !px.drawn) toast(`${ta()} 从点子罐里摇出了「${short(x.text, 14)}」`, { icon: taSt('cheer'), action: { label: '看看', fn: go('#/cal') } });
       break;
     case 'anniv':
     case 'meet':
     case 'plan':
       if (!px) {
         const label = r.c === 'meet' ? `见面：${x.date}` : short(x.title, 14);
-        toast(`${ta()} 在小日历上加了「${label}」`, { icon: r.c === 'meet' ? '🚄' : '📅', action: { label: '看看', fn: go('#/cal') } });
+        toast(`${ta()} 在日历上加了「${label}」`, { icon: taSt(r.c === 'meet' ? 'hi' : 'idea'), action: { label: '看看', fn: go('#/cal') } });
       }
       break;
     case 'react': {
       if (px && px.e === x.e) break;
       const [col, id] = String(x.t || '').split('/');
       const author = app.store.rec(col, id)?.by;
-      if (author === app.me) toast(`${ta()} 回应了你 ${x.e}`, { icon: x.e, kind: 'soft', ms: 3000 });
+      if (author !== app.me) break;
+      const isKey = !!stLabel(stId(app.partner, x.e)) && !/\p{Extended_Pictographic}/u.test(x.e);
+      toast(`${ta()} 回应了你${isKey ? `：${stLabel(stId(app.partner, x.e))}` : ` ${x.e}`}`, { icon: isKey ? stId(app.partner, x.e) : x.e, kind: 'soft', ms: 3000 });
       break;
     }
     case 'cmt': {
       if (px) break;
       const [col, id] = String(x.t || '').split('/');
       const author = app.store.rec(col, id)?.by;
-      if (author === app.me) toast(`${ta()} 回你：${short(x.text, 16)}`, { icon: '💬' });
+      if (author === app.me) toast(`${ta()} 回你：${short(x.text, 16)}`, { icon: taSt('hi') });
       break;
     }
     default:
@@ -189,15 +200,15 @@ function onLive(r, prev) {
 // ---------- "while you were away" summary ----------
 const AWAY = {
   chat: (n) => `发了 ${n} 条消息`,
-  journalTa: (n) => `对你说了 ${n} 段话`,
+  journalTa: (n) => `给你留了 ${n} 段话`,
   journal: (n) => `记录了 ${n} 件小事`,
   poke: () => '戳过你',
   workout: (n) => `运动了 ${n} 次`,
   meal: (n) => `记了 ${n} 顿饭`,
-  recipe: (n) => `扔上来 ${n} 个菜谱`,
+  recipe: (n) => `分享了 ${n} 个菜谱`,
   wish: (n) => `想吃 ${n} 样东西`,
-  idea: (n) => `往点子罐扔了 ${n} 个点子`,
-  cal: () => '更新了小日历',
+  idea: (n) => `往点子罐放了 ${n} 个点子`,
+  cal: () => '更新了日历',
 };
 
 function summarize(since, countUnread) {
@@ -223,8 +234,8 @@ function summarize(since, countUnread) {
   if (!c.size) return;
   const parts = [];
   for (const k of Object.keys(AWAY)) if (c.has(k)) parts.push(AWAY[k](c.get(k)));
-  const target = c.has('journalTa') || c.has('journal') ? '#/journal' : c.has('chat') ? '#/together' : c.has('cal') ? '#/cal' : '';
-  toast(`欢迎回来～你不在的时候，${ta()} ${parts.join('、')}`, { icon: '🌷', ms: 9000, action: target ? { label: '去看看', fn: go(target) } : null });
+  const fn = c.has('journalTa') || c.has('journal') ? go('#/journal') : c.has('chat') ? () => bus.emit('chat:open') : c.has('cal') ? go('#/cal') : null;
+  toast(`欢迎回来～你不在的时候，${ta()} ${parts.join('、')}`, { icon: taSt('hi'), ms: 9000, action: fn ? { label: '去看看', fn } : null });
 }
 
 export function startFeed() {
@@ -288,15 +299,15 @@ export function startWatcher() {
           const m = d.mode || MODES[s.mode] || MODES.study;
           if (d.state === 'done' || naturalIdle) {
             chime('end', true);
-            toast(`一起${m.label}圆满结束啦，辛苦啦`, { icon: '🎉', ms: 6000 });
+            toast(`一起${m.label}结束啦，辛苦啦`, { icon: 'd-yay', ms: 6000 });
             notify('偏心我', `一起${m.label}结束啦`);
           } else if (d.phase === 'break') {
             chime('bell', true);
-            toast('休息时间到～聊两句吧', { icon: '☕', ms: 5000 });
+            toast('休息时间到～可以聊两句了', { icon: stId(app.me, 'tea'), ms: 5000 });
             notify('偏心我', '休息时间到～');
           } else {
             chime('start', true);
-            toast(`第 ${d.round} 轮开始，一起加油`, { icon: m.emoji, ms: 3600 });
+            toast(`第 ${d.round} 轮开始，一起加油`, { icon: modeSt(m, app.me), ms: 3600 });
             notify('偏心我', `第 ${d.round} 轮开始啦`);
           }
         } catch (e) {

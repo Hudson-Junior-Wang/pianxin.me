@@ -1,24 +1,26 @@
-// 偏心我 · 健身专区 — 记录运动、这一周的小足迹、一起运动（不比较、不打分）
-import { html } from '../h.js?v=efe89b71a3';
+// 偏心我 · 运动（生活 › 运动）— 记录运动、这一周的小脚印、一起运动（不比较、不打分）
+import { html } from '../h.js?v=d7c13ae0f9';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, toast } from '../../lib/ctx.js?v=efe89b71a3';
-import { quickStart } from '../../lib/together.js?v=efe89b71a3';
-import { uid, today, addDays, weekStart, WEEK, parseDay, fmtDay, fmtHM, cx } from '../../lib/util.js?v=efe89b71a3';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, confirmDel } from '../common.js?v=efe89b71a3';
-import { strip } from './home.js?v=efe89b71a3';
+import { app, useCols, nameOf, toast, stId } from '../../lib/ctx.js?v=d7c13ae0f9';
+import { quickStart } from '../../lib/together.js?v=d7c13ae0f9';
+import { uid, today, addDays, weekStart, WEEK, parseDay, fmtDay, fmtHM, cx } from '../../lib/util.js?v=d7c13ae0f9';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=d7c13ae0f9';
+import { Icon } from '../icons.js?v=d7c13ae0f9';
 
 export const SPORTS = [
   ['🏃', '跑步'], ['🚶', '散步'], ['🚴', '骑车'], ['🏊', '游泳'], ['🧘', '瑜伽'], ['🏋️', '力量'],
   ['🤸', '拉伸'], ['🏸', '羽毛球'], ['🏀', '篮球'], ['⚽', '足球'], ['🧗', '攀岩'], ['💃', '跳舞'],
   ['🥾', '爬山'], ['🎾', '网球'], ['🏓', '乒乓'], ['✨', '其他'],
 ];
-const FEELS = [['😌', '轻松'], ['🙂', '刚好'], ['🥵', '好累'], ['🔥', '燃爆']];
+const FEELS = [['easy', '轻松', 'thanks'], ['ok', '刚好', 'ok'], ['tired', '好累', 'dizzy'], ['fire', '超爽', 'cheer']];
+const OLD_FEEL = { '😌': 'easy', '🙂': 'ok', '🥵': 'tired', '🔥': 'fire' };
+const feelOf = (f) => FEELS.find((x) => x[0] === (OLD_FEEL[f] || f));
 const MINS = [10, 20, 30, 45, 60, 90];
 
 function LogForm({ edit, onDone }) {
   const [sport, setSport] = useState(edit ? edit.sport : '🏃');
   const [min, setMin] = useState(edit ? edit.min : 30);
-  const [feel, setFeel] = useState(edit ? edit.feel || '' : '');
+  const [feel, setFeel] = useState(edit ? OLD_FEEL[edit.feel] || edit.feel || '' : '');
   const [note, setNote] = useState(edit ? edit.note || '' : '');
   const [photos, setPhotos] = useState(edit ? edit.photos || [] : []);
   const [day, setDay] = useState(edit ? edit.day : today());
@@ -29,7 +31,7 @@ function LogForm({ edit, onDone }) {
     if (edit) app.store.put('workout', edit.id, { ...strip(edit), ...data });
     else {
       app.store.put('workout', uid(), data);
-      toast(`记下来啦，${name} ${m} 分钟`, { icon: sport });
+      toast(`记下来啦，${name} ${m} 分钟`, { icon: stId(app.me, 'cheer') });
     }
     setNote('');
     setPhotos([]);
@@ -46,7 +48,7 @@ function LogForm({ edit, onDone }) {
     </div>
     <div class="row wrap">
       <span class="lbl">感觉</span>
-      <div class="chips">${FEELS.map(([e, l]) => html`<button type="button" class=${cx('chip', feel === e && 'on')} onClick=${() => setFeel(feel === e ? '' : e)}><span class="chip-i">${e}</span>${l}</button>`)}</div>
+      <div class="chips">${FEELS.map(([k, l, st]) => html`<button type="button" class=${cx('chip st-chip', feel === k && 'on')} onClick=${() => setFeel(feel === k ? '' : k)}><${St} id=${stId(app.me, st)} size=${26} title="" />${l}</button>`)}</div>
     </div>
     <div class="row wrap">
       <span class="lbl">日期</span>
@@ -68,11 +70,11 @@ function WeekStrip({ list }) {
   const t = today();
   return html`<section class="card week">
     <div class="card-hd">
-      <h3>这一周，我们动了动</h3>
+      <h3>这一周动了动</h3>
       <span class="row tight">
-        <button class="icon-btn" aria-label="上一周" onClick=${() => setOff(off - 1)}>‹</button>
+        <button class="icon-btn" aria-label="上一周" onClick=${() => setOff(off - 1)}><${Icon} n="left" size=${18} /></button>
         ${off !== 0 && html`<button class="btn xs ghost" onClick=${() => setOff(0)}>本周</button>`}
-        <button class="icon-btn" aria-label="下一周" disabled=${off >= 0} onClick=${() => setOff(off + 1)}>›</button>
+        <button class="icon-btn" aria-label="下一周" disabled=${off >= 0} onClick=${() => setOff(off + 1)}><${Icon} n="right" size=${18} /></button>
       </span>
     </div>
     <div class="week-row">
@@ -90,18 +92,20 @@ function WeekStrip({ list }) {
 
 function Item({ x, onEdit }) {
   const mine = x.who === app.me;
+  const f = feelOf(x.feel);
   return html`<article class=${cx('entry fit-item', 'p-' + x.who)}>
     <header class="entry-hd">
       <span class="fit-e">${x.sport}</span>
       <div class="entry-meta">
-        <b>${nameOf(x.who)} · ${x.name} ${x.min} 分钟 ${x.feel || ''}</b>
-        <small class="muted">${fmtDay(x.day)} ${x.at ? fmtHM(x.at) : ''}</small>
+        <b>${nameOf(x.who)} · ${x.name} ${x.min} 分钟</b>
+        <small class="muted">${fmtDay(x.day)} ${x.at ? fmtHM(x.at) : ''}${f ? ` · ${f[1]}` : ''}</small>
       </div>
-      ${mine && html`<span class="entry-ops"><button class="btn xs ghost" onClick=${() => onEdit(x)}>编辑</button><button class="btn xs ghost" onClick=${() => confirmDel('删除这条运动记录？') && app.store.del('workout', x.id)}>删除</button></span>`}
+      ${f && html`<${St} id=${stId(x.who, f[2])} size=${44} />`}
+      ${mine && html`<span class="entry-ops"><button class="icon-btn sm" aria-label="编辑" onClick=${() => onEdit(x)}><${Icon} n="edit" size=${16} /></button><button class="icon-btn sm" aria-label="删除" onClick=${() => confirmDel('删除这条运动记录？') && app.store.del('workout', x.id)}><${Icon} n="trash" size=${16} /></button></span>`}
     </header>
     ${x.note && html`<div class="entry-t">${x.note}</div>`}
     <${Photos} list=${x.photos} />
-    <${Reacts} target=${`workout/${x.id}`} opts=${['💪', '👏', '🔥', '🥹', '❤️']} />
+    <${Reacts} target=${`workout/${x.id}`} set="fit" />
   </article>`;
 }
 
@@ -110,20 +114,17 @@ export function Fit() {
   const [edit, setEdit] = useState(null);
   const [limit, setLimit] = useState(20);
   const list = app.store.list('workout').sort((a, b) => (b.day > a.day ? 1 : b.day < a.day ? -1 : (b.at || b._t) - (a.at || a._t)));
-  return html`<div class="page fit">
-    <div class="page-hd">
-      <h2>💪 健身专区</h2>
-      <button class="btn" onClick=${() => { quickStart('sport'); location.hash = '#/together'; }}>🏃 开始一起运动</button>
+  return html`<div class="cols">
+    <div class="col-a">
+      <button class="card cta" onClick=${() => { quickStart('sport'); location.hash = '#/together'; }}>
+        <${St} id="d-run" size=${64} title="" /><div><b>开始一起运动</b><small class="muted">同一个计时，各练各的</small></div><${Icon} n="right" />
+      </button>
+      ${edit ? html`<${LogForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${LogForm} key="new" />`}
+      <${WeekStrip} list=${list} />
     </div>
-    <div class="cols">
-      <div class="col-a">
-        ${edit ? html`<${LogForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${LogForm} key="new" />`}
-        <${WeekStrip} list=${list} />
-      </div>
-      <div class="col-b">
-        ${list.length ? list.slice(0, limit).map((x) => html`<${Item} key=${x.id} x=${x} onEdit=${setEdit} />`) : html`<${Empty} icon="🌿" text="还没有运动记录，散步十分钟也算哦" />`}
-        ${list.length > limit && html`<button class="btn ghost block" onClick=${() => setLimit(limit + 20)}>再看看更早的</button>`}
-      </div>
+    <div class="col-b">
+      ${list.length ? list.slice(0, limit).map((x) => html`<${Item} key=${x.id} x=${x} onEdit=${setEdit} />`) : html`<${Empty} st="run" text="还没有运动记录，散步十分钟也算哦" />`}
+      ${list.length > limit && html`<button class="btn ghost block" onClick=${() => setLimit(limit + 20)}>再看看更早的</button>`}
     </div>
   </div>`;
 }

@@ -1,57 +1,80 @@
-// 偏心我 · app entry
-import { html, render } from './ui/h.js?v=efe89b71a3';
+// 偏心我 · app entry & shell
+// wide screens: sidebar (nav) | page | chat column
+// phones:       top bar + page + bottom tabs, chat in a bottom sheet
+import { html, render } from './ui/h.js?v=d7c13ae0f9';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, avatarOf, toast, NEEDS } from './lib/ctx.js?v=efe89b71a3';
-import { Store } from './lib/store.js?v=efe89b71a3';
-import { Sync } from './lib/sync.js?v=efe89b71a3';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=efe89b71a3';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=efe89b71a3';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=efe89b71a3';
-import { cx, fmtClock } from './lib/util.js?v=efe89b71a3';
-import { Avatar, Dot } from './ui/common.js?v=efe89b71a3';
-import { Home } from './ui/pages/home.js?v=efe89b71a3';
-import { Together } from './ui/pages/together.js?v=efe89b71a3';
-import { Journal } from './ui/pages/journal.js?v=efe89b71a3';
-import { Fit } from './ui/pages/fit.js?v=efe89b71a3';
-import { Food } from './ui/pages/food.js?v=efe89b71a3';
-import { Cal } from './ui/pages/cal.js?v=efe89b71a3';
-import { Me } from './ui/pages/me.js?v=efe89b71a3';
+import { app, WHO, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf } from './lib/ctx.js?v=d7c13ae0f9';
+import { Store } from './lib/store.js?v=d7c13ae0f9';
+import { Sync } from './lib/sync.js?v=d7c13ae0f9';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=d7c13ae0f9';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=d7c13ae0f9';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=d7c13ae0f9';
+import { cx, fmtClock } from './lib/util.js?v=d7c13ae0f9';
+import { Avatar, Dot, St, Portal } from './ui/common.js?v=d7c13ae0f9';
+import { Icon } from './ui/icons.js?v=d7c13ae0f9';
+import { Chat } from './ui/chat.js?v=d7c13ae0f9';
+import { Home } from './ui/pages/home.js?v=d7c13ae0f9';
+import { Together } from './ui/pages/together.js?v=d7c13ae0f9';
+import { Journal } from './ui/pages/journal.js?v=d7c13ae0f9';
+import { Life } from './ui/pages/food.js?v=d7c13ae0f9';
+import { Cal } from './ui/pages/cal.js?v=d7c13ae0f9';
+import { Me } from './ui/pages/me.js?v=d7c13ae0f9';
 
-const PAGES = {
-  home: { label: '首页', icon: '🏠', C: Home },
-  together: { label: '一起', icon: '⏱️', C: Together },
-  journal: { label: '记录', icon: '📔', C: Journal },
-  fit: { label: '健身', icon: '💪', C: Fit },
-  food: { label: '吃饭', icon: '🍚', C: Food },
-  cal: { label: '小日历', icon: '📅', C: Cal },
-  me: { label: '设置', icon: '⚙️', C: Me },
-};
+const NAV = [
+  { k: 'home', label: '今天', icon: 'today', C: Home },
+  { k: 'together', label: '一起', icon: 'together', C: Together },
+  { k: 'journal', label: '记录', icon: 'journal', C: Journal },
+  { k: 'life', label: '生活', icon: 'life', C: Life },
+  { k: 'cal', label: '日历', icon: 'cal', C: Cal },
+];
+const PAGES = Object.fromEntries([...NAV.map((n) => [n.k, n]), ['me', { k: 'me', label: '设置', icon: 'gear', C: Me }]]);
+// old links keep working
+const ALIAS = { food: ['life', null], fit: ['life', 'fit'] };
 
 function parseHash() {
-  const h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  const [page, param] = h.split('/');
+  let h = location.hash.replace(/^#\/?/, '');
+  try { h = decodeURIComponent(h); } catch {}
+  let [page, param] = h.split('/');
+  if (ALIAS[page]) {
+    const [p, fixed] = ALIAS[page];
+    param = fixed || param;
+    page = p;
+  }
   return { page: PAGES[page] ? page : 'home', param: param || '' };
 }
 
-// ---------- header ----------
-function PartnerChip() {
+// ---------- small shared widgets ----------
+function UnreadBadge({ dot }) {
+  const force = useForce();
+  useBus('unread', force, []);
+  if (!app.unread) return null;
+  return dot ? html`<i class="nav-dot"></i>` : html`<i class="nav-badge">${app.unread > 99 ? '99+' : app.unread}</i>`;
+}
+
+function LiveDot() {
+  useCols(['together', 'tjoin']);
+  useNow(5000);
+  return derive(session(), Date.now()).state === 'run' ? html`<i class="nav-live"></i>` : null;
+}
+
+function PartnerMini() {
   useCols(['status', 'profile']);
   useSyncEvent('presence');
   const st = app.store.get('status', app.partner);
   const need = st && NEEDS.find((n) => n.k === st.need);
-  return html`<a class=${cx('partner-chip', 'p-' + app.partner)} href="#/" title=${nameOf(app.partner)}>
-    <${Avatar} who=${app.partner} size=${30} />
-    <span class="pc-t"><b>${nameOf(app.partner)}</b><small>${app.sync.isOnline(app.partner) ? '在线' : '不在线'}${st?.mood ? ' · ' + st.mood : ''}${need ? ' · ' + need.label : ''}</small></span>
-    <${Dot} on=${app.sync.isOnline(app.partner)} />
+  const mood = st && moodOf(st.mood);
+  const on = app.sync.isOnline(app.partner);
+  return html`<a class=${cx('partner-mini', 'p-' + app.partner)} href="#/">
+    <${Avatar} who=${app.partner} size=${36} />
+    <span class="pm-t"><b>${nameOf(app.partner)} <${Dot} on=${on} /></b><small>${need ? need.label : mood ? mood.label : on ? '在线' : '不在线'}</small></span>
   </a>`;
 }
 
 function NetPill() {
   useSyncEvent(['net', 'sweep']);
-  const online = app.sync.online;
   const sw = app.sync.sweepState;
   if (sw) return html`<span class="pill">同步中 ${sw.done}/${sw.total}</span>`;
-  if (!online) return html`<span class="pill warn" title="网络恢复后会自动同步">离线中</span>`;
+  if (!app.sync.online) return html`<span class="pill warn" title="网络恢复后会自动同步">离线中</span>`;
   return null;
 }
 
@@ -61,64 +84,101 @@ function TimerPill() {
   const s = session();
   const d = derive(s, now);
   if (d.state !== 'run') return null;
-  return html`<a class=${cx('pill timer', d.phase, d.paused && 'paused')} href="#/together">${d.mode.emoji} ${isMember(s) ? phaseText(d) : '一起' + d.mode.label} ${fmtClock(d.remaining)}</a>`;
+  return html`<a class=${cx('pill timer', d.phase, d.paused && 'paused')} href="#/together"><${Icon} n="clock" size=${14} /> ${isMember(s) ? phaseText(d) : '一起' + d.mode.label} ${fmtClock(d.remaining)}</a>`;
 }
 
-function Header({ route }) {
-  const [poked, setPoked] = useState(0);
+function PokeBtn({ cls }) {
+  const [pop, setPop] = useState(0);
+  const go = () => {
+    if (!poke('poke')) return;
+    setPop(Date.now());
+    toast(`戳了戳 ${nameOf(app.partner)}`, { icon: stId(app.me, 'poke'), kind: 'soft', ms: 1800 });
+  };
+  return html`<button class=${cx('poke-mini', cls, pop && 'pop')} key=${pop} title="戳一下" aria-label="戳一下" onClick=${go}><${St} id=${stId(app.me, 'poke')} size=${34} title="" /></button>`;
+}
+
+// ---------- wide layout ----------
+function Sidebar({ route }) {
+  useCols(['profile']);
+  return html`<aside class="side">
+    <a class="brand" href="#/"><img src="/app/icon-192.png" alt="" /><span>偏心我</span></a>
+    <nav class="side-nav">
+      ${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('sn', route.page === n.k && 'on')}>
+        <${Icon} n=${n.icon} size=${22} /><span>${n.label}</span>${n.k === 'together' ? html`<${LiveDot} />` : null}
+      </a>`)}
+    </nav>
+    <span class="sp"></span>
+    <div class="side-me">
+      <${Avatar} who=${app.me} size=${36} />
+      <span class="sm-t"><b>${nameOf(app.me)}</b><small>我</small></span>
+      <a class=${cx('icon-btn', route.page === 'me' && 'on')} href="#/me" aria-label="设置"><${Icon} n="gear" /></a>
+    </div>
+  </aside>`;
+}
+
+function ChatColumn() {
   const force = useForce();
   useBus('quiet', force, []);
-  const doPoke = () => {
-    if (!poke('poke')) return;
-    setPoked(Date.now());
-    toast(`戳了戳 ${nameOf(app.partner)}`, { icon: '👉', kind: 'soft', ms: 2000 });
-  };
-  return html`<header class="hd">
-    <div class="hd-in">
-      <a class="logo" href="#/"><span class="logo-h">♥</span><span>偏心我</span></a>
-      <nav class="tabs">${Object.entries(PAGES).filter(([k]) => k !== 'me').map(([k, p]) => html`<a href=${'#/' + (k === 'home' ? '' : k)} class=${cx('tab', route.page === k && 'on')}>${p.label}<${TabBadge} k=${k} /></a>`)}</nav>
-      <span class="sp"></span>
-      ${app.focus && html`<span class="pill focus">🤫 专注中</span>`}
-      <${TimerPill} />
-      <${NetPill} />
-      <button class=${cx('poke-mini', poked && 'pop')} key=${poked} title="戳一下" aria-label="戳一下" onClick=${doPoke}>👉</button>
-      <${PartnerChip} />
-      <a class=${cx('icon-btn gear', route.page === 'me' && 'on')} href="#/me" aria-label="设置">⚙️</a>
-    </div>
+  return html`<aside class="chat-col"><${Chat} quiet=${app.focus} /></aside>`;
+}
+
+// ---------- phone layout ----------
+function TopBar({ route }) {
+  return html`<header class="topbar">
+    <${PartnerMini} />
+    <span class="sp"></span>
+    <${NetPill} />
+    <${PokeBtn} />
+    <button class="icon-btn chat-btn" aria-label="聊天" onClick=${() => bus.emit('chat:open')}><${Icon} n="chat" /><${UnreadBadge} /></button>
+    <a class=${cx('icon-btn', route.page === 'me' && 'on')} href="#/me" aria-label="设置"><${Icon} n="gear" /></a>
   </header>`;
 }
 
-function TabBadge({ k }) {
-  const force = useForce();
-  useBus('unread', force, []);
-  useCols(['together', 'tjoin']);
-  if (k === 'together') {
-    const d = derive(session(), Date.now());
-    if (app.unread > 0) return html`<i class="tab-badge">${app.unread > 99 ? '99+' : app.unread}</i>`;
-    if (d.state === 'run') return html`<i class="tab-dot"></i>`;
-  }
-  return null;
+function TabBar({ route }) {
+  return html`<nav class="tabbar">${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('tb', route.page === n.k && 'on')}>
+    <span class="tb-i"><${Icon} n=${n.icon} size=${24} />${n.k === 'together' ? html`<${LiveDot} />` : null}</span><small>${n.label}</small>
+  </a>`)}</nav>`;
 }
 
-function BottomNav({ route }) {
-  return html`<nav class="bnav">${Object.entries(PAGES).filter(([k]) => k !== 'me').map(([k, p]) => html`<a href=${'#/' + (k === 'home' ? '' : k)} class=${cx('bn', route.page === k && 'on')}><span class="bn-i">${p.icon}<${TabBadge} k=${k} /></span><small>${p.label}</small></a>`)}</nav>`;
+function ChatSheet({ onClose }) {
+  const force = useForce();
+  useBus('quiet', force, []);
+  useEffect(() => {
+    document.body.classList.add('noscroll');
+    const k = (e) => e.key === 'Escape' && onClose();
+    addEventListener('keydown', k);
+    return () => {
+      document.body.classList.remove('noscroll');
+      removeEventListener('keydown', k);
+    };
+  }, []);
+  return html`<${Portal}>
+    <div class="sheet-bg" onClick=${(e) => e.target === e.currentTarget && onClose()}>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="聊天"><${Chat} quiet=${app.focus} onClose=${onClose} /></div>
+    </div>
+  <//>`;
 }
 
 function Toasts() {
   const list = useToasts();
   return html`<div class="toasts" aria-live="polite">${list.map(
     (t) => html`<div key=${t.id} class=${cx('toast', t.kind)} onClick=${() => dismissToast(t.id)}>
-      <span class="toast-i">${t.icon}</span><span class="toast-t">${t.text}</span>
+      ${isSt(t.icon) ? html`<${St} id=${t.icon} size=${44} cls="toast-st" title="" />` : html`<span class="toast-i">${t.icon}</span>`}
+      <span class="toast-t">${t.text}</span>
       ${t.action && html`<button class="btn xs" onClick=${(e) => { e.stopPropagation(); dismissToast(t.id); t.action.fn(); }}>${t.action.label}</button>`}
     </div>`,
   )}</div>`;
 }
 
 function App() {
+  useCols('profile');
   const [route, setRoute] = useState(parseHash());
+  const [sheet, setSheet] = useState(false);
   const force = useForce();
   useBus('quiet', force, []);
-  const wide = useMedia('(min-width: 900px)');
+  const wide = useMedia('(min-width: 1100px)');
+  const mid = useMedia('(min-width: 760px)');
+  useEffect(() => { if (wide) setSheet(false); }, [wide]);
   useEffect(() => {
     let last = route.page;
     const f = () => {
@@ -126,15 +186,25 @@ function App() {
       if (r.page !== last) scrollTo(0, 0);
       last = r.page;
       setRoute(r);
+      setSheet(false);
     };
     addEventListener('hashchange', f);
     return () => removeEventListener('hashchange', f);
   }, []);
+  useBus('chat:open', () => {
+    if (!matchMedia('(min-width: 1100px)').matches) setSheet(true);
+    else document.querySelector('.chat-col .chat-ta, .chat-col .st-quick button')?.focus();
+  }, []);
   const P = PAGES[route.page].C;
-  return html`<div class=${cx('shell', app.focus && 'focus-mode', 'me-' + app.me)}>
-    <${Header} route=${route} />
-    <main class="main"><${P} param=${route.param} /></main>
-    ${!wide && html`<${BottomNav} route=${route} />`}
+  return html`<div class=${cx('shell', wide ? 'wide' : mid ? 'mid' : 'narrow', app.focus && 'focus-mode', 'me-' + app.me, 'ch-' + chOf(app.me))}>
+    ${mid ? html`<${Sidebar} route=${route} />` : html`<${TopBar} route=${route} />`}
+    <main class="main">
+      ${mid && html`<div class="main-top"><span class="sp"></span><${TimerPill} /><${NetPill} /><${PokeBtn} />${!wide && html`<button class="icon-btn chat-btn" aria-label="聊天" onClick=${() => setSheet(true)}><${Icon} n="chat" /><${UnreadBadge} /></button>`}</div>`}
+      <${P} param=${route.param} />
+    </main>
+    ${wide && html`<${ChatColumn} />`}
+    ${!mid && html`<${TabBar} route=${route} />`}
+    ${!wide && sheet && html`<${ChatSheet} onClose=${() => setSheet(false)} />`}
     <${Toasts} />
   </div>`;
 }
@@ -146,6 +216,7 @@ function Lock({ onDone }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [res, setRes] = useState(null);
+  const ch = app.me === 'xiaoha' ? 'r' : 'b';
   const submit = async (e) => {
     e.preventDefault();
     if (pw.trim().length < 6) return setErr('暗号至少 6 个字，长一点更安全');
@@ -166,7 +237,7 @@ function Lock({ onDone }) {
   };
   return html`<div class="lock">
     <div class="lock-card">
-      <div class="lock-heart">♥</div>
+      <${St} id=${res ? `${ch}-ok` : busy ? `${ch}-study` : `${ch}-hi`} size=${120} title="" />
       <h1>偏心我</h1>
       <p class="lock-hi">你好呀，<b>${app.me}</b></p>
       ${res
@@ -178,7 +249,7 @@ function Lock({ onDone }) {
             <button class="link sm" onClick=${() => setRes(null)}>重新输入</button>
           </div>`
         : html`<form onSubmit=${submit}>
-            <p class="hint">输入你们俩约定好的暗号。两个人要输入<b>一模一样</b>的暗号，才会进到同一个小空间。</p>
+            <p class="hint">输入你们约定好的暗号。两个人要输入<b>一模一样</b>的暗号，才会进到同一个小空间。</p>
             <div class="pw-row">
               <input class="inp" type=${show ? 'text' : 'password'} autocomplete="current-password" placeholder="我们的暗号" value=${pw} onInput=${(e) => setPw(e.target.value)} autoFocus />
               <button type="button" class="btn ghost sm" onClick=${() => setShow(!show)}>${show ? '隐藏' : '显示'}</button>
@@ -217,7 +288,9 @@ async function start(seed) {
   if (room !== kr.room) await store.setMeta('room', kr.room);
   const o = new Date().getTimezoneOffset();
   if (store.get('tz', app.me)?.o !== o) store.put('tz', app.me, { o });
-  if (!store.get('profile', app.me)) store.put('profile', app.me, { name: app.me, avatar: app.me === 'xiaoha' ? '🐰' : '🐻' });
+  const prof = store.get('profile', app.me);
+  if (!prof) store.put('profile', app.me, { name: app.me, ch: app.me === 'xiaoha' ? 'bunny' : 'bear' });
+  else if (!prof.ch) store.put('profile', app.me, { ...prof, ch: app.me === 'xiaoha' ? 'bunny' : 'bear' });
 
   startFeed();
   startWatcher();
@@ -226,7 +299,7 @@ async function start(seed) {
   });
   document.title = `偏心我 · ${nameOf(app.me)}`;
   sync.on((type, h) => {
-    if (type === 'live' && h.e === 'toast') toast(h.text, { icon: h.icon || '💗' });
+    if (type === 'live' && h.e === 'toast') toast(h.text, { icon: h.icon || stId(app.partner, 'hi') });
   });
   await sync.start();
   render(html`<${App} />`, root);

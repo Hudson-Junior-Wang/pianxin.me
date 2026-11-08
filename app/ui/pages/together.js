@@ -1,12 +1,14 @@
-// 偏心我 · 一起模式 — 同步计时 + 聊天 + 互相可见的草稿栏 + 今日任务
-import { html } from '../h.js?v=efe89b71a3';
-import { useState, useEffect, useRef, useLayoutEffect, useMemo } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, useMedia, nameOf, avatarOf, toast, MOODS } from '../../lib/ctx.js?v=efe89b71a3';
-import { MODES, MODE_KEYS, derive, session, members, isMember, quietOf, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=efe89b71a3';
-import { markChatRead } from '../../lib/feed.js?v=efe89b71a3';
-import { uid, fmtClock, fmtHM, fmtMin, throttle, cx, dayKey, fmtDay } from '../../lib/util.js?v=efe89b71a3';
-import { Avatar, Dot, confirmDel } from '../common.js?v=efe89b71a3';
-import { TaskList, PokeBar } from './home.js?v=efe89b71a3';
+// 偏心我 · 一起模式 — 同步计时 + 互相可见的草稿栏 + 今日任务（聊天在右栏 / 底部抽屉）
+import { html } from '../h.js?v=d7c13ae0f9';
+import { useState, useEffect, useRef } from '../../vendor/hooks.js';
+import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=d7c13ae0f9';
+import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=d7c13ae0f9';
+import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=d7c13ae0f9';
+import { Avatar, Dot, St, confirmDel } from '../common.js?v=d7c13ae0f9';
+import { Icon } from '../icons.js?v=d7c13ae0f9';
+import { TaskList } from './home.js?v=d7c13ae0f9';
+
+const modeSticker = (m, who = app.me) => (m.st.startsWith('d-') ? m.st : stId(who, m.st));
 
 // ---------- timer ----------
 function Ring({ frac, phase, children }) {
@@ -50,10 +52,11 @@ function Pick({ label, value, options, onChange, fmt = minLabel, zero }) {
   </div>`;
 }
 
-function Setup() {
+function Setup({ initial }) {
   const all = loadCfg();
-  const [mode, setMode] = useState(all._mode && MODES[all._mode] ? all._mode : 'study');
-  const [cfg, setCfg] = useState(() => cfgFor(all, mode));
+  const first = MODES[initial] ? initial : all._mode && MODES[all._mode] ? all._mode : 'study';
+  const [mode, setMode] = useState(first);
+  const [cfg, setCfg] = useState(() => cfgFor(all, first));
   const m = MODES[mode];
   const choose = (k) => {
     setMode(k);
@@ -68,30 +71,34 @@ function Setup() {
   };
   const total = cfg.rounds ? cfg.focus * cfg.rounds + (m.brk.length ? cfg.brk * Math.max(0, cfg.rounds - 1) : 0) : 0;
   return html`<section class="card setup">
-    <h3>想一起做点什么？</h3>
+    <div class="card-hd"><h3>想一起做点什么？</h3></div>
     <div class="mode-grid">
-      ${MODE_KEYS.map((k) => html`<button type="button" class=${cx('mode-b', k === mode && 'on')} onClick=${() => choose(k)}><span>${MODES[k].emoji}</span>${MODES[k].label}</button>`)}
+      ${MODE_KEYS.map((k) => html`<button type="button" class=${cx('mode-b', k === mode && 'on')} onClick=${() => choose(k)}>
+        <${St} id=${modeSticker(MODES[k])} size=${64} title="" /><span>${MODES[k].label}</span>
+      </button>`)}
     </div>
-    <${Pick} key=${mode + 'f'} label=${mode === 'study' || mode === 'read' ? '专注' : '时长'} value=${cfg.focus} options=${m.focus} onChange=${(v) => setCfg({ ...cfg, focus: v })} />
-    ${m.brk.length > 0 && html`<${Pick} key=${mode + 'b'} label="休息" value=${cfg.brk} options=${m.brk} zero="不休息" onChange=${(v) => setCfg({ ...cfg, brk: v })} />`}
-    ${m.rounds.length > 0 && html`<${Pick} key=${mode + 'r'} label="轮数" value=${cfg.rounds} options=${m.rounds} zero="不限" fmt=${(v) => `${v} 轮`} onChange=${(v) => setCfg({ ...cfg, rounds: v })} />`}
-    <p class="hint">${m.quiet ? '专注时聊天会自动收起、静音，只能发表情；休息时再展开。' : '这个模式聊天一直开着，边做边聊。'}${total ? ` 大约 ${fmtMin(total)}。` : ''}</p>
-    <button class="btn big" onClick=${go}>${m.emoji} 开始一起${m.label}</button>
-    <p class="hint center">开始后 ${nameOf(app.partner)} 会收到邀请，你们看到的是同一个计时。</p>
+    <div class="setup-opts">
+      <${Pick} key=${mode + 'f'} label=${mode === 'study' || mode === 'read' ? '专注' : '时长'} value=${cfg.focus} options=${m.focus} onChange=${(v) => setCfg({ ...cfg, focus: v })} />
+      ${m.brk.length > 0 && html`<${Pick} key=${mode + 'b'} label="休息" value=${cfg.brk} options=${m.brk} zero="不休息" onChange=${(v) => setCfg({ ...cfg, brk: v })} />`}
+      ${m.rounds.length > 0 && html`<${Pick} key=${mode + 'r'} label="轮数" value=${cfg.rounds} options=${m.rounds} zero="不限" fmt=${(v) => `${v} 轮`} onChange=${(v) => setCfg({ ...cfg, rounds: v })} />`}
+    </div>
+    <p class="hint">${m.quiet ? '专注时聊天自动收起、静音，只能发表情；休息时再展开。' : '这个模式聊天一直开着，边做边聊。'}${total ? ` 大约 ${fmtMin(total)}。` : ''}</p>
+    <button class="btn big" onClick=${go}>开始一起${m.label}</button>
+    <p class="hint center">开始后 ${nameOf(app.partner)} 会收到邀请，两边看到的是同一个计时。</p>
   </section>`;
 }
 
-function Person({ who, s, inSession }) {
+function Person({ who, inSession }) {
   useCols(['status']);
   useSyncEvent('presence');
   const st = app.store.get('status', who);
-  const mood = st && MOODS.find((v) => v[0] === st.mood);
+  const mood = st && moodOf(st.mood);
   const on = app.sync.isOnline(who);
   return html`<div class=${cx('person', 'p-' + who, inSession ? 'in' : 'out')}>
     <${Avatar} who=${who} size=${44} />
     <div class="person-t">
       <b>${nameOf(who)} <${Dot} on=${on} /></b>
-      <small>${inSession ? (on ? '在这里' : '暂时离开了页面') : on ? '还没加入' : '不在线'}${mood ? ` · ${mood[0]} ${mood[1]}` : ''}</small>
+      <small>${inSession ? (on ? '在这里' : '暂时离开了页面') : on ? '还没加入' : '不在线'}${mood ? ` · ${mood.label}` : ''}</small>
     </div>
   </div>`;
 }
@@ -110,140 +117,40 @@ function Running() {
   const rounds = s.rounds || 0;
   const roundText = d.mode.brk.length || rounds > 1 ? (rounds ? `第 ${d.round}/${rounds} 轮` : `第 ${d.round} 轮`) : '';
   const elapsed = Math.max(0, now - (s.t0 || s.start));
+  const face = d.paused ? stId(app.me, 'tea') : d.phase === 'break' ? stId(app.me, 'tea') : modeSticker(d.mode);
   return html`<section class=${cx('card running', d.phase, d.paused && 'paused', 'm-' + s.mode)}>
     <div class="run-hd">
-      <span class="run-mode">${d.mode.emoji} 一起${d.mode.label}</span>
+      <span class="run-mode">一起${d.mode.label}</span>
       ${roundText && html`<span class="run-round">${roundText}</span>`}
     </div>
-    <${Ring} frac=${frac} phase=${d.paused ? 'paused' : d.phase}>
-      <div class="run-phase">${phaseText(d)}</div>
-      <div class="run-clock">${fmtClock(d.remaining)}</div>
-      <div class="run-sub">已经一起 ${fmtMin(elapsed / 60000)}</div>
-    </${Ring}>
-    <div class="people">
-      ${[app.me, app.partner].map((w) => html`<${Person} who=${w} s=${s} inSession=${who.includes(w)} />`)}
-    </div>
-    ${me
-      ? html`<div class="run-ctl">
-          ${d.paused
-            ? html`<button class="btn" onClick=${resume}>▶ 继续</button>`
-            : html`<button class="btn ghost" onClick=${() => pause(d)}>⏸ 暂停</button>`}
-          ${d.mode.brk.length > 0 && s.brk > 0 && html`<button class="btn ghost" onClick=${() => skip(d)}>${d.phase === 'focus' ? '☕ 提前休息' : '⏭ 跳过休息'}</button>`}
-          <button class="btn ghost" onClick=${() => { if (confirmDel('结束这次一起' + d.mode.label + '吗？')) end(s, true, d.round); }}>⏹ 结束</button>
-          ${who.length > 1 && html`<button class="btn ghost" onClick=${() => { if (confirmDel('先离开一下？TA 的计时会继续。')) leave(); }}>🚪 先离开</button>`}
-        </div>`
-      : html`<div class="run-ctl"><button class="btn big" onClick=${join}>${d.mode.emoji} 加入 ${nameOf(s.owner || app.partner)}</button></div>`}
-  </section>`;
-}
-
-// ---------- chat ----------
-const QUIET_EMO = ['💪', '❤️', '🫶', '☕', '🥱', '😵‍💫', '✅', '🙌', '🔥', '😴', '🍵', '🥺'];
-const BREAK_EMO = ['😘', '🥰', '😂', '🫂', '👀', '🤔', '👍', '🎉'];
-const emojiOnly = (s) => /^(\p{Extended_Pictographic}|\p{Emoji_Component}|\u200d|\ufe0f|\s)+$/u.test(s) && !/^[\d#*\s]+$/.test(s);
-
-function sendChat(text, emo) {
-  text = String(text || '').trim();
-  if (!text) return false;
-  app.store.put('chat', uid(), { who: app.me, text: text.slice(0, 2000), emo: !!emo || emojiOnly(text), at: Date.now() });
-  return true;
-}
-
-function Bubble({ m, showWho }) {
-  const mine = m.who === app.me;
-  return html`<div class=${cx('msg', mine ? 'me' : 'ta', m.emo && 'emo')}>
-    ${!mine && showWho ? html`<${Avatar} who=${m.who} size=${26} />` : html`<span class="msg-sp"></span>`}
-    <div class="bubble" title=${fmtHM(m.at || m._t)}>${m.text}</div>
-    <span class="msg-meta">${fmtHM(m.at || m._t)}${mine && html`<button class="msg-x" aria-label="撤回" onClick=${() => confirmDel('撤回这条消息？') && app.store.del('chat', m.id)}>撤回</button>`}</span>
-  </div>`;
-}
-
-function Messages({ list }) {
-  const box = useRef();
-  const stick = useRef(true);
-  const last = list.length ? list[list.length - 1].id : '';
-  useLayoutEffect(() => {
-    const el = box.current;
-    if (el && stick.current) el.scrollTop = el.scrollHeight;
-  }, [last, list.length]);
-  let prevDay = '';
-  let prevWho = '';
-  return html`<div class="msgs" ref=${box} onScroll=${(e) => {
-    const el = e.currentTarget;
-    stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
-  }}>
-    ${!list.length && html`<div class="msgs-empty">还没有消息，说句话吧 ✨</div>`}
-    ${list.map((m) => {
-      const day = dayKey(m.at || m._t);
-      const out = [];
-      if (day !== prevDay) {
-        out.push(html`<div class="msg-day" key=${'d' + day}>${fmtDay(day)}</div>`);
-        prevDay = day;
-        prevWho = '';
-      }
-      out.push(html`<${Bubble} key=${m.id} m=${m} showWho=${prevWho !== m.who} />`);
-      prevWho = m.who;
-      return out;
-    })}
-  </div>`;
-}
-
-export function Chat({ quiet, compact }) {
-  const ver = useCols(['chat']);
-  const force = useForce();
-  useBus('unread', force, []);
-  const [open, setOpen] = useState(!quiet);
-  const [text, setText] = useState('');
-  const [more, setMore] = useState(200);
-  useEffect(() => setOpen(!quiet), [quiet]);
-  useEffect(() => {
-    if (!open) return;
-    app.chatViews++;
-    markChatRead();
-    return () => { app.chatViews--; };
-  }, [open]);
-  const all = useMemo(() => app.store.list('chat').sort((a, b) => (a.at || a._t) - (b.at || b._t)), [ver]);
-  const list = all.length > more ? all.slice(-more) : all;
-  const submit = (e) => {
-    e && e.preventDefault();
-    if (sendChat(text)) setText('');
-  };
-  if (!open) {
-    const recent = all.filter((m) => m.who === app.partner && m.emo && Date.now() - (m.at || m._t) < 10 * 60000).slice(-3);
-    return html`<section class="card chat collapsed">
-      <div class="chat-q">
-        <span class="chat-q-t">🤫 专注中 · 聊天已收起、静音，只能发表情</span>
-        ${app.unread > 0 && html`<span class="badge soft">${app.unread} 条消息，休息时再看</span>`}
+    <div class="run-body">
+      <${Ring} frac=${frac} phase=${d.paused ? 'paused' : d.phase}>
+        <${St} id=${face} size=${84} cls="run-st" title="" />
+        <div class="run-clock">${fmtClock(d.remaining)}</div>
+        <div class="run-phase">${phaseText(d)}</div>
+      </${Ring}>
+      <div class="run-side">
+        <div class="people">${[app.me, app.partner].map((w) => html`<${Person} who=${w} inSession=${who.includes(w)} />`)}</div>
+        <div class="run-sub"><${Icon} n="clock" size=${16} /> 已经一起 ${fmtMin(elapsed / 60000)}</div>
+        ${me
+          ? html`<div class="run-ctl">
+              ${d.paused
+                ? html`<button class="btn" onClick=${resume}><${Icon} n="play" size=${16} /> 继续</button>`
+                : html`<button class="btn ghost" onClick=${() => pause(d)}><${Icon} n="pause" size=${16} /> 暂停</button>`}
+              ${d.mode.brk.length > 0 && s.brk > 0 && html`<button class="btn ghost" onClick=${() => skip(d)}><${Icon} n="skip" size=${16} /> ${d.phase === 'focus' ? '提前休息' : '跳过休息'}</button>`}
+              <button class="btn ghost" onClick=${() => { if (confirmDel('结束这次一起' + d.mode.label + '吗？')) end(s, true, d.round); }}><${Icon} n="stop" size=${16} /> 结束</button>
+              ${who.length > 1 && html`<button class="btn ghost" onClick=${() => { if (confirmDel('先离开一下？TA 的计时会继续。')) leave(); }}><${Icon} n="leave" size=${16} /> 先离开</button>`}
+            </div>`
+          : html`<div class="run-ctl"><button class="btn big" onClick=${join}>加入 ${nameOf(s.owner || app.partner)}</button></div>`}
       </div>
-      ${recent.length > 0 && html`<div class="chat-peek">${recent.map((m) => html`<span key=${m.id} class="peek"><i>${avatarOf(m.who)}</i>${m.text}</span>`)}</div>`}
-      <div class="emo-row">${QUIET_EMO.map((e) => html`<button type="button" onClick=${() => sendChat(e, true)}>${e}</button>`)}</div>
-      <button type="button" class="link sm" onClick=${() => setOpen(true)}>偷看一眼聊天记录</button>
-    </section>`;
-  }
-  return html`<section class=${cx('card chat', compact && 'compact', quiet && 'quiet')}>
-    <div class="card-hd">
-      <h3>💬 悄悄话</h3>
-      ${quiet ? html`<button type="button" class="link sm" onClick=${() => setOpen(false)}>收起</button>` : html`<small class="muted">只有你们俩看得到</small>`}
     </div>
-    ${all.length > list.length && html`<button type="button" class="link sm center" onClick=${() => setMore(more + 200)}>看更早的消息</button>`}
-    <${Messages} list=${list} />
-    ${quiet
-      ? html`<div class="chat-in quiet"><div class="emo-row">${QUIET_EMO.map((e) => html`<button type="button" onClick=${() => sendChat(e, true)}>${e}</button>`)}</div><small class="muted center">专注时只能发表情哦</small></div>`
-      : html`<form class="chat-in" onSubmit=${submit}>
-          <div class="emo-row mini">${BREAK_EMO.map((e) => html`<button type="button" onClick=${() => sendChat(e, true)}>${e}</button>`)}</div>
-          <div class="row">
-            <textarea class="inp chat-ta" rows="1" maxlength="2000" placeholder=${`和 ${nameOf(app.partner)} 说点什么…`} value=${text}
-              onInput=${(e) => setText(e.target.value)}
-              onKeyDown=${(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); submit(); } }}></textarea>
-            <button class="btn" disabled=${!text.trim()}>发送</button>
-          </div>
-        </form>`}
   </section>`;
 }
 
 // ---------- draft pads ----------
 const INK_W = 1000;
 const INK_H = 640;
-const INK_COLORS = ['#43282f', '#ef6f9c', '#3b82f6', '#16a34a'];
+const INK_COLORS = ['#4a3a35', '#e8789a', '#5b8def', '#3aa676'];
 const INK_MAX = 90000;
 
 function drawStrokes(cv, strokes, extra) {
@@ -269,7 +176,7 @@ function drawStrokes(cv, strokes, extra) {
   for (const s of list) {
     if (!s || s.length < 4) continue;
     let c = INK_COLORS[s[0]] || INK_COLORS[0];
-    if (dark && s[0] === 0) c = '#f9e8ee';
+    if (dark && s[0] === 0) c = '#f3e9e4';
     g.strokeStyle = c;
     g.lineWidth = s[1];
     g.beginPath();
@@ -324,7 +231,7 @@ function InkPad() {
   const down = (e) => {
     if (e.button > 0) return;
     if (JSON.stringify(strokes.current).length > INK_MAX) {
-      toast('草稿纸写满啦，清一清再写吧', { icon: '📄' });
+      toast('草稿纸写满啦，清一清再写吧', { icon: stId(app.me, 'dizzy') });
       return;
     }
     e.preventDefault();
@@ -373,7 +280,7 @@ function InkPad() {
     <div class="ink-tools">
       ${INK_COLORS.map((c, i) => html`<button type="button" class=${cx('ink-c', i === color && 'on')} style=${`--c:${c}`} aria-label="颜色" onClick=${() => setColor(i)}></button>`)}
       <span class="sp"></span>
-      <button type="button" class="btn xs ghost" disabled=${!strokes.current.length} onClick=${undo}>↶ 撤销</button>
+      <button type="button" class="btn xs ghost" disabled=${!strokes.current.length} onClick=${undo}>撤销</button>
       <button type="button" class="btn xs ghost" disabled=${!strokes.current.length} onClick=${clear}>清空</button>
     </div>
   </div>`;
@@ -397,14 +304,14 @@ function MyDraft() {
   };
   return html`<div class=${cx('pad mine', 'p-' + app.me)}>
     <div class="pad-hd">
-      <span><${Avatar} who=${app.me} size=${22} /> 我的草稿</span>
+      <span><${Avatar} who=${app.me} size=${26} /> 我的草稿</span>
       <div class="seg tiny">
-        <button type="button" class=${cx(tab === 'text' && 'on')} onClick=${() => pickTab('text')}>文字</button>
-        <button type="button" class=${cx(tab === 'ink' && 'on')} onClick=${() => pickTab('ink')}>手写</button>
+        <button type="button" class=${cx(tab === 'text' && 'on')} onClick=${() => pickTab('text')}><${Icon} n="type" size=${14} /> 文字</button>
+        <button type="button" class=${cx(tab === 'ink' && 'on')} onClick=${() => pickTab('ink')}><${Icon} n="pen" size=${14} /> 手写</button>
       </div>
     </div>
     ${tab === 'text'
-      ? html`<textarea ref=${ref} class="inp pad-ta" maxlength="20000" placeholder="随手写：解题思路、公式、待办、想说的话…（TA 能实时看到）" value=${text}
+      ? html`<textarea ref=${ref} class="inp pad-ta" maxlength="20000" placeholder="随手写：解题思路、公式、待办…（TA 能实时看到）" value=${text}
           onInput=${(e) => { setText(e.target.value); save.current(e.target.value); }}></textarea>`
       : html`<${InkPad} />`}
   </div>`;
@@ -420,17 +327,17 @@ function TaDraft() {
   const hasInk = ink && ink.s && ink.s.length > 0;
   return html`<div class=${cx('pad ta', 'p-' + app.partner)}>
     <div class="pad-hd">
-      <span><${Avatar} who=${app.partner} size=${22} /> ${nameOf(app.partner)} 的草稿</span>
+      <span><${Avatar} who=${app.partner} size=${26} /> ${nameOf(app.partner)} 的草稿</span>
       ${(writing || drawing) && html`<span class="typing">${drawing ? '正在画' : '正在写'}<i>.</i><i>.</i><i>.</i></span>`}
     </div>
-    ${rec?.text ? html`<div class="pad-view">${rec.text}</div>` : !hasInk && html`<div class="pad-view muted">TA 的草稿还是空白的</div>`}
+    ${rec?.text ? html`<div class="pad-view">${rec.text}</div>` : !hasInk && html`<div class="pad-view empty-pad"><${St} id=${stId(app.partner, 'study')} size=${64} title="" /><span class="muted">TA 的草稿还是空白的</span></div>`}
     ${hasInk && html`<${InkView} strokes=${ink.s} />`}
   </div>`;
 }
 
 export function Drafts() {
   return html`<section class="card drafts">
-    <div class="card-hd"><h3>📝 草稿栏</h3><small class="muted">你们能看到彼此的草稿</small></div>
+    <div class="card-hd"><h3>草稿栏</h3><small class="muted">你们能看到彼此的草稿</small></div>
     <div class="pads">
       <${MyDraft} />
       <${TaDraft} />
@@ -438,48 +345,39 @@ export function Drafts() {
   </section>`;
 }
 
-// ---------- memories ----------
+// ---------- past sessions ----------
 function Memories() {
   useCols(['tsess']);
-  const list = app.store.list('tsess').sort((a, b) => b.t0 - a.t0).slice(0, 8);
+  const list = app.store.list('tsess').sort((a, b) => b.t0 - a.t0).slice(0, 6);
   if (!list.length) return null;
   return html`<section class="card memories">
-    <div class="card-hd"><h3>🕰️ 一起的时光</h3></div>
+    <div class="card-hd"><h3>最近一起做过的事</h3></div>
     <ul class="mem-ul">
       ${list.map((x) => {
         const m = MODES[x.mode] || MODES.study;
         const both = (x.who || []).length > 1;
-        return html`<li key=${x.id}><span class="mem-e">${m.emoji}</span><span>${fmtDay(x.day)} ${fmtHM(x.t0)}</span><span>${both ? '一起' : `${nameOf((x.who || [])[0] || app.me)} `}${m.label} ${fmtMin((x.t1 - x.t0) / 60000)}</span></li>`;
+        return html`<li key=${x.id}><${St} id=${modeSticker(m)} size=${36} title="" /><span>${fmtDay(x.day)} ${fmtHM(x.t0)}</span><span class="muted">${both ? '一起' : `${nameOf((x.who || [])[0] || app.me)} `}${m.label} ${fmtMin((x.t1 - x.t0) / 60000)}</span></li>`;
       })}
     </ul>
   </section>`;
 }
 
-export function Together() {
+export function Together({ param }) {
   useCols(['together', 'tjoin']);
   useNow(5000);
   const force = useForce();
   useBus('quiet', force, []);
-  const wide = useMedia('(min-width: 900px)');
   const s = session();
   const d = derive(s, Date.now());
-  const quiet = !!app.focus;
   const running = d.state === 'run';
-  const chat = html`<${Chat} quiet=${quiet} />`;
-  return html`<div class=${cx('page together', quiet && 'is-focus')}>
-    <div class="room">
-      <div class="room-main">
-        ${running ? html`<${Running} />` : html`<${Setup} />`}
-        ${!wide && chat}
-        ${!quiet && html`<${PokeBar} />`}
-        <${Drafts} />
-        <div class="grid2">
-          <${TaskList} who=${app.me} />
-          <${TaskList} who=${app.partner} />
-        </div>
-        ${!running && html`<${Memories} />`}
-      </div>
-      ${wide && html`<aside class="room-side">${chat}</aside>`}
+  return html`<div class=${cx('page together', app.focus && 'is-focus')}>
+    <div class="page-hd"><h2>一起</h2><small class="muted">同一个计时，各做各的，彼此作伴</small></div>
+    ${running ? html`<${Running} />` : html`<${Setup} key=${param || 'x'} initial=${param} />`}
+    <${Drafts} />
+    <div class="grid2">
+      <${TaskList} who=${app.me} />
+      <${TaskList} who=${app.partner} />
     </div>
+    ${!running && html`<${Memories} />`}
   </div>`;
 }

@@ -10,10 +10,10 @@
 //   p/<who>.<device>   presence (cleared by the broker's last-will when we drop)
 //   i                  room info
 
-import { MqttClient } from './mqtt.js?v=efe89b71a3';
-import { seal, unseal, keyedHash } from './crypto.js?v=efe89b71a3';
-import { STATE_COLS, LINK_MASK } from './store.js?v=efe89b71a3';
-import { utcDay, sleep, uid } from './util.js?v=efe89b71a3';
+import { MqttClient } from './mqtt.js?v=d7c13ae0f9';
+import { seal, unseal, keyedHash } from './crypto.js?v=d7c13ae0f9';
+import { STATE_COLS, LINK_MASK } from './store.js?v=d7c13ae0f9';
+import { utcDay, sleep, uid } from './util.js?v=d7c13ae0f9';
 
 export const LINKS = [
   { name: 'EMQX', urls: ['wss://broker.emqx.io:8084/mqtt', 'wss://broker-cn.emqx.io:8084/mqtt'], rate: 6, burst: 6 },
@@ -131,7 +131,9 @@ export class Sync {
   status() { return this.links.map((l) => ({ name: l.name, state: l.state, url: l.client.url })); }
 
   async start() {
-    this.blobOut = (await this.store.getMeta('blobOut')) || {};
+    const pendingBlobs = (await this.store.getMeta('blobOut')) || {};
+    const shared = this._sharedBlobIds();
+    this.blobOut = Object.fromEntries(Object.entries(pendingBlobs).filter(([id]) => shared.has(id)));
     LINKS.forEach((cfg, i) => this.links.push(new Link(this, cfg, i)));
     const willTopic = this.base + `p/${this.me}.${this.dev}`;
     this.days = this._dayFilters();
@@ -562,10 +564,23 @@ export class Sync {
     for (const id of Object.keys(this.blobOut)) this._resumeOne(id);
   }
 
-  /** after a key change: upload every image we hold again */
+  _sharedBlobIds() {
+    const ids = new Set();
+    for (const r of this.store.recs.values()) {
+      if (r.c.startsWith('_') || !r.x || !Array.isArray(r.x.photos)) continue;
+      for (const p of r.x.photos) if (!p.loc) {
+        if (p.id) ids.add(p.id);
+        if (p.th) ids.add(p.th);
+      }
+    }
+    return ids;
+  }
+
+  /** After a key change, only re-upload images referenced by shared records. */
   async reshareAll() {
-    for (const id of await this.store.blobIds()) this.blobOut[id] = LINK_MASK;
-    this._saveBlobOut();
+    this.blobOut = Object.fromEntries([...this._sharedBlobIds()].map((id) => [id, LINK_MASK]));
+    // Called before start(); persist now so startup cannot overwrite the new queue.
+    await this.store.setMeta('blobOut', { ...this.blobOut });
   }
 
   /** publish a blob that was stored locally only (e.g. a private note became shared) */
@@ -636,6 +651,7 @@ export class Sync {
   }
 
   async _serveBlob(id) {
+    if (!this._sharedBlobIds().has(id)) return;
     if (Date.now() - (this.cooldown.get(id) || 0) < 60000) return;
     const v = await this.store.getBlob(id);
     if (!v) return;

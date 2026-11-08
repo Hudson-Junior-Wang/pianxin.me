@@ -1,11 +1,11 @@
-// 偏心我 · app-wide context: identity, reactive hooks, toasts, sounds.
+// 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
-  zhengwang: { name: 'zhengwang', avatar: '🐻' },
-  xiaoha: { name: 'xiaoha', avatar: '🐰' },
+  zhengwang: { name: 'zhengwang', ch: 'bear' },
+  xiaoha: { name: 'xiaoha', ch: 'bunny' },
 };
 
 export const app = {
@@ -14,6 +14,7 @@ export const app = {
   store: null,
   sync: null,
   quiet: false,
+  focus: false,
   settings: { sound: true, notify: false },
 };
 
@@ -45,6 +46,9 @@ export const bus = {
   },
 };
 
+/** open the chat wherever it lives on this screen size */
+export const openChat = () => bus.emit('chat:open');
+
 // ---------- reactive hooks ----------
 export function useForce() {
   const [, set] = useState(0);
@@ -62,16 +66,6 @@ export function useCols(cols) {
     });
   }, [key]);
   return ver;
-}
-
-export function useRec(col, id) {
-  useCols(col);
-  return app.store.get(col, id);
-}
-
-export function useList(col, filter) {
-  useCols(col);
-  return app.store.list(col, filter);
 }
 
 export function useSyncEvent(types) {
@@ -103,15 +97,15 @@ export function useSecondTick(anchor) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     let t;
-    const loop = () => {
-      const n = Date.now();
-      setNow(n);
-      const ph = ((((anchor || 0) - n) % 1000) + 1000) % 1000;
-      t = setTimeout(loop, (ph || 1000) + 8);
+    const wait = () => {
+      const ph = ((((anchor || 0) - Date.now()) % 1000) + 1000) % 1000;
+      return (ph || 1000) + 8;
     };
-    const n = Date.now();
-    const ph = ((((anchor || 0) - n) % 1000) + 1000) % 1000;
-    t = setTimeout(loop, (ph || 1000) + 8);
+    const loop = () => {
+      setNow(Date.now());
+      t = setTimeout(loop, wait());
+    };
+    t = setTimeout(loop, wait());
     return () => clearTimeout(t);
   }, [anchor]);
   return now;
@@ -122,6 +116,7 @@ export function useMedia(q) {
   useEffect(() => {
     const mq = matchMedia(q);
     const f = () => setM(mq.matches);
+    f();
     mq.addEventListener('change', f);
     return () => mq.removeEventListener('change', f);
   }, [q]);
@@ -130,19 +125,60 @@ export function useMedia(q) {
 
 // ---------- people ----------
 export function profileOf(who) {
-  return { ...DEFAULT_PROFILE[who], ...(app.store.get('profile', who) || {}) };
+  return { ...DEFAULT_PROFILE[who], ...((app.store && app.store.get('profile', who)) || {}) };
 }
 export const nameOf = (who) => profileOf(who).name || who;
-export const avatarOf = (who) => profileOf(who).avatar || '🙂';
 export const myName = () => nameOf(app.me);
 export const taName = () => nameOf(app.partner);
+
+// ---------- stickers (小熊 & 小兔) ----------
+const KEYS = ['hi', 'cheer', 'ok', 'okay', 'thanks', 'what', 'study', 'read', 'done', 'idea', 'tea', 'eat', 'run', 'yawn', 'sleep', 'morning',
+  'poke', 'pat', 'listen', 'salute', 'dizzy', 'pout', 'facepalm', 'sorry', 'cry'];
+export const CHARS = {
+  bear: { p: 'b', name: '小熊', keys: KEYS },
+  bunny: { p: 'r', name: '小兔', keys: [...KEYS, 'gym'] },
+};
+export const ST_LABEL = {
+  hi: '嗨', cheer: '冲呀', ok: '棒', okay: 'OK', thanks: '谢谢', what: '啊？', study: '学习中', read: '看书', done: '搞定',
+  idea: '有了', tea: '喝奶茶', eat: '干饭', run: '跑起来', gym: '举铁', yawn: '好困', sleep: '晚安', morning: '早安',
+  poke: '戳', pat: '拍拍', listen: '我在听', salute: '收到', dizzy: '晕了', pout: '哼', facepalm: '无语', sorry: '抱歉', cry: '哭哭',
+};
+const DUO_LABEL = {
+  'd-study': '一起学习', 'd-five': '击掌', 'd-eat': '一起干饭', 'd-movie': '看电影', 'd-run': '一起跑',
+  'd-pat': '拍拍', 'd-yay': '耶', 'd-listen': '听你说', 'd-tired': '累瘫',
+};
+export const DUO = Object.keys(DUO_LABEL);
+
+export function chOf(who) {
+  const ch = profileOf(who).ch;
+  return CHARS[ch] ? ch : who === 'xiaoha' ? 'bunny' : 'bear';
+}
+/** sticker id for a person: stId('xiaoha', 'cheer') → 'r-cheer'; duo ids pass through */
+export function stId(who, key) {
+  if (!key) return '';
+  if (key.startsWith('d-')) return key;
+  const c = CHARS[chOf(who)];
+  return `${c.p}-${c.keys.includes(key) ? key : 'hi'}`;
+}
+export const avId = (who) => (chOf(who) === 'bunny' ? 'av-bunny' : 'av-bear');
+export const isSt = (s) => typeof s === 'string' && /^(?:[bdr]|av)-[a-z]+$/.test(s);
+export const stUrl = (id) => `/app/stickers/${id}.webp`;
+export function stLabel(id) {
+  if (!isSt(id)) return '';
+  if (id.startsWith('d-')) return DUO_LABEL[id] || '';
+  return ST_LABEL[id.slice(2)] || '';
+}
+export function stickersOf(who) {
+  const c = CHARS[chOf(who)];
+  return c.keys.map((k) => `${c.p}-${k}`);
+}
 
 /** a gentle edge toast on the other person's screen (live only, never stored) */
 export function liveToast(icon, text, extra = {}) {
   if (app.sync) app.sync.sendLive({ e: 'toast', icon, text, ...extra });
 }
 
-// reactions: one emoji per person per target, toggled
+// reactions: one sticker per person per target, toggled
 export function setReaction(target, e) {
   const id = `${target}~${app.me}`;
   const cur = app.store.get('react', id);
@@ -151,15 +187,32 @@ export function setReaction(target, e) {
 
 // ---------- moods & needs ----------
 export const MOODS = [
-  ['😊', '开心'], ['🥰', '甜甜的'], ['😌', '平静'], ['🤩', '兴奋'],
-  ['😴', '困困'], ['🥱', '累了'], ['😤', '烦躁'], ['😢', '难过'],
-  ['🤒', '不舒服'], ['🤯', '忙炸了'], ['😶', '说不清'], ['🥺', '想你'],
+  { k: 'happy', label: '开心', st: 'cheer' },
+  { k: 'fresh', label: '元气满满', st: 'morning' },
+  { k: 'calm', label: '平静', st: 'thanks' },
+  { k: 'focus', label: '在专注', st: 'study' },
+  { k: 'great', label: '超顺利', st: 'ok' },
+  { k: 'hungry', label: '饿了', st: 'eat' },
+  { k: 'sleepy', label: '困困', st: 'yawn' },
+  { k: 'tired', label: '累了', st: 'sorry' },
+  { k: 'busy', label: '忙炸了', st: 'dizzy' },
+  { k: 'annoyed', label: '烦躁', st: 'pout' },
+  { k: 'sad', label: '难过', st: 'cry' },
+  { k: 'meh', label: '说不清', st: 'what' },
 ];
+// Historical moods retain their original meaning/value; only new choices use the neutral list.
+const OLD_MOODS = [
+  ['😊', '开心', 'cheer'], ['🥰', '甜甜的', 'cheer'], ['😌', '平静', 'thanks'], ['🤩', '兴奋', 'ok'],
+  ['😴', '困困', 'yawn'], ['🥱', '累了', 'sorry'], ['😤', '烦躁', 'pout'], ['😢', '难过', 'cry'],
+  ['🤒', '不舒服', 'sorry'], ['🤯', '忙炸了', 'dizzy'], ['😶', '说不清', 'what'], ['🥺', '想你', 'hi'],
+].map(([k, label, st]) => ({ k, label, st, legacy: true }));
+export const moodOf = (k) => MOODS.find((m) => m.k === k) || OLD_MOODS.find((m) => m.k === k);
+
 export const NEEDS = [
-  { k: 'chat', label: '想聊天', icon: '💬', hint: '想聊天！快来找我', ta: 'TA 想聊天，去找 TA 说说话吧' },
-  { k: 'quiet', label: '想安静', icon: '🤫', hint: '想安静一会儿，消息不会响', ta: 'TA 想安静一会儿，消息不会吵到 TA' },
-  { k: 'comfort', label: '求安慰', icon: '🫂', hint: '需要一点安慰', ta: 'TA 现在需要抱抱和安慰' },
-  { k: 'vent', label: '只想吐槽', icon: '😮‍💨', hint: '只想吐槽，听着就好', ta: 'TA 只想吐槽，听着就好，不用讲道理' },
+  { k: 'chat', label: '想聊天', st: 'hi', hint: '想找人说说话', ta: '想找人聊聊天，去和 TA 说说话吧' },
+  { k: 'quiet', label: '想安静', st: 'read', hint: '想安静一会儿，消息不会响', ta: '想安静一会儿，消息不会吵到 TA' },
+  { k: 'comfort', label: '求安慰', st: 'cry', hint: '需要一点安慰', ta: '现在需要一点安慰' },
+  { k: 'vent', label: '只想吐槽', st: 'pout', hint: '只想吐槽，听着就好', ta: '只想吐槽，听着就好，不用讲道理' },
 ];
 
 // ---------- the other person's local day / time ----------
@@ -192,7 +245,8 @@ export function dismissToast(id) {
   toastList = toastList.filter((x) => x.id !== id);
   pushToasts();
 }
-export function toast(text, { icon = '💗', ms = 4200, kind = '', action = null } = {}) {
+/** icon: a sticker id (e.g. 'r-cheer') or a plain emoji */
+export function toast(text, { icon = '✨', ms = 4200, kind = '', action = null } = {}) {
   // the same message twice in a row just refreshes the existing toast
   const dup = toastList.find((x) => x.text === text);
   if (dup) toastList = toastList.filter((x) => x !== dup);

@@ -1,15 +1,16 @@
 // 偏心我 · "一起模式": one synced timer shared by every kind of companionship.
 
-import { app, WHO } from './ctx.js?v=efe89b71a3';
-import { uid, dayKey } from './util.js?v=efe89b71a3';
+import { app, WHO } from './ctx.js?v=d7c13ae0f9';
+import { uid, dayKey } from './util.js?v=d7c13ae0f9';
 
+// st = sticker shown for the mode (duo sticker when there is one, else my own character)
 export const MODES = {
-  study: { label: '自习', emoji: '📚', focus: [25, 45, 60, 90], brk: [5, 10, 15], rounds: [1, 2, 4, 0], def: [25, 5, 4], quiet: true, on: '专注中', off: '休息一下' },
-  read: { label: '阅读', emoji: '📖', focus: [20, 30, 45, 60], brk: [0, 5, 10], rounds: [1, 2, 0], def: [30, 5, 2], quiet: true, on: '安静阅读中', off: '伸个懒腰' },
-  sport: { label: '运动', emoji: '🏃', focus: [10, 20, 30, 45], brk: [0, 2, 5], rounds: [1, 3, 5], def: [20, 0, 1], quiet: true, on: '燃烧中', off: '喘口气' },
-  eat: { label: '吃饭', emoji: '🍚', focus: [15, 30, 45, 60], brk: [], rounds: [], def: [30, 0, 1], quiet: false, on: '一起干饭中', off: '' },
-  movie: { label: '观影', emoji: '🎬', focus: [45, 90, 120, 150], brk: [], rounds: [], def: [120, 0, 1], quiet: false, on: '一起看片中', off: '' },
-  sleep: { label: '睡觉', emoji: '😴', focus: [360, 420, 480, 540], brk: [], rounds: [], def: [480, 0, 1], quiet: true, on: '晚安，好梦', off: '' },
+  study: { label: '自习', emoji: '📚', st: 'd-study', focus: [25, 45, 60, 90], brk: [5, 10, 15], rounds: [1, 2, 4, 0], def: [25, 5, 4], quiet: true, on: '专注中', off: '休息一下' },
+  read: { label: '阅读', emoji: '📖', st: 'read', focus: [20, 30, 45, 60], brk: [0, 5, 10], rounds: [1, 2, 0], def: [30, 5, 2], quiet: true, on: '安静阅读中', off: '伸个懒腰' },
+  sport: { label: '运动', emoji: '🏃', st: 'd-run', focus: [10, 20, 30, 45], brk: [0, 2, 5], rounds: [1, 3, 5], def: [20, 0, 1], quiet: true, on: '动起来', off: '喘口气' },
+  eat: { label: '吃饭', emoji: '🍚', st: 'd-eat', focus: [15, 30, 45, 60], brk: [], rounds: [], def: [30, 0, 1], quiet: false, on: '干饭中', off: '' },
+  movie: { label: '观影', emoji: '🎬', st: 'd-movie', focus: [45, 90, 120, 150], brk: [], rounds: [], def: [120, 0, 1], quiet: false, on: '看片中', off: '' },
+  sleep: { label: '睡觉', emoji: '😴', st: 'sleep', focus: [360, 420, 480, 540], brk: [], rounds: [], def: [480, 0, 1], quiet: true, on: '晚安，好梦', off: '' },
 };
 export const MODE_KEYS = Object.keys(MODES);
 

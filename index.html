@@ -2,231 +2,57 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>偏心我 · pianxin.me</title>
-<meta name="description" content="偏心我 pianxin.me — 世界再大，也要偏心我一个。">
-<meta name="theme-color" content="#fff6f1">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f472a0' d='M12 21s-7.5-4.9-10-9.3C.4 8.6 2.2 5 5.7 5c2 0 3.6 1.1 4.3 2.7h4c.7-1.6 2.3-2.7 4.3-2.7 3.5 0 5.3 3.6 3.7 6.7C19.5 16.1 12 21 12 21z'/%3E%3C/svg%3E">
+<meta name="description" content="一起学习，顺手分享生活。两个人的小空间，不催回复，也不用打卡。">
+<meta name="theme-color" content="#fbf6f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1715" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/app/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/app/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap&text=%20.026AEIMNPXaeghimnopwxz%C2%A9%E3%80%82%E4%B8%80%E4%B8%8B%E4%B8%96%E4%B8%AA%E4%B9%9F%E4%BB%BD%E5%81%8F%E5%86%8D%E5%87%86%E5%9C%A8%E5%A4%87%E5%A4%A7%E5%B0%8F%E5%BE%85%E5%BF%83%E6%88%91%E6%95%AC%E6%9C%89%E6%9C%9F%E6%AD%A3%E7%82%B9%E7%88%B1%E7%95%8C%E8%A6%81%E8%AF%B7%EF%BC%8C">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap">
 <style>
-  :root {
-    --ink: #43282f;
-    --ink-soft: rgba(67, 40, 47, .55);
-    --accent: #ef6f9c;
-    --accent-deep: #d94f82;
-    --bg: #fff6f1;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --ink: #f9e8ee;
-      --ink-soft: rgba(249, 232, 238, .5);
-      --accent: #ff9ebd;
-      --accent-deep: #f472a0;
-      --bg: #1b1116;
-    }
-  }
-  * { margin: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ---- drifting gradient blobs ---- */
-  .blob {
-    position: fixed; border-radius: 50%;
-    filter: blur(90px); opacity: .55; pointer-events: none;
-    will-change: transform;
-  }
-  .blob:nth-child(1) { width: 55vmax; height: 55vmax; left: -18vmax; top: -20vmax;
-    background: #ffd3e0; animation: drift1 26s ease-in-out infinite alternate; }
-  .blob:nth-child(2) { width: 45vmax; height: 45vmax; right: -15vmax; bottom: -18vmax;
-    background: #ffe3c9; animation: drift2 32s ease-in-out infinite alternate; }
-  .blob:nth-child(3) { width: 32vmax; height: 32vmax; right: 8vmax; top: -12vmax;
-    background: #e6dcff; opacity: .4; animation: drift3 38s ease-in-out infinite alternate; }
-  @media (prefers-color-scheme: dark) {
-    .blob:nth-child(1) { background: #5c2438; }
-    .blob:nth-child(2) { background: #4d2f22; }
-    .blob:nth-child(3) { background: #352a52; }
-  }
-  @keyframes drift1 { to { transform: translate(9vmax, 7vmax) scale(1.12); } }
-  @keyframes drift2 { to { transform: translate(-8vmax, -6vmax) scale(1.08); } }
-  @keyframes drift3 { to { transform: translate(-6vmax, 9vmax); } }
-
-  /* ---- layout ---- */
-  main {
-    position: relative; height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center; padding: 24px; gap: 0;
-  }
-
-  .heart { width: 54px; height: 54px; margin-bottom: 34px;
-    animation: beat 2.2s ease-in-out infinite; transform-origin: center; }
-  @keyframes beat {
-    0%, 100% { transform: scale(1); }
-    12% { transform: scale(1.14); }
-    24% { transform: scale(1); }
-    36% { transform: scale(1.09); }
-    48% { transform: scale(1); }
-  }
-
-  .domain {
-    font-family: "ZCOOL KuaiLe", ui-rounded, -apple-system, sans-serif;
-    font-weight: 600;
-    font-size: 12px; letter-spacing: .55em; text-indent: .55em;
-    text-transform: uppercase; color: var(--ink-soft); margin-bottom: 22px;
-  }
-
-  h1 {
-    font-family: "ZCOOL KuaiLe", "Yuanti SC", "PingFang SC", sans-serif;
-    font-weight: 400;
-    font-size: clamp(56px, 13vw, 120px);
-    letter-spacing: .04em;
-    line-height: 1.2;
-  }
-  h1 .ch { display: inline-block; }
-  h1 .c1 { transform: rotate(-5deg); }
-  h1 .c2 { transform: rotate(4deg) translateY(-4px); }
-  h1 .c3 { transform: rotate(-3deg); }
-  h1 .ch:hover { animation: wiggle .5s ease-in-out; }
-  @keyframes wiggle {
-    0%,100% { scale: 1; } 50% { scale: 1.15; }
-  }
-  h1 .xin {
-    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; color: var(--accent);
-  }
-
-  .rule { width: 44px; height: 1px; background: var(--ink-soft);
-    opacity: .5; margin: 34px 0 26px; }
-
-  .tagline {
-    font-family: "ZCOOL KuaiLe", "Yuanti SC", "PingFang SC", sans-serif;
-    font-weight: 400;
-    font-size: clamp(15px, 2.6vw, 18px);
-    letter-spacing: .18em; text-indent: .18em;
-    color: var(--ink); opacity: .85;
-  }
-  .doors { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
-  .door {
-    display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);
-    font-family: "ZCOOL KuaiLe", ui-rounded, -apple-system, sans-serif;
-    padding: 12px 22px 12px 14px; border-radius: 999px; font-size: 16px; letter-spacing: .06em;
-    background: rgba(255, 255, 255, .6); border: 1px solid rgba(67, 40, 47, .08);
-    box-shadow: 0 6px 24px rgba(214, 120, 150, .12); transition: transform .2s, box-shadow .2s;
-  }
-  .door:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(214, 120, 150, .22); }
-  .door-e { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; }
-  .door.zw .door-e { background: #e5edff; }
-  .door.xh .door-e { background: #ffe4ee; }
-  @media (prefers-color-scheme: dark) {
-    .door { background: rgba(40, 27, 34, .7); border-color: rgba(249, 232, 238, .1); }
-    .door.zw .door-e { background: #22304f; }
-    .door.xh .door-e { background: #4a2333; }
-  }
-
-  footer {
-    position: fixed; bottom: 22px; left: 0; right: 0;
-    text-align: center; font-size: 11px; letter-spacing: .2em;
-    color: var(--ink-soft); pointer-events: none;
-  }
-
-  .hint {
-    font-family: "ZCOOL KuaiLe", "Yuanti SC", "PingFang SC", sans-serif;
-    position: fixed; bottom: 48px; left: 0; right: 0;
-    text-align: center; font-size: 11px; letter-spacing: .25em;
-    color: var(--ink-soft); opacity: .7; pointer-events: none;
-    transition: opacity 1s;
-  }
-
-  /* ---- click hearts ---- */
-  .fly {
-    position: fixed; pointer-events: none; z-index: 10;
-    font-size: 0; width: 22px; height: 22px;
-    animation: fly 1.6s ease-out forwards;
-  }
-  .fly svg { width: 100%; height: 100%; }
-  @keyframes fly {
-    0% { transform: translate(-50%, -50%) scale(.4) rotate(0deg); opacity: 0; }
-    15% { opacity: 1; }
-    100% { transform: translate(-50%, -240%) scale(1.15) rotate(var(--rot, 12deg)); opacity: 0; }
-  }
-
-  /* entrance */
-  .rise { animation: rise 1.1s cubic-bezier(.2, .7, .2, 1) both; }
-  .rise.d1 { animation-delay: .12s; } .rise.d2 { animation-delay: .24s; }
-  .rise.d3 { animation-delay: .4s; } .rise.d4 { animation-delay: .55s; }
-  @keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; }
-  }
+  :root { --ink: #4a3a35; --muted: #95857d; --bg: #fbf6f0; --card: #fffdfa; --line: #eadfd5; --accent: #dd784d; --soft: #f5eee6; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --ink: #f3e9e4; --muted: #b5a39a; --bg: #1c1715; --card: #2a2320; --line: #463a33; --accent: #f59d74; --soft: #342b27; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); background: var(--bg); font: 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; -webkit-font-smoothing: antialiased; }
+  main { min-height: 100svh; max-width: 960px; margin: auto; padding: 36px 24px 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .domain { color: var(--muted); font-size: 11px; letter-spacing: .3em; margin: 0 0 20px; }
+  .scene { width: clamp(160px, 30vw, 230px); height: auto; margin: 0 0 12px; animation: rise .8s both; }
+  h1 { font: 400 clamp(48px, 10vw, 76px)/1.2 "ZCOOL KuaiLe", "PingFang SC", sans-serif; letter-spacing: .06em; margin: 0; }
+  .tagline { font-size: clamp(17px, 3vw, 21px); margin: 20px 0 6px; }
+  .sub { color: var(--muted); margin: 0; font-size: 13px; }
+  .doors { display: flex; gap: 16px; margin: 30px 0 26px; }
+  .door { min-width: 190px; padding: 14px 20px 14px 12px; display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 6px 20px #845b3410; transition: transform .2s, border-color .2s; }
+  .door:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .door:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+  .door img { width: 52px; height: 52px; object-fit: contain; }
+  .door span { display: flex; flex-direction: column; }
+  .door b { font-size: 16px; }
+  .door small { color: var(--muted); font-size: 11px; }
+  .door em { margin-left: auto; font-size: 20px; color: var(--accent); font-style: normal; }
+  .features { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .features span { background: var(--soft); color: var(--muted); padding: 4px 12px; border-radius: 30px; font-size: 12px; }
+  footer { color: var(--muted); font-size: 11px; margin-top: 32px; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  @media (max-width: 480px) { main { padding: 24px 20px; } .doors { width: 100%; flex-direction: column; gap: 10px; margin: 24px 0; } .door { min-width: 0; } .scene { width: 160px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-  <div class="blob"></div><div class="blob"></div><div class="blob"></div>
-
-  <main>
-    <svg class="heart rise" viewBox="0 0 24 24" aria-hidden="true">
-      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#f98bb0"/><stop offset="1" stop-color="#d94f82"/>
-      </linearGradient></defs>
-      <path fill="url(#g)" d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2.2 5 5.7 5c2 0 3.6 1.1 4.3 2.7h4c.7-1.6 2.3-2.7 4.3-2.7 3.5 0 5.3 3.6 3.7 6.7C19.5 16.1 12 21 12 21z"/>
-    </svg>
-
-    <div class="domain rise d1">pianxin.me</div>
-    <h1 class="rise d2"><span class="ch c1">偏</span><span class="ch c2 xin">心</span><span class="ch c3">我</span></h1>
-    <div class="rule rise d3"></div>
-    <p class="tagline rise d3">世界再大，也要偏心我一个。</p>
-    <nav class="doors rise d4">
-      <a class="door zw" href="/zhengwang/"><span class="door-e">🐻</span><span>zhengwang</span></a>
-      <a class="door xh" href="/xiaoha/"><span class="door-e">🐰</span><span>xiaoha</span></a>
-    </nav>
-  </main>
-
-  <div class="hint" id="hint">点一下，有小心心</div>
-  <footer>© 2026 PIANXIN.ME</footer>
-
-<script>
-  const heartSVG = '<svg viewBox="0 0 24 24"><path fill="COLOR" d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2.2 5 5.7 5c2 0 3.6 1.1 4.3 2.7h4c.7-1.6 2.3-2.7 4.3-2.7 3.5 0 5.3 3.6 3.7 6.7C19.5 16.1 12 21 12 21z"/></svg>';
-  const colors = ['#f472a0', '#f98bb0', '#d94f82', '#ffb3c7', '#e59ab5'];
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let hinted = false;
-
-  addEventListener('pointerdown', e => {
-    if (reduced || e.target.closest('a')) return;
-    for (let i = 0; i < 5; i++) {
-      const el = document.createElement('div');
-      el.className = 'fly';
-      el.innerHTML = heartSVG.replace('COLOR', colors[Math.random() * colors.length | 0]);
-      el.style.left = (e.clientX + (Math.random() - .5) * 70) + 'px';
-      el.style.top = (e.clientY + (Math.random() - .5) * 30) + 'px';
-      el.style.setProperty('--rot', (Math.random() * 50 - 25) + 'deg');
-      el.style.animationDelay = (i * 60) + 'ms';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2200);
-    }
-    if (!hinted) { hinted = true; document.getElementById('hint').style.opacity = 0; }
-  }, { passive: true });
-
-  // gentle parallax on blobs
-  if (!reduced) {
-    const blobs = document.querySelectorAll('.blob');
-    addEventListener('pointermove', e => {
-      const x = (e.clientX / innerWidth - .5), y = (e.clientY / innerHeight - .5);
-      blobs.forEach((b, i) => {
-        const f = (i + 1) * 12;
-        b.style.translate = `${x * f}px ${y * f}px`;
-      });
-    }, { passive: true });
-  }
-</script>
+<main>
+  <p class="domain">PIANXIN.ME</p>
+  <img class="scene" src="/app/stickers/d-study.webp" width="230" height="230" alt="小熊和小兔一起学习">
+  <h1>偏心我</h1>
+  <p class="tagline">一起学习，顺手分享生活。</p>
+  <p class="sub">各做各的，也有人作伴。不催回复，不用打卡。</p>
+  <nav class="doors" aria-label="选择自己的入口">
+    <a class="door" href="/zhengwang/"><img src="/app/stickers/av-bear.webp" width="52" height="52" alt=""><span><b>zhengwang</b><small>从这里进入</small></span><em aria-hidden="true">›</em></a>
+    <a class="door" href="/xiaoha/"><img src="/app/stickers/av-bunny.webp" width="52" height="52" alt=""><span><b>xiaoha</b><small>从这里进入</small></span><em aria-hidden="true">›</em></a>
+  </nav>
+  <div class="features"><span>一起专注</span><span>可爱表情</span><span>生活记录</span><span>共享计划</span></div>
+  <footer>两个人用同一个暗号，进入同一个小空间。</footer>
+</main>
 </body>
 </html>

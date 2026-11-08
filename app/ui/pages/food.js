@@ -1,11 +1,12 @@
-// 偏心我 · 吃饭专区 — 吃了啥、共享菜谱（可展开）、吃货专区（想吃的东西）
-import { html } from '../h.js?v=efe89b71a3';
+// 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
+import { html } from '../h.js?v=d7c13ae0f9';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, avatarOf, toast } from '../../lib/ctx.js?v=efe89b71a3';
-import { quickStart } from '../../lib/together.js?v=efe89b71a3';
-import { uid, today, fmtDay, fmtHM, cx, pick } from '../../lib/util.js?v=efe89b71a3';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, confirmDel, Modal } from '../common.js?v=efe89b71a3';
-import { strip } from './home.js?v=efe89b71a3';
+import { app, useCols, nameOf, toast, stId } from '../../lib/ctx.js?v=d7c13ae0f9';
+import { quickStart } from '../../lib/together.js?v=d7c13ae0f9';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=d7c13ae0f9';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=d7c13ae0f9';
+import { Icon } from '../icons.js?v=d7c13ae0f9';
+import { Fit } from './fit.js?v=d7c13ae0f9';
 
 // ---------- meals ----------
 const MEALS = [['🌅', '早饭'], ['🍱', '午饭'], ['🌙', '晚饭'], ['🍪', '加餐'], ['🌃', '夜宵']];
@@ -33,9 +34,10 @@ function MealForm({ edit, onDone }) {
     onDone && onDone();
   };
   return html`<section class="card meal-form">
+    <div class="meal-form-hd"><${St} id=${stId(app.me, 'eat')} size=${56} title="" /><b>今天吃了什么？</b></div>
     <div class="chips">${MEALS.map(([e, l]) => html`<button type="button" class=${cx('chip', meal === l && 'on')} onClick=${() => setMeal(l)}><span class="chip-i">${e}</span>${l}</button>`)}</div>
     <div class="row">
-      <input class="inp" maxlength="500" placeholder="吃了什么？比如：番茄牛腩饭 + 冰美式" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${(e) => e.key === 'Enter' && !e.isComposing && e.keyCode !== 229 && save()} />
+      <input class="inp" maxlength="500" placeholder="比如：番茄牛腩饭 + 冰美式" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${(e) => e.key === 'Enter' && !e.isComposing && e.keyCode !== 229 && save()} />
       <input class="inp date" type="date" value=${day} max=${today()} onInput=${(e) => e.target.value && setDay(e.target.value)} />
     </div>
     <${PhotoPicker} value=${photos} onChange=${setPhotos} max=${4} />
@@ -53,21 +55,24 @@ function Meals() {
   const all = app.store.list('meal');
   const days = [...new Set(all.map((x) => x.day))].sort().reverse();
   const order = MEALS.map((m) => m[1]);
-  return html`<div class="meals">
+  return html`<div class="stack">
+    <button class="card cta" onClick=${() => { quickStart('eat'); location.hash = '#/together'; }}>
+      <${St} id="d-eat" size=${64} title="" /><div><b>一起吃饭</b><small class="muted">开个计时，边吃边聊</small></div><${Icon} n="right" />
+    </button>
     ${edit ? html`<${MealForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${MealForm} key="new" />`}
-    ${!days.length && html`<${Empty} icon="🍚" text="还没有记录，今天吃了什么好吃的？" />`}
+    ${!days.length && html`<${Empty} st="eat" text="还没有记录，今天吃了什么好吃的？" />`}
     ${days.slice(0, limit).map((d) => html`<section class="card meal-day" key=${d}>
       <div class="card-hd"><h3>${fmtDay(d)}</h3></div>
       <div class="meal-cols">
         ${[app.me, app.partner].map((w) => {
           const items = all.filter((x) => x.day === d && x.who === w).sort((a, b) => order.indexOf(a.meal) - order.indexOf(b.meal) || a.at - b.at);
           return html`<div class=${cx('meal-col', 'p-' + w)}>
-            <div class="meal-who"><${Avatar} who=${w} size=${22} /> ${nameOf(w)}</div>
+            <div class="meal-who"><${Avatar} who=${w} size=${26} /> ${nameOf(w)}</div>
             ${items.length ? items.map((x) => html`<div class="meal-i" key=${x.id}>
               <div class="meal-row"><span class="meal-tag">${(MEALS.find((m) => m[1] === x.meal) || MEALS[3])[0]} ${x.meal}</span><span class="meal-t">${x.text}</span>
-                ${x.who === app.me && html`<span class="meal-ops"><button class="icon-btn xs" aria-label="编辑" onClick=${() => setEdit(x)}>✎</button><button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删除这条？') && app.store.del('meal', x.id)}>✕</button></span>`}</div>
+                ${x.who === app.me && html`<span class="meal-ops"><button class="icon-btn xs" aria-label="编辑" onClick=${() => setEdit(x)}><${Icon} n="edit" size=${14} /></button><button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删除这条？') && app.store.del('meal', x.id)}><${Icon} n="x" size=${14} /></button></span>`}</div>
               <${Photos} list=${x.photos} />
-              <${Reacts} target=${`meal/${x.id}`} opts=${['🤤', '😋', '👍', '🥺', '❤️']} />
+              <${Reacts} target=${`meal/${x.id}`} set="food" />
             </div>`) : html`<p class="muted sm">还没记</p>`}
           </div>`;
         })}
@@ -94,10 +99,10 @@ function RecipeForm({ edit, onClose }) {
     };
     if (edit) app.store.put('recipe', edit.id, { ...strip(edit), ...data, editBy: app.me });
     else app.store.put('recipe', uid(), data);
-    toast(edit ? '菜谱改好啦' : '菜谱扔上去啦', { icon: '📖' });
+    toast(edit ? '菜谱改好啦' : '菜谱放上去啦', { icon: stId(app.me, 'ok') });
     onClose();
   };
-  return html`<${Modal} title=${edit ? '改菜谱' : '扔一个菜谱上来'} onClose=${onClose} cls="wide">
+  return html`<${Modal} title=${edit ? '改菜谱' : '分享一个菜谱'} onClose=${onClose} cls="wide">
     <label class="lbl">菜名</label>
     <input class="inp" maxlength="60" placeholder="比如：可乐鸡翅" value=${name} onInput=${(e) => setName(e.target.value)} />
     <label class="lbl">食材（选填，一行一个）</label>
@@ -108,7 +113,7 @@ function RecipeForm({ edit, onClose }) {
     <input class="inp" maxlength="80" placeholder="家常 快手 下饭" value=${tags} onInput=${(e) => setTags(e.target.value)} />
     <label class="lbl">成品图（选填）</label>
     <${PhotoPicker} value=${photos} onChange=${setPhotos} max=${4} />
-    <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!name.trim()} onClick=${save}>${edit ? '保存' : '扔上去'}</button></div>
+    <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!name.trim()} onClick=${save}>${edit ? '保存' : '放上去'}</button></div>
   <//>`;
 }
 
@@ -124,21 +129,21 @@ function RecipeCard({ x, open, onToggle, onEdit }) {
   return html`<article class=${cx('recipe', open && 'open')}>
     <button type="button" class="recipe-hd" aria-expanded=${open} onClick=${onToggle}>
       <span class="recipe-name">${x.name}</span>
-      <span class="chev">${open ? '▾' : '▸'}</span>
+      <span class="chev"><${Icon} n=${open ? 'down' : 'right'} size=${18} /></span>
     </button>
     ${open && html`<div class="recipe-bd">
-      <div class="recipe-meta"><span class=${'recipe-by p-' + x.who} title=${nameOf(x.who)}>${avatarOf(x.who)}</span>${(x.tags || []).map((t) => html`<em class="tag">${t}</em>`)}</div>
+      <div class="recipe-meta"><${Avatar} who=${x.who} size=${24} />${(x.tags || []).map((t) => html`<em class="tag">${t}</em>`)}</div>
       <${Photos} list=${x.photos} />
       ${ings.length > 0 && html`<div class="recipe-sec"><h4>食材</h4><ul class="ing">${ings.map((l) => html`<li>${l}</li>`)}</ul></div>`}
       ${steps.length > 0 ? html`<div class="recipe-sec"><h4>做法</h4><ol class="steps">${steps.map((l) => html`<li>${l}</li>`)}</ol></div>` : html`<p class="muted">还没写做法，补一下吧～</p>`}
       <div class="recipe-ft">
-        <small class="muted">${nameOf(x.who)} 扔上来的${x.editBy && x.editBy !== x.who ? ` · ${nameOf(x.editBy)} 改过` : ''}${cooked.length ? ` · 做过 ${cooked.length} 次，最近一次 ${fmtDay(cooked[0].day)}` : ''}</small>
+        <small class="muted">${nameOf(x.who)} 分享的${x.editBy && x.editBy !== x.who ? ` · ${nameOf(x.editBy)} 改过` : ''}${cooked.length ? ` · 做过 ${cooked.length} 次，最近一次 ${fmtDay(cooked[0].day)}` : ''}</small>
         <span class="sp"></span>
-        <button class="btn xs" onClick=${() => { app.store.put('rcook', uid(), { r: x.id, who: app.me, day: today(), at: Date.now() }); toast(`做了「${x.name}」，好吃吗？`, { icon: '👩‍🍳' }); }}>👩‍🍳 今天做了</button>
+        <button class="btn xs" onClick=${() => { app.store.put('rcook', uid(), { r: x.id, who: app.me, day: today(), at: Date.now() }); toast(`做了「${x.name}」，好吃吗？`, { icon: stId(app.me, 'eat') }); }}>今天做了</button>
         <button class="btn xs ghost" onClick=${() => onEdit(x)}>编辑</button>
         <button class="btn xs ghost" onClick=${() => confirmDel(`删除菜谱「${x.name}」？`) && app.store.del('recipe', x.id)}>删除</button>
       </div>
-      <${Reacts} target=${`recipe/${x.id}`} opts=${['🤤', '😋', '👍', '❤️', '🔥']} />
+      <${Reacts} target=${`recipe/${x.id}`} set="food" />
     </div>`}
   </article>`;
 }
@@ -163,24 +168,24 @@ function Recipes() {
     const r = pick(all);
     setQ('');
     setOpen(new Set([r.id]));
-    toast(`今天做「${r.name}」怎么样？`, { icon: '🎲' });
+    toast(`今天做「${r.name}」怎么样？`, { icon: stId(app.me, 'idea') });
   };
-  return html`<div class="recipes">
+  return html`<div class="stack">
     <div class="row">
-      <input class="inp" placeholder="🔍 搜菜名、食材、标签" value=${q} onInput=${(e) => setQ(e.target.value)} />
-      <button class="btn ghost" onClick=${roll} title="随机一道">🎲</button>
-      <button class="btn" onClick=${() => setForm({})}>＋ 菜谱</button>
+      <label class="search"><${Icon} n="search" size=${18} /><input class="inp" placeholder="搜菜名、食材、标签" value=${q} onInput=${(e) => setQ(e.target.value)} /></label>
+      <button class="btn ghost" onClick=${roll} title="随机一道"><${Icon} n="dice" size=${18} /></button>
+      <button class="btn" onClick=${() => setForm({})}><${Icon} n="plus" size=${18} /> 菜谱</button>
     </div>
     <p class="hint">点菜名展开做法，两个人都能编辑。</p>
     <div class="recipe-list card">
       ${list.length ? list.map((x) => html`<${RecipeCard} key=${x.id} x=${x} open=${open.has(x.id)} onToggle=${() => toggle(x.id)} onEdit=${(r) => setForm({ edit: r })} />`)
-        : html`<${Empty} icon="📖" text=${ql ? '没找到这道菜' : '还没有菜谱，想到什么好吃的就扔上来吧'} />`}
+        : html`<${Empty} st="idea" text=${ql ? '没找到这道菜' : '还没有菜谱，想到什么好吃的就放上来吧'} />`}
     </div>
     ${form && html`<${RecipeForm} edit=${form.edit} onClose=${() => setForm(null)} />`}
   </div>`;
 }
 
-// ---------- wishlist (吃货专区) ----------
+// ---------- wishlist ----------
 const WISH_KINDS = [['🍜', '想吃的菜'], ['🏪', '想去的店'], ['🧋', '零食饮品'], ['🍰', '甜品'], ['✈️', '旅行美食']];
 
 function Wishes() {
@@ -202,13 +207,14 @@ function Wishes() {
   const want = (x) => app.store.put('wish', x.id, { ...strip(x), plus: [...new Set([...(x.plus || []), app.me])] });
   const unwant = (x) => app.store.put('wish', x.id, { ...strip(x), plus: (x.plus || []).filter((w) => w !== app.me) });
   const done = (x) => app.store.put('wish', x.id, { ...strip(x), done: !x.done, doneAt: x.done ? 0 : Date.now(), doneDay: x.done ? '' : today() });
-  return html`<div class="wishes">
+  return html`<div class="stack">
     <form class="card wish-form" onSubmit=${add}>
+      <div class="meal-form-hd"><${St} id=${stId(app.me, 'tea')} size=${56} title="" /><b>想吃什么？记下来</b></div>
       <div class="chips">${WISH_KINDS.map(([e, l]) => html`<button type="button" class=${cx('chip', kind === e && 'on')} onClick=${() => setKind(e)}><span class="chip-i">${e}</span>${l}</button>`)}</div>
       <div class="row">
-        <input class="inp" maxlength="60" placeholder="想吃什么？比如：楼下新开的烤肉" value=${name} onInput=${(e) => setName(e.target.value)} />
+        <input class="inp" maxlength="60" placeholder="比如：楼下新开的烤肉" value=${name} onInput=${(e) => setName(e.target.value)} />
         <input class="inp" maxlength="80" placeholder="在哪（选填）" value=${where} onInput=${(e) => setWhere(e.target.value)} />
-        <button class="btn" disabled=${!name.trim()}>想吃！</button>
+        <button class="btn" disabled=${!name.trim()}>记下</button>
       </div>
     </form>
     <${Seg} value=${tab} onChange=${setTab} options=${[{ value: 'todo', label: `想吃的 ${all.filter((x) => !x.done).length}` }, { value: 'done', label: `吃到啦 ${all.filter((x) => x.done).length}` }]} />
@@ -219,31 +225,36 @@ function Wishes() {
         return html`<article class=${cx('card wish', both && 'both', x.done && 'done')} key=${x.id}>
           <div class="wish-hd"><span class="wish-k">${x.kind}</span><b>${x.name}</b></div>
           ${x.where && html`<small class="muted">📍 ${x.where}</small>`}
-          <div class="wish-who">${[...plus].map((w) => html`<span class=${'p-' + w}>${avatarOf(w)}</span>`)}<small class="muted">${both ? '都想吃！' : `${nameOf(x.who)} 想吃`}</small></div>
-          ${x.done && html`<small class="muted">😋 ${x.doneDay ? fmtDay(x.doneDay) : ''}吃到啦</small>`}
+          <div class="wish-who">${[...plus].map((w) => html`<${Avatar} who=${w} size=${24} />`)}<small class="muted">${both ? '都想吃' : `${nameOf(x.who)} 想吃`}</small></div>
+          ${x.done && html`<small class="muted">${x.doneDay ? fmtDay(x.doneDay) : ''}吃到啦</small>`}
           <div class="wish-ft">
-            ${!x.done && (plus.has(app.me) ? (x.who !== app.me ? html`<button class="btn xs ghost" onClick=${() => unwant(x)}>不想了</button>` : null) : html`<button class="btn xs" onClick=${() => want(x)}>🙋 我也想</button>`)}
-            <button class="btn xs ghost" onClick=${() => done(x)}>${x.done ? '还想再吃' : '✓ 吃到啦'}</button>
-            ${x.who === app.me && html`<button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删掉这个？') && app.store.del('wish', x.id)}>✕</button>`}
+            ${!x.done && (plus.has(app.me) ? (x.who !== app.me ? html`<button class="btn xs ghost" onClick=${() => unwant(x)}>不想了</button>` : null) : html`<button class="btn xs" onClick=${() => want(x)}>我也想</button>`)}
+            <button class="btn xs ghost" onClick=${() => done(x)}>${x.done ? '还想再吃' : '吃到啦'}</button>
+            ${x.who === app.me && html`<button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删掉这个？') && app.store.del('wish', x.id)}><${Icon} n="x" size=${14} /></button>`}
           </div>
-          ${x.done && html`<${Reacts} target=${`wish/${x.id}`} opts=${['😋', '🤤', '👍', '❤️', '🥲']} />`}
+          ${x.done && html`<${Reacts} target=${`wish/${x.id}`} set="food" />`}
         </article>`;
-      }) : html`<${Empty} icon=${tab === 'todo' ? '🤤' : '🍽️'} text=${tab === 'todo' ? '还没有想吃的？不可能！' : '吃到的会出现在这里'} />`}
+      }) : html`<${Empty} st=${tab === 'todo' ? 'tea' : 'eat'} text=${tab === 'todo' ? '还没有想吃的？不可能！' : '吃到的会出现在这里'} />`}
     </div>
   </div>`;
 }
 
-export function Food({ param }) {
-  const tab = ['meal', 'recipe', 'wish'].includes(param) ? param : 'meal';
-  return html`<div class="page food">
-    <div class="page-hd">
-      <h2>🍚 吃饭专区</h2>
-      <button class="btn" onClick=${() => { quickStart('eat'); location.hash = '#/together'; }}>🍚 一起吃饭</button>
-    </div>
-    <${Seg} value=${tab} onChange=${(v) => (location.hash = '#/food/' + v)} cls="big"
-      options=${[{ value: 'meal', label: '吃了啥', icon: '🍱' }, { value: 'recipe', label: '共享菜谱', icon: '📖' }, { value: 'wish', label: '吃货专区', icon: '🤤' }]} />
+export const LIFE_TABS = [
+  { value: 'meal', label: '吃了啥', key: 'eat' },
+  { value: 'recipe', label: '菜谱', key: 'idea' },
+  { value: 'wish', label: '想吃的', key: 'tea' },
+  { value: 'fit', label: '运动', key: 'run' },
+];
+
+export function Life({ param }) {
+  const tab = LIFE_TABS.some((t) => t.value === param) ? param : 'meal';
+  return html`<div class="page life">
+    <div class="page-hd"><h2>生活</h2><small class="muted">吃饭、菜谱、想吃的、运动</small></div>
+    <${Seg} value=${tab} onChange=${(v) => (location.hash = '#/life/' + v)} cls="big"
+      options=${LIFE_TABS.map((t) => ({ value: t.value, label: t.label, st: stId(app.me, t.key) }))} />
     ${tab === 'meal' && html`<${Meals} />`}
     ${tab === 'recipe' && html`<${Recipes} />`}
     ${tab === 'wish' && html`<${Wishes} />`}
+    ${tab === 'fit' && html`<${Fit} />`}
   </div>`;
 }
