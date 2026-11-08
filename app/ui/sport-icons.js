@@ -1,7 +1,7 @@
 // Eight original SVG mini-illustrations, drawn for the exercise picker.
 // Characters are fixed by sport, not by the current user's avatar preference.
-import { html } from './h.js?v=69dcf6b8ad';
-import { sportArtOf } from '../lib/sports.js?v=69dcf6b8ad';
+import { html } from './h.js?v=6970b80344';
+import { sportArtOf } from '../lib/sports.js?v=6970b80344';
 
 const ink = '#674738', fur = '#f3c182', cream = '#fff8ec', pink = '#f6b5c4';
 const ground = '<ellipse cx="59" cy="108" rx="37" ry="5" fill="#d8c6ad" opacity=".23" stroke="none"/>';

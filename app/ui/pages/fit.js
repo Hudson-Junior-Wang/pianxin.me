@@ -1,15 +1,15 @@
 // 偏心我 · 运动 — 各自记录，方便时再回应，不比较、不要求同时进行
-import { html } from '../h.js?v=69dcf6b8ad';
+import { html } from '../h.js?v=6970b80344';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=69dcf6b8ad';
-import { localZone } from '../../lib/time.js?v=69dcf6b8ad';
-import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=69dcf6b8ad';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=69dcf6b8ad';
-import { Icon } from '../icons.js?v=69dcf6b8ad';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=6970b80344';
+import { localZone } from '../../lib/time.js?v=6970b80344';
+import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=6970b80344';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=6970b80344';
+import { Icon } from '../icons.js?v=6970b80344';
 
-import { SPORTS, sportOf } from '../../lib/sports.js?v=69dcf6b8ad';
-import { SportIcon } from '../sport-icons.js?v=69dcf6b8ad';
-export { SPORTS } from '../../lib/sports.js?v=69dcf6b8ad';
+import { SPORTS, sportOf } from '../../lib/sports.js?v=6970b80344';
+import { SportIcon } from '../sport-icons.js?v=6970b80344';
+export { SPORTS } from '../../lib/sports.js?v=6970b80344';
 const FEELS = [['easy', '轻松', 'thanks'], ['ok', '刚好', 'ok'], ['tired', '好累', 'dizzy'], ['fire', '超爽', 'cheer']];
 const OLD_FEEL = { '😌': 'easy', '🙂': 'ok', '🥵': 'tired', '🔥': 'fire' };
 const feelOf = (f) => FEELS.find((x) => x[0] === (OLD_FEEL[f] || f));
@@ -57,7 +57,7 @@ function LogForm({ edit, onDone }) {
       <span class="lbl">日期</span>
       <input class="inp date" type="date" value=${day} max=${today()} onInput=${(e) => e.target.value && setDay(e.target.value)} />
     </div>
-    <${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${1000} placeholder="想说点什么（选填）：跑了哪条路、练了什么…" />
+    <${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${1000} placeholder="想说点什么（选填）" />
     <${PhotoPicker} value=${photos} onChange=${setPhotos} max=${4} />
     <div class="row end">
       ${edit && html`<button type="button" class="btn ghost sm" onClick=${onDone}>取消</button>`}
