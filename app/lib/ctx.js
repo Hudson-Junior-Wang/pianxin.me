@@ -1,7 +1,8 @@
 // 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
-import { localZone, validZone, zoneParts } from './time.js?v=f8c0c1b1d6';
+import { localZone, validZone, zoneParts } from './time.js?v=81eb25e2e5';
+import { emojiText } from './pictograms.js?v=81eb25e2e5';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
@@ -284,8 +285,8 @@ export function dismissToast(id) {
   toastList = toastList.filter((x) => x.id !== id);
   pushToasts();
 }
-/** icon: a sticker id (e.g. 'r-cheer') or a plain emoji */
-export function toast(text, { icon = '✨', ms = 4200, kind = '', action = null } = {}) {
+/** icon: sticker ID; historical emoji IDs are illustrated at render time. */
+export function toast(text, { icon = stId(app.me, 'idea'), ms = 4200, kind = '', action = null } = {}) {
   // the same message twice in a row just refreshes the existing toast
   const dup = toastList.find((x) => x.text === text);
   if (dup) toastList = toastList.filter((x) => x !== dup);
@@ -354,5 +355,5 @@ export function notify(title, body, timer = false) {
   if (!app.settings.notify || (app.quiet && !timer) || app.store?.get('status', app.me)?.need === 'quiet') return;
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return;
-  try { new Notification(title, { body, tag: 'pianxin-' + Date.now(), icon: '/app/icons/icon-192-v3.png' }); } catch {}
+  try { new Notification(emojiText(title), { body: emojiText(body), tag: 'pianxin-' + Date.now(), icon: '/app/icons/icon-192-v3.png' }); } catch {}
 }

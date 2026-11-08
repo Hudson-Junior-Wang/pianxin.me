@@ -1,16 +1,17 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=f8c0c1b1d6';
+import { html } from '../h.js?v=81eb25e2e5';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=f8c0c1b1d6';
-import { localZone } from '../../lib/time.js?v=f8c0c1b1d6';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=f8c0c1b1d6';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=f8c0c1b1d6';
-import { Icon } from '../icons.js?v=f8c0c1b1d6';
-import { Fit } from './fit.js?v=f8c0c1b1d6';
-import { Cal } from './cal.js?v=f8c0c1b1d6';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=81eb25e2e5';
+import { localZone } from '../../lib/time.js?v=81eb25e2e5';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=81eb25e2e5';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=81eb25e2e5';
+import { Icon } from '../icons.js?v=81eb25e2e5';
+import { Fit } from './fit.js?v=81eb25e2e5';
+import { Cal } from './cal.js?v=81eb25e2e5';
+import { Pic } from '../pictograms.js?v=81eb25e2e5';
 
 // ---------- meals ----------
-const MEALS = [['🌅', '早饭'], ['🍱', '午饭'], ['🌙', '晚饭'], ['🍪', '加餐'], ['🌃', '夜宵']];
+const MEALS = [['breakfast', '早饭'], ['lunch', '午饭'], ['dinner', '晚饭'], ['snack', '加餐'], ['supper', '夜宵']];
 function guessMeal() {
   const h = new Date().getHours();
   if (h < 10) return '早饭';
@@ -40,7 +41,7 @@ function MealForm({ edit, onDone }) {
   };
   return html`<section class="card meal-form">
     <div class="meal-form-hd"><${St} id=${stId(app.me, 'eat')} size=${56} title="" /><b>今天吃了什么？</b></div>
-    <div class="chips">${MEALS.map(([e, l]) => html`<button type="button" class=${cx('chip', meal === l && 'on')} onClick=${() => setMeal(l)}><span class="chip-i">${e}</span>${l}</button>`)}</div>
+    <div class="chips">${MEALS.map(([e, l]) => html`<button type="button" class=${cx('chip illustrated-chip', meal === l && 'on')} aria-pressed=${meal === l} onClick=${() => setMeal(l)}><${Pic} name=${e} size=${28} />${l}</button>`)}</div>
     <div class="row date-row">
       <input class="inp" maxlength="500" placeholder="比如：番茄牛腩饭 + 冰美式" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${(e) => e.key === 'Enter' && !e.isComposing && e.keyCode !== 229 && save()} />
       <input class="inp date" type="date" value=${day} max=${today()} onInput=${(e) => e.target.value && setDay(e.target.value)} />
@@ -191,7 +192,8 @@ function Recipes() {
 }
 
 // ---------- wishlist ----------
-const WISH_KINDS = [['🍜', '想吃的菜'], ['🏪', '想去的店'], ['🧋', '零食饮品'], ['🍰', '甜品'], ['✈️', '旅行美食']];
+// Keep historical category keys stable; only the displayed artwork changes.
+const WISH_KINDS = [['🍜', '想吃的菜', 'dish'], ['🏪', '想去的店', 'shop'], ['🧋', '零食饮品', 'drink'], ['🍰', '甜品', 'dessert'], ['✈️', '旅行美食', 'travel']];
 
 function Wishes() {
   useCols(['wish', 'react']);
@@ -215,7 +217,7 @@ function Wishes() {
   return html`<div class="stack">
     <form class="card wish-form" onSubmit=${add}>
       <div class="meal-form-hd"><${St} id=${stId(app.me, 'tea')} size=${56} title="" /><b>想吃什么？记下来</b></div>
-      <div class="chips">${WISH_KINDS.map(([e, l]) => html`<button type="button" class=${cx('chip', kind === e && 'on')} onClick=${() => setKind(e)}><span class="chip-i">${e}</span>${l}</button>`)}</div>
+      <div class="chips">${WISH_KINDS.map(([e, l, art]) => html`<button type="button" class=${cx('chip illustrated-chip', kind === e && 'on')} aria-pressed=${kind === e} onClick=${() => setKind(e)}><${Pic} name=${art} size=${28} />${l}</button>`)}</div>
       <div class="row">
         <input class="inp" maxlength="60" placeholder="比如：楼下新开的烤肉" value=${name} onInput=${(e) => setName(e.target.value)} />
         <input class="inp" maxlength="80" placeholder="在哪（选填）" value=${where} onInput=${(e) => setWhere(e.target.value)} />
@@ -228,8 +230,8 @@ function Wishes() {
         const plus = new Set([x.who, ...(x.plus || [])]);
         const both = plus.has(app.me) && plus.has(app.partner);
         return html`<article class=${cx('card wish', both && 'both', x.done && 'done')} key=${x.id}>
-          <div class="wish-hd"><span class="wish-k">${x.kind}</span><b>${x.name}</b></div>
-          ${x.where && html`<small class="muted">📍 ${x.where}</small>`}
+          <div class="wish-hd"><span class="wish-k"><${Pic} name=${x.kind} size=${38} label=${WISH_KINDS.find(([k]) => k===x.kind)?.[1]||'想吃的'} /></span><b>${x.name}</b></div>
+          ${x.where && html`<small class="muted wish-place"><${Icon} n="pin" size=${14} />${x.where}</small>`}
           <div class="wish-who">${[...plus].map((w) => html`<${Avatar} who=${w} size=${24} />`)}<small class="muted">${both ? '都想吃' : `${nameOf(x.who)} 想吃`}</small></div>
           ${x.done && html`<small class="muted">${x.doneDay ? fmtDay(x.doneDay) : ''}吃到啦</small>`}
           <div class="wish-ft">

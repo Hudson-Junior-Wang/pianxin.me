@@ -1,14 +1,16 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=f8c0c1b1d6';
+import { html, render } from './h.js?v=81eb25e2e5';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=f8c0c1b1d6';
-import { compressPair, cx } from '../lib/util.js?v=f8c0c1b1d6';
-import { useLayerClose } from './motion.js?v=f8c0c1b1d6';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=81eb25e2e5';
+import { compressPair, cx } from '../lib/util.js?v=81eb25e2e5';
+import { useLayerClose } from './motion.js?v=81eb25e2e5';
+import { Pic } from './pictograms.js?v=81eb25e2e5';
+import { pictogramOf, emojiText } from '../lib/pictograms.js?v=81eb25e2e5';
 
-/** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
+/** Sticker image with presentation-only artwork for historical emoji IDs. */
 export function St({ id, size = 48, cls = '', title, onClick }) {
   if (!id) return null;
-  if (!isSt(id)) return html`<span class=${cx('st-emo', cls)} style=${`--s:${size}px`} onClick=${onClick}>${id}</span>`;
+  if (!isSt(id)) return html`<${Pic} name=${id} size=${size} cls=${cx('st', cls)} label=${title??pictogramOf(id).label} onClick=${onClick} />`;
   const t = title ?? stLabel(id);
   return html`<img class=${cx('st', cls)} src=${stUrl(id)} width=${size} height=${size} alt=${t} title=${t} loading="lazy" decoding="async" draggable="false" onClick=${onClick} />`;
 }
@@ -281,7 +283,7 @@ const REACT_SETS = {
 const isKey = (e) => typeof e === 'string' && Object.prototype.hasOwnProperty.call(ST_LABEL, e);
 
 function ReactBadge({ r, mine, onClick }) {
-  const pic = isKey(r.e) ? html`<${St} id=${stId(r.who, r.e)} size=${30} />` : html`<b>${r.e}</b>`;
+  const pic = html`<${St} id=${isKey(r.e) ? stId(r.who, r.e) : r.e} size=${30} />`;
   return mine
     ? html`<button type="button" class=${'rx mine p-' + r.who} title="再点一下取消" onClick=${onClick}>${pic}</button>`
     : html`<span class=${'rx p-' + r.who} title=${nameOf(r.who)}>${pic}</span>`;
@@ -322,7 +324,7 @@ export function AutoText({ value, onInput, placeholder, rows = 3, maxLength = 40
 }
 
 export function confirmDel(text = '确定删除吗？') {
-  return window.confirm(text);
+  return window.confirm(emojiText(text));
 }
 
 export const strip = (x) => {

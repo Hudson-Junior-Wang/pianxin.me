@@ -85,7 +85,21 @@ ul, ol { margin: 0; padding: 0; }
 
 /* stickers */
 .st { display: block; flex: none; object-fit: contain; user-select: none; -webkit-user-drag: none; }
-.st-emo { font-size: calc(var(--s) * .62); line-height: 1; display: inline-grid; place-items: center; width: var(--s); height: var(--s); }
+.pictogram { display: block; flex: none; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.inline-pictogram { display: inline-block; width: 1.6em; height: 1.6em; max-width: none; vertical-align: -.35em; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+.illustrated-chip { gap: 5px; min-height: 40px; padding: 4px 11px 4px 7px; }
+.illustrated-chip .pictogram { width: 28px; height: 28px; }
+.wish-place { display: flex; align-items: flex-start; gap: 4px; }
+.wish-place .ic { margin-top: 2px; }
+.msg.emo .inline-pictogram { width: 2.4em; height: 2.4em; }
+.key-fingerprint { display: inline-flex; justify-content: center; gap: 8px; max-width: 100%; }
+.fingerprint-tile { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px; border-radius: 9px; background: var(--card); min-width: 0; }
+.fingerprint-tile code { font: 600 12px/1.3 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; color: var(--ink); }
+.key-fingerprint.compact { gap: 4px; }
+.key-fingerprint.compact .fingerprint-tile { flex-direction: row; gap: 2px; padding: 2px; background: var(--soft); }
+.key-fingerprint.compact .fingerprint-tile code { font-size: 10px; }
+.network-hd { flex-wrap: wrap; }
+.network-fingerprint { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 100%; }
 
 /* ---------- buttons & inputs ---------- */
 .btn {
@@ -625,7 +639,7 @@ a.tg-row { color: var(--ink); }
 .wish.done { opacity: .85; }
 .wish-hd { display: flex; align-items: center; gap: 8px; }
 .wish-hd b { font-size: 16px; word-break: break-word; }
-.wish-k { font-size: 24px; }
+.wish-k { display: flex; flex: none; }
 .wish-who { display: flex; align-items: center; gap: 4px; }
 .wish-ft { display: flex; gap: 6px; align-items: center; margin-top: auto; flex-wrap: wrap; }
 
@@ -642,12 +656,13 @@ a.tg-row { color: var(--ink); }
 .anniv-ul, .plan-ul, .idea-used { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .anniv-ul li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--soft); }
 .anniv-ul li.today { background: var(--accent-soft); }
-.anniv-e { font-size: 22px; }
+.anniv-e { display: flex; flex: none; }
 .anniv-m { flex: 1; display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
 .anniv-d { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
 .anniv-ops { display: flex; }
 .emo-pick { display: flex; flex-wrap: wrap; gap: 4px; }
-.emo-pick button { border: 0; background: var(--soft); width: 40px; height: 40px; border-radius: 12px; font-size: 20px; cursor: pointer; }
+.emo-pick button { display: grid; place-items: center; border: 0; background: var(--soft); width: 44px; height: 44px; border-radius: 12px; cursor: pointer; transition: transform 220ms var(--ease-out), background-color 220ms var(--ease-out); }
+.emo-pick button:active { transform: scale(.92); }
 .emo-pick button.on { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
 .mini-cal { margin-bottom: 12px; }
 .mini-cal .cal-c { aspect-ratio: auto; height: 46px; }
@@ -694,7 +709,7 @@ a.tg-row { color: var(--ink); }
 .lock form, .fp-box { display: flex; flex-direction: column; gap: 12px; text-align: left; width: 100%; }
 .fp-box { text-align: center; }
 .pw-row { display: flex; gap: 6px; }
-.fp { font-size: 30px; letter-spacing: 6px; background: var(--soft); border-radius: 16px; padding: 10px; }
+.fp { background: var(--soft); border-radius: 16px; padding: 10px; }
 .hint.small { font-size: 11.5px; }
 
 /* iPhone / Safari: notch, Home indicator, keyboard and comfortable touch targets. */
@@ -764,7 +779,10 @@ body, .shell, .boot, .lock { min-height: 100svh; }
   .together-card.live .tc-c { font-size: 24px; }
   .lock { padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
   .lock-card { padding-left: 20px; padding-right: 20px; }
-  .fp { font-size: clamp(20px, 6vw, 30px); letter-spacing: 3px; overflow-wrap: anywhere; }
+  .fp { overflow-wrap: anywhere; }
+  .key-fingerprint { gap: 5px; }
+  .fingerprint-tile { padding: 3px; }
+  .fingerprint-tile > .pictogram { width: 30px; height: 30px; }
 }
 @media (max-width: 359px) {
   .card { padding: 14px; }

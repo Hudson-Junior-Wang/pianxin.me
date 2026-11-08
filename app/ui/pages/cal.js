@@ -1,14 +1,16 @@
 // 偏心我 · 日历 — 下次见面、重要的日子、一起的计划、点子罐
-import { html } from '../h.js?v=f8c0c1b1d6';
+import { html } from '../h.js?v=81eb25e2e5';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=f8c0c1b1d6';
-import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=f8c0c1b1d6';
-import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=f8c0c1b1d6';
-import { Icon } from '../icons.js?v=f8c0c1b1d6';
-import { planScope, planOwner, canEditPlan } from '../../lib/plans.js?v=f8c0c1b1d6';
-import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=f8c0c1b1d6';
+import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=81eb25e2e5';
+import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=81eb25e2e5';
+import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=81eb25e2e5';
+import { Icon } from '../icons.js?v=81eb25e2e5';
+import { planScope, planOwner, canEditPlan } from '../../lib/plans.js?v=81eb25e2e5';
+import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=81eb25e2e5';
+import { Pic } from '../pictograms.js?v=81eb25e2e5';
 
-const DAY_EMOJI = ['🎂', '🎓', '📝', '✈️', '🎉', '🏠', '🐾', '⭐', '🍰', '📅'];
+// Original keys remain in old/new records so edits and sync need no migration.
+const DAY_ART = [['🎂','birthday','生日'],['🎓','graduation','毕业'],['📝','note','记事'],['✈️','travel','旅行'],['🎉','party','庆祝'],['🏠','home','家'],['🐾','paw','小脚印'],['⭐','star','星星'],['🍰','dessert','甜品'],['📅','calendar','日历']];
 
 // ---------- next meet-up ----------
 function MeetCard() {
@@ -84,7 +86,7 @@ function DayForm({ edit, onClose }) {
     onClose();
   };
   return html`<${Modal} title=${edit ? '改一下' : '加一个重要的日子'} onClose=${onClose}>
-    <div class="emo-pick">${DAY_EMOJI.map((e) => html`<button type="button" class=${cx(emoji === e && 'on')} onClick=${() => setEmoji(e)}>${e}</button>`)}</div>
+    <div class="emo-pick" role="group" aria-label="日子图案">${DAY_ART.map(([e, art, label]) => html`<button type="button" class=${cx(emoji === e && 'on')} aria-label=${label} aria-pressed=${emoji === e} onClick=${() => setEmoji(e)}><${Pic} name=${art} size=${34} /></button>`)}</div>
     <label class="lbl">名字</label><input class="inp" maxlength="40" placeholder="TA 的生日 / 出发的日子 / 见面的日子" value=${title} onInput=${(e) => setTitle(e.target.value)} />
     <label class="lbl">日期</label><input class="inp" type="date" value=${date} onInput=${(e) => setDate(e.target.value)} />
     <label class="check"><input type="checkbox" checked=${yearly} onChange=${(e) => setYearly(e.target.checked)} /> 每年重复显示倒数（比如生日）</label>
@@ -105,7 +107,7 @@ function Days() {
   return html`<section class="card annivs">
     <div class="card-hd"><h3>重要的日子</h3><button class="btn xs" onClick=${() => setForm({})}><${Icon} n="plus" size=${14} /> 添加</button></div>
     ${list.length ? html`<ul class="anniv-ul">${list.map((a) => html`<li key=${a.id} class=${cx(a.days === 0 && 'today')}>
-      <span class="anniv-e">${a.emoji || '📅'}</span>
+      <span class="anniv-e"><${Pic} name=${a.emoji||'calendar'} size=${38} fallback="calendar" label=${DAY_ART.find(([e])=>e===a.emoji)?.[2]||'日子图案'} /></span>
       <div class="anniv-m">
         <b>${a.title}</b>
         <small class="muted">${fmtDayFull(a.day)}${a.yearly !== false && a.years > 0 ? ` · 第 ${a.years} 年` : ''}${a.since > 0 ? ` · 已经 ${a.since} 天` : ''}</small>

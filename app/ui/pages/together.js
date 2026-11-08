@@ -1,12 +1,12 @@
 // 偏心我 · 一起模式 — 同步计时 + 互相可见的草稿栏 + 今日任务（聊天在右栏 / 底部抽屉）
-import { html } from '../h.js?v=f8c0c1b1d6';
+import { html } from '../h.js?v=81eb25e2e5';
 import { useState, useEffect, useRef } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=f8c0c1b1d6';
-import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=f8c0c1b1d6';
-import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=f8c0c1b1d6';
-import { Avatar, Dot, St, confirmDel } from '../common.js?v=f8c0c1b1d6';
-import { Icon } from '../icons.js?v=f8c0c1b1d6';
-import { TaskList } from './home.js?v=f8c0c1b1d6';
+import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=81eb25e2e5';
+import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=81eb25e2e5';
+import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=81eb25e2e5';
+import { Avatar, Dot, St, confirmDel } from '../common.js?v=81eb25e2e5';
+import { Icon } from '../icons.js?v=81eb25e2e5';
+import { TaskList } from './home.js?v=81eb25e2e5';
 
 const modeSticker = (m, who = app.me) => (m.st.startsWith('d-') ? m.st : stId(who, m.st));
 

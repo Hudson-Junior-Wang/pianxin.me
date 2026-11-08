@@ -1,26 +1,27 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=f8c0c1b1d6';
+import { html, render } from './ui/h.js?v=81eb25e2e5';
 import { useState, useEffect, useRef } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=f8c0c1b1d6';
-import { Store } from './lib/store.js?v=f8c0c1b1d6';
-import { initViewport } from './lib/viewport.js?v=f8c0c1b1d6';
-import { Sync } from './lib/sync.js?v=f8c0c1b1d6';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=f8c0c1b1d6';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=f8c0c1b1d6';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=f8c0c1b1d6';
-import { cx, fmtClock } from './lib/util.js?v=f8c0c1b1d6';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=f8c0c1b1d6';
-import { Icon } from './ui/icons.js?v=f8c0c1b1d6';
-import { Chat } from './ui/chat.js?v=f8c0c1b1d6';
-import { Home } from './ui/pages/home.js?v=f8c0c1b1d6';
-import { Learn } from './ui/pages/learn.js?v=f8c0c1b1d6';
-import { Together } from './ui/pages/together.js?v=f8c0c1b1d6';
-import { Journal } from './ui/pages/journal.js?v=f8c0c1b1d6';
-import { Life } from './ui/pages/food.js?v=f8c0c1b1d6';
-import { Me } from './ui/pages/me.js?v=f8c0c1b1d6';
-import { useLayerClose, useRouteMotion } from './ui/motion.js?v=f8c0c1b1d6';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=81eb25e2e5';
+import { Store } from './lib/store.js?v=81eb25e2e5';
+import { initViewport } from './lib/viewport.js?v=81eb25e2e5';
+import { Sync } from './lib/sync.js?v=81eb25e2e5';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=81eb25e2e5';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=81eb25e2e5';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=81eb25e2e5';
+import { cx, fmtClock } from './lib/util.js?v=81eb25e2e5';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=81eb25e2e5';
+import { Icon } from './ui/icons.js?v=81eb25e2e5';
+import { Chat } from './ui/chat.js?v=81eb25e2e5';
+import { Home } from './ui/pages/home.js?v=81eb25e2e5';
+import { Learn } from './ui/pages/learn.js?v=81eb25e2e5';
+import { Together } from './ui/pages/together.js?v=81eb25e2e5';
+import { Journal } from './ui/pages/journal.js?v=81eb25e2e5';
+import { Life } from './ui/pages/food.js?v=81eb25e2e5';
+import { Me } from './ui/pages/me.js?v=81eb25e2e5';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=81eb25e2e5';
+import { Fingerprint } from './ui/pictograms.js?v=81eb25e2e5';
 
 initViewport();
 
@@ -163,7 +164,7 @@ function Toasts() {
   const list = useToasts();
   return html`<div class="toasts" aria-live="polite">${list.map(
     (t) => html`<div key=${t.id} class=${cx('toast', t.kind)} onClick=${() => dismissToast(t.id)}>
-      ${isSt(t.icon) ? html`<${St} id=${t.icon} size=${44} cls="toast-st" title="" />` : html`<span class="toast-i">${t.icon}</span>`}
+      <${St} id=${t.icon} size=${44} cls="toast-st" title="" />
       <span class="toast-t">${t.text}</span>
       ${t.action && html`<button class="btn xs" onClick=${(e) => { e.stopPropagation(); dismissToast(t.id); t.action.fn(); }}>${t.action.label}</button>`}
     </div>`,
@@ -245,8 +246,8 @@ function Lock({ onDone }) {
       ${res
         ? html`<div class="fp-box">
             <p>这是你们这把钥匙的指纹：</p>
-            <div class="fp">${res.fp}</div>
-            <p class="hint">和 ${nameOf(app.partner)} 那边看到的一样，就说明暗号对上啦。</p>
+            <div class="fp"><${Fingerprint} value=${res.fp} /></div>
+            <p class="hint">和 ${nameOf(app.partner)} 那边的四组编号一模一样，就说明暗号对上啦。</p>
             <button class="btn big" onClick=${enter}>进入</button>
             <button class="link sm" onClick=${() => setRes(null)}>重新输入</button>
           </div>`

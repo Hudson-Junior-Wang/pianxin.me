@@ -1,10 +1,11 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=f8c0c1b1d6';
+import { html } from '../h.js?v=81eb25e2e5';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=f8c0c1b1d6';
-import { download, today, cx } from '../../lib/util.js?v=f8c0c1b1d6';
-import { St } from '../common.js?v=f8c0c1b1d6';
-import { installPlatform } from '../../lib/install.js?v=f8c0c1b1d6';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=81eb25e2e5';
+import { download, today, cx } from '../../lib/util.js?v=81eb25e2e5';
+import { St } from '../common.js?v=81eb25e2e5';
+import { Fingerprint } from '../pictograms.js?v=81eb25e2e5';
+import { installPlatform } from '../../lib/install.js?v=81eb25e2e5';
 
 function Profile() {
   useCols('profile');
@@ -65,9 +66,9 @@ function Network() {
   };
   const label = { up: '已连接', connecting: '连接中…', down: '重连中…', idle: '未连接', stopped: '已停止' };
   return html`<section class="card">
-    <div class="card-hd"><h3>连接</h3><small class="muted">钥匙指纹 ${app.kr.fp}</small></div>
+    <div class="card-hd network-hd"><h3>连接</h3><span class="network-fingerprint"><small class="muted">钥匙指纹</small><${Fingerprint} value=${app.kr.fp} compact /></span></div>
     <ul class="net-ul">${st.map((l) => html`<li><i class=${cx('dot', l.state === 'up' && 'on')}></i><b>${l.name}</b><span class="muted">${label[l.state] || l.state}</span></li>`)}</ul>
-    <p class="hint">内容在离开你的设备之前就已经用你们的暗号加密（AES-256-GCM），中转服务器只看得到乱码。两边的“钥匙指纹”一样，说明暗号一致。</p>
+    <p class="hint">内容在离开你的设备之前就已经用你们的暗号加密（AES-256-GCM），中转服务器只看得到乱码。两边的“钥匙指纹”四组编号一模一样，说明暗号一致。</p>
     <p class="hint">数据主要存在每个人的浏览器里，通过公共中转线路同步。公共服务不保证长期保存，不能代替备份；换手机或清理浏览器前，请先导出文字记录，照片另行保存。</p>
     <div class="row wrap">
       <button class="btn ghost sm" disabled=${busy || !app.sync.online} onClick=${repair}>${busy ? '上传中…' : '重新上传我这边的记录'}</button>
@@ -130,7 +131,7 @@ function Install() {
     <button class="btn ghost sm" type="button" onClick=${copyEntry}>复制自己的入口链接</button>
     <details class="install-help" data-platform="huawei" open=${!standalone && platform !== 'safari'}>
       <summary>华为浏览器 / HarmonyOS</summary>
-      <ol class="install-guide"><li>在华为浏览器里打开上面的入口，不要停留在微信等应用的内置网页。</li><li>HarmonyOS 5.0 及以上：点菜单「∷（四个点）」→「添加至桌面」。更早的鸿蒙 / EMUI：点「∷」→「添加至」→「桌面」。</li><li>确认名称「偏心我」及自己的入口，再点「✔」或「添加」。添加后会保留自己的入口。</li></ol>
+      <ol class="install-guide"><li>在华为浏览器里打开上面的入口，不要停留在微信等应用的内置网页。</li><li>HarmonyOS 5.0 及以上：点菜单「∷（四个点）」→「添加至桌面」。更早的鸿蒙 / EMUI：点「∷」→「添加至」→「桌面」。</li><li>确认名称「偏心我」及自己的入口，再点确认勾选按钮或「添加」。添加后会保留自己的入口。</li></ol>
       <p class="hint">这可能只是网页快捷方式，打开时仍有浏览器工具栏，不一定是独立 App。菜单名称、图标外观由系统版本决定。</p>
       <p class="hint">没有这个菜单？先更新华为浏览器和系统。鸿蒙 5.0 及以上还可在「我的 → 书签收藏 → 书签」长按已收藏的网址，选择「添加至桌面」。官方当前说明该版本的浏览器桌面快捷方式上限为 10 个。</p>
       <p class="hint"><a href="https://consumer.huawei.com/cn/support/content/zh-cn16032141/" target="_blank" rel="noopener noreferrer">华为官方：鸿蒙 5.0 及以上</a> · <a href="https://consumer.huawei.com/cn/support/content/zh-cn00448896/" target="_blank" rel="noopener noreferrer">较早版本指引</a></p>
