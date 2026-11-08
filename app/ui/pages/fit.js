@@ -1,17 +1,15 @@
 // 偏心我 · 运动 — 各自记录，方便时再回应，不比较、不要求同时进行
-import { html } from '../h.js?v=b9727bb22b';
+import { html } from '../h.js?v=69dcf6b8ad';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=b9727bb22b';
-import { localZone } from '../../lib/time.js?v=b9727bb22b';
-import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=b9727bb22b';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=b9727bb22b';
-import { Icon } from '../icons.js?v=b9727bb22b';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=69dcf6b8ad';
+import { localZone } from '../../lib/time.js?v=69dcf6b8ad';
+import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=69dcf6b8ad';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=69dcf6b8ad';
+import { Icon } from '../icons.js?v=69dcf6b8ad';
 
-export const SPORTS = [
-  ['🏃', '跑步'], ['🚶', '散步'], ['🚴', '骑车'], ['🏊', '游泳'], ['🧘', '瑜伽'], ['🏋️', '力量'],
-  ['🤸', '拉伸'], ['🏸', '羽毛球'], ['🏀', '篮球'], ['⚽', '足球'], ['🧗', '攀岩'], ['💃', '跳舞'],
-  ['🥾', '爬山'], ['🎾', '网球'], ['🏓', '乒乓'], ['✨', '其他'],
-];
+import { SPORTS, sportOf } from '../../lib/sports.js?v=69dcf6b8ad';
+import { SportIcon } from '../sport-icons.js?v=69dcf6b8ad';
+export { SPORTS } from '../../lib/sports.js?v=69dcf6b8ad';
 const FEELS = [['easy', '轻松', 'thanks'], ['ok', '刚好', 'ok'], ['tired', '好累', 'dizzy'], ['fire', '超爽', 'cheer']];
 const OLD_FEEL = { '😌': 'easy', '🙂': 'ok', '🥵': 'tired', '🔥': 'fire' };
 const feelOf = (f) => FEELS.find((x) => x[0] === (OLD_FEEL[f] || f));
@@ -26,7 +24,8 @@ function LogForm({ edit, onDone }) {
   useNow(30000);
   const [dayChoice, setDay] = useState(edit ? edit.day : '');
   const day = dayChoice || today();
-  const name = (SPORTS.find((s) => s[0] === sport) || SPORTS[15])[1];
+  const legacy = edit && !sportOf(edit.sport);
+  const name = sportOf(sport)?.[1] || (edit?.sport === sport ? edit.name : '') || '其他';
   const save = () => {
     const m = Math.max(1, Math.min(600, Math.round(Number(min) || 0)));
     const data = { who: app.me, day: dayChoice || today(), sport, name, min: m, feel, note: note.trim().slice(0, 1000), photos, zone: edit?.zone || localZone(), at: edit ? edit.at : Date.now() };
@@ -43,7 +42,8 @@ function LogForm({ edit, onDone }) {
   };
   return html`<section class="card fit-form">
     <div class="card-hd"><h3>${edit ? '改一下' : '记一笔运动'}</h3></div>
-    <div class="sport-grid">${SPORTS.map(([e, l]) => html`<button type="button" class=${cx('sport-b', sport === e && 'on')} onClick=${() => setSport(e)}><span>${e}</span><small>${l}</small></button>`)}</div>
+    <div class="sport-grid" role="group" aria-label="运动类型">${SPORTS.map(([key, label]) => html`<button type="button" key=${key} class=${cx('sport-b', sport === key && 'on')} aria-label=${label} aria-pressed=${sport === key} onClick=${() => setSport(key)}><${SportIcon} sport=${key} /><small>${label}</small></button>`)}</div>
+    ${legacy && html`<div class="fit-legacy"><button type="button" class=${cx('chip', sport === edit.sport && 'on')} aria-pressed=${sport === edit.sport} onClick=${() => setSport(edit.sport)}>保留原项目：${edit.name || edit.sport}</button><p class="hint">原有记录会保留，也可以改选上面的运动。</p></div>`}
     <div class="row wrap">
       <span class="lbl">时长</span>
       <div class="chips">${MINS.map((v) => html`<button type="button" class=${cx('chip', Number(min) === v && 'on')} onClick=${() => setMin(v)}>${v} 分</button>`)}</div>
@@ -86,7 +86,7 @@ function WeekStrip({ list }) {
         const items = list.filter((x) => x.day === d);
         return html`<div class=${cx('wk-day', d === t && 'today')}>
           <span class="wk-d">周${WEEK[parseDay(d).getDay()]}<small>${Number(d.slice(8))}</small></span>
-          <span class=${cx('wk-c', items.length && 'has')}>${items.slice(0, 4).map((x) => html`<i class=${'p-' + x.who} title=${`${nameOf(x.who)} · ${x.name} ${x.min} 分钟`}>${x.sport}</i>`)}</span>
+          <span class=${cx('wk-c', items.length && 'has')}>${items.slice(0, 4).map((x) => html`<i class=${'p-' + x.who} title=${`${nameOf(x.who)} · ${x.name} ${x.min} 分钟`}><${SportIcon} sport=${x.sport} size=${24} /></i>`)}</span>
         </div>`;
       })}
     </div>
@@ -98,7 +98,7 @@ function Item({ x, onEdit }) {
   const f = feelOf(x.feel);
   return html`<article class=${cx('entry fit-item', 'p-' + x.who)}>
     <header class="entry-hd">
-      <span class="fit-e">${x.sport}</span>
+      <span class="fit-e"><${SportIcon} sport=${x.sport} size=${46} /></span>
       <div class="entry-meta">
         <b>${nameOf(x.who)} · ${x.name} ${x.min} 分钟</b>
         <small class="muted">${localDayLabel(x.who, x.day)}${x.zone ? ' · ' + x.zone : ''}${f ? ` · ${f[1]}` : ''}</small>

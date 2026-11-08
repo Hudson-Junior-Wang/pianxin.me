@@ -2,8 +2,8 @@
 // A record is { k, c (collection), i (id), t (hybrid clock), d (device), by, x (data|null) }.
 // Last writer wins per record; x === null is a tombstone.
 
-import { openDB, reqP, txDone } from './idb.js?v=b9727bb22b';
-import { uid } from './util.js?v=b9727bb22b';
+import { openDB, reqP, txDone } from './idb.js?v=69dcf6b8ad';
+import { uid } from './util.js?v=69dcf6b8ad';
 
 // "state" collections keep exactly one copy at a fixed topic; everything else is a dated log.
 export const STATE_COLS = new Set(['profile', 'status', 'draft', 'ink', 'together', 'tjoin', 'poke', 'tz']);

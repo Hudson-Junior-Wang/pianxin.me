@@ -1,25 +1,25 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=b9727bb22b';
+import { html, render } from './ui/h.js?v=69dcf6b8ad';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=b9727bb22b';
-import { Store } from './lib/store.js?v=b9727bb22b';
-import { initViewport } from './lib/viewport.js?v=b9727bb22b';
-import { Sync } from './lib/sync.js?v=b9727bb22b';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=b9727bb22b';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=b9727bb22b';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=b9727bb22b';
-import { cx, fmtClock } from './lib/util.js?v=b9727bb22b';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=b9727bb22b';
-import { Icon } from './ui/icons.js?v=b9727bb22b';
-import { Chat } from './ui/chat.js?v=b9727bb22b';
-import { Home } from './ui/pages/home.js?v=b9727bb22b';
-import { Learn } from './ui/pages/learn.js?v=b9727bb22b';
-import { Together } from './ui/pages/together.js?v=b9727bb22b';
-import { Journal } from './ui/pages/journal.js?v=b9727bb22b';
-import { Life } from './ui/pages/food.js?v=b9727bb22b';
-import { Me } from './ui/pages/me.js?v=b9727bb22b';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=69dcf6b8ad';
+import { Store } from './lib/store.js?v=69dcf6b8ad';
+import { initViewport } from './lib/viewport.js?v=69dcf6b8ad';
+import { Sync } from './lib/sync.js?v=69dcf6b8ad';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=69dcf6b8ad';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=69dcf6b8ad';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=69dcf6b8ad';
+import { cx, fmtClock } from './lib/util.js?v=69dcf6b8ad';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=69dcf6b8ad';
+import { Icon } from './ui/icons.js?v=69dcf6b8ad';
+import { Chat } from './ui/chat.js?v=69dcf6b8ad';
+import { Home } from './ui/pages/home.js?v=69dcf6b8ad';
+import { Learn } from './ui/pages/learn.js?v=69dcf6b8ad';
+import { Together } from './ui/pages/together.js?v=69dcf6b8ad';
+import { Journal } from './ui/pages/journal.js?v=69dcf6b8ad';
+import { Life } from './ui/pages/food.js?v=69dcf6b8ad';
+import { Me } from './ui/pages/me.js?v=69dcf6b8ad';
 
 initViewport();
 

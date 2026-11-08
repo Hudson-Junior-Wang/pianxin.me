@@ -565,10 +565,13 @@ a.tg-row { color: var(--ink); }
 .entry-t { margin-top: 8px; white-space: pre-wrap; word-break: break-word; line-height: 1.75; }
 
 /* ---------- life ---------- */
-.sport-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 8px; }
-.sport-b { border: 1.5px solid var(--line); background: var(--card); border-radius: 12px; padding: 6px 2px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-.sport-b span { font-size: 22px; }
-.sport-b small { font-size: 11px; color: var(--ink-2); }
+.sport-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+.sport-b { min-width: 0; border: 1.5px solid var(--line); background: var(--card); border-radius: 14px; padding: 6px 2px 8px; gap: 3px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+.sport-icon { display: block; flex: none; }
+.sport-b .sport-icon { width: 58px; max-width: 100%; height: auto; }
+.sport-b small { font-size: 13px; color: var(--ink-2); }
+.fit-legacy { margin: 10px 0; }
+.fit-legacy .chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .sport-b.on { border-color: var(--accent); background: var(--accent-soft); }
 @media (max-width: 560px) { .sport-grid { grid-template-columns: repeat(4, 1fr); } }
 .fit-form .row { margin: 8px 0; }
@@ -579,8 +582,8 @@ a.tg-row { color: var(--ink); }
 .wk-c { min-height: 52px; border-radius: 12px; background: var(--soft); display: flex; flex-wrap: wrap; align-content: center; align-items: center; justify-content: center; gap: 1px; font-size: 15px; padding: 3px 1px; }
 .wk-c.has { background: var(--accent-soft); }
 .wk-day.today .wk-c { box-shadow: inset 0 0 0 2px var(--accent-soft); }
-.wk-c i { font-style: normal; line-height: 1.2; border-bottom: 2px solid var(--p); border-radius: 2px; }
-.fit-e { font-size: 28px; }
+.wk-c i { display: inline-flex; align-items: center; justify-content: center; font-style: normal; line-height: 1.2; border-bottom: 2px solid var(--p); border-radius: 2px; }
+.fit-e { flex: none; font-size: 28px; }
 .col-b > .entry + .entry { margin-top: 12px; }
 .meal-form-hd { display: flex; align-items: center; gap: 8px; margin: -6px 0 6px -4px; }
 .meal-form-hd b { font-size: 16px; }
