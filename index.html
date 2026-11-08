@@ -7,8 +7,18 @@
 <meta name="description" content="一起学习，顺手分享生活。两个人的小空间，不催回复，也不用打卡。">
 <meta name="theme-color" content="#fbf6f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1c1715" media="(prefers-color-scheme: dark)">
-<link rel="icon" href="/app/favicon.png" type="image/png">
-<link rel="apple-touch-icon" href="/app/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="偏心我">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="application-name" content="偏心我">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/app/icons/favicon-32-v2.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" sizes="152x152" href="/app/icons/icon-152-v2.png">
+<link rel="apple-touch-icon" sizes="167x167" href="/app/icons/icon-167-v2.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/app/icons/icon-180-v2.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap">
@@ -37,6 +47,9 @@
   footer { color: var(--muted); font-size: 11px; margin-top: 32px; }
   @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
   @media (max-width: 480px) { main { padding: 24px 20px; } .doors { width: 100%; flex-direction: column; gap: 10px; margin: 24px 0; } .door { min-width: 0; } .scene { width: 160px; } }
+  main { padding-top: max(36px, env(safe-area-inset-top, 0px)); padding-bottom: max(28px, env(safe-area-inset-bottom, 0px)); padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  .install-tip { margin-top: 18px; max-width: 420px; }
+  @media (max-width: 480px) { main { padding-top: max(24px, env(safe-area-inset-top, 0px)); padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); } }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -52,6 +65,7 @@
     <a class="door" href="/xiaoha/"><img src="/app/stickers/av-bear.webp" width="52" height="52" alt=""><span><b>小哈森</b><small>xiaoha · 从这里进入</small></span><em aria-hidden="true">›</em></a>
   </nav>
   <div class="features"><span>一起专注</span><span>可爱表情</span><span>生活记录</span><span>共享计划</span></div>
+  <p class="sub install-tip">想放到手机桌面？先进入自己的页面，再用 Safari「分享 → 添加到主屏幕」。</p>
   <footer>两个人用同一个暗号，进入同一个小空间。</footer>
 </main>
 </body>

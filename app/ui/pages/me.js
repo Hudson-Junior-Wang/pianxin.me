@@ -1,9 +1,9 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=ad495840f0';
+import { html } from '../h.js?v=baab30bfc4';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=ad495840f0';
-import { download, today, cx } from '../../lib/util.js?v=ad495840f0';
-import { St } from '../common.js?v=ad495840f0';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=baab30bfc4';
+import { download, today, cx } from '../../lib/util.js?v=baab30bfc4';
+import { St } from '../common.js?v=baab30bfc4';
 
 function Profile() {
   useCols('profile');
@@ -112,6 +112,16 @@ function Backup() {
   </section>`;
 }
 
+function Install() {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  return html`<section class="card install-card">
+    <div class="card-hd"><h3>${standalone ? '已从桌面打开' : '放到手机桌面'}</h3><img src="/app/icons/icon-180-v2.png" width="44" height="44" alt="偏心我，小熊和小兔图标" style="border-radius:11px" /></div>
+    ${standalone ? html`<p class="hint">这个图标打开的是 ${nameOf(app.me)} 的入口。仍需要联网加载页面和同步，不是离线应用。</p>` : html`<p class="hint">在 iPhone / iPad 的 Safari 里，先打开自己的专属入口，再添加到主屏幕。</p><ol class="install-guide"><li>点 Safari 的「分享」按钮。</li><li>选择「添加到主屏幕」（部分版本在「更多」里）。</li><li>保留名称「偏心我」，点「添加」。若有「作为 Web App 打开」，可保持开启。</li></ol>`}
+    <p class="hint">当前入口：<b>pianxin.me/${app.me}/</b>。添加后会保留这个入口，不会变成对方的身份。</p>
+    <p class="hint">旧图标若没有更新，先导出备份、另存照片，再考虑移除旧快捷方式重加。不要清除 Safari 网站数据；桌面版若要求暗号，输入原来的即可。私人记录只在原设备与浏览器中保存，不会自动搬到桌面版。</p>
+  </section>`;
+}
+
 function Danger() {
   const lock = () => {
     if (!confirm('退出后，这台设备需要重新输入暗号才能进来（记录还在）。确定吗？')) return;
@@ -138,7 +148,7 @@ export function Me() {
   return html`<div class="page me">
     <div class="page-hd"><h2>设置</h2></div>
     <div class="cols">
-      <div class="col-a"><${Profile} /><${Prefs} /></div>
+      <div class="col-a"><${Profile} /><${Install} /><${Prefs} /></div>
       <div class="col-b"><${Network} /><${Backup} /><${Danger} /></div>
     </div>
   </div>`;

@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "偏心我",
+  "short_name": "偏心我",
+  "lang": "zh-CN",
+  "description": "各做各的，也有人作伴。不催回复，不用打卡。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbf6f0",
+  "theme_color": "#fbf6f0",
+  "icons": [
+    { "src": "/app/icons/icon-192-v2.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app/icons/icon-512-v2.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app/icons/icon-maskable-512-v2.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

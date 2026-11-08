@@ -1,24 +1,27 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=ad495840f0';
+import { html, render } from './ui/h.js?v=baab30bfc4';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=ad495840f0';
-import { Store } from './lib/store.js?v=ad495840f0';
-import { Sync } from './lib/sync.js?v=ad495840f0';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=ad495840f0';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=ad495840f0';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=ad495840f0';
-import { cx, fmtClock } from './lib/util.js?v=ad495840f0';
-import { Avatar, Dot, St, Portal } from './ui/common.js?v=ad495840f0';
-import { Icon } from './ui/icons.js?v=ad495840f0';
-import { Chat } from './ui/chat.js?v=ad495840f0';
-import { Home } from './ui/pages/home.js?v=ad495840f0';
-import { Together } from './ui/pages/together.js?v=ad495840f0';
-import { Journal } from './ui/pages/journal.js?v=ad495840f0';
-import { Life } from './ui/pages/food.js?v=ad495840f0';
-import { Cal } from './ui/pages/cal.js?v=ad495840f0';
-import { Me } from './ui/pages/me.js?v=ad495840f0';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=baab30bfc4';
+import { Store } from './lib/store.js?v=baab30bfc4';
+import { initViewport } from './lib/viewport.js?v=baab30bfc4';
+import { Sync } from './lib/sync.js?v=baab30bfc4';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=baab30bfc4';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=baab30bfc4';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=baab30bfc4';
+import { cx, fmtClock } from './lib/util.js?v=baab30bfc4';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=baab30bfc4';
+import { Icon } from './ui/icons.js?v=baab30bfc4';
+import { Chat } from './ui/chat.js?v=baab30bfc4';
+import { Home } from './ui/pages/home.js?v=baab30bfc4';
+import { Together } from './ui/pages/together.js?v=baab30bfc4';
+import { Journal } from './ui/pages/journal.js?v=baab30bfc4';
+import { Life } from './ui/pages/food.js?v=baab30bfc4';
+import { Cal } from './ui/pages/cal.js?v=baab30bfc4';
+import { Me } from './ui/pages/me.js?v=baab30bfc4';
+
+initViewport();
 
 const NAV = [
   { k: 'home', label: '今天', icon: 'today', C: Home },
@@ -139,7 +142,7 @@ function TopBar({ route }) {
 }
 
 function TabBar({ route }) {
-  return html`<nav class="tabbar">${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('tb', route.page === n.k && 'on')}>
+  return html`<nav class="tabbar" aria-label="主要导航">${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('tb', route.page === n.k && 'on')} aria-current=${route.page === n.k ? 'page' : undefined}>
     <span class="tb-i"><${Icon} n=${n.icon} size=${24} />${n.k === 'together' ? html`<${LiveDot} />` : null}</span><small>${n.label}</small>
   </a>`)}</nav>`;
 }
@@ -147,18 +150,10 @@ function TabBar({ route }) {
 function ChatSheet({ onClose }) {
   const force = useForce();
   useBus('quiet', force, []);
-  useEffect(() => {
-    document.body.classList.add('noscroll');
-    const k = (e) => e.key === 'Escape' && onClose();
-    addEventListener('keydown', k);
-    return () => {
-      document.body.classList.remove('noscroll');
-      removeEventListener('keydown', k);
-    };
-  }, []);
+  useDialog('.sheet', onClose);
   return html`<${Portal}>
     <div class="sheet-bg" onClick=${(e) => e.target === e.currentTarget && onClose()}>
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="聊天"><${Chat} quiet=${app.focus} onClose=${onClose} /></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="聊天" tabIndex=${-1}><${Chat} quiet=${app.focus} onClose=${onClose} /></div>
     </div>
   <//>`;
 }

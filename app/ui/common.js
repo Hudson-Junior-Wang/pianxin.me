@@ -1,8 +1,8 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=ad495840f0';
+import { html, render } from './h.js?v=baab30bfc4';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=ad495840f0';
-import { compressPair, cx } from '../lib/util.js?v=ad495840f0';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=baab30bfc4';
+import { compressPair, cx } from '../lib/util.js?v=baab30bfc4';
 
 /** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
 export function St({ id, size = 48, cls = '', title, onClick }) {
@@ -56,25 +56,50 @@ export function Portal({ children }) {
 }
 
 let openModals = 0;
-export function Modal({ title, onClose, children, cls }) {
+// Shared by modal forms and the phone chat sheet. Focus a close control, not a
+// text field, so opening a panel does not summon the iPhone keyboard by surprise.
+export function useDialog(selector, onClose) {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
+    const node = [...document.querySelectorAll(selector)].at(-1);
+    if (!node) return;
+    const opener = document.activeElement;
+    const layer = [...document.body.children].find((el) => el.contains(node));
+    const background = [...document.body.children].filter((el) => el !== layer).map((el) => [el, el.inert]);
+    background.forEach(([el]) => { el.inert = true; });
+    const focusable = () => [...node.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]')].filter((el) => el.getClientRects().length);
+    const frame = requestAnimationFrame(() => {
+      if (node.contains(document.activeElement) && document.activeElement !== opener) return;
+      (node.querySelector('[aria-label^="关闭"]') || node).focus({ preventScroll: true });
+    });
     const k = (e) => {
-      if (e.key === 'Escape') close.current();
+      if ([...document.querySelectorAll('[role="dialog"]')].at(-1) !== node) return;
+      if (e.key === 'Escape') { e.preventDefault(); close.current(); }
+      if (e.key !== 'Tab') return;
+      const items = focusable(), first = items[0], last = items.at(-1);
+      if (!first) { e.preventDefault(); node.focus(); }
+      else if (e.shiftKey && (document.activeElement === first || !node.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !node.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
     };
     addEventListener('keydown', k);
     openModals++;
     document.body.classList.add('noscroll');
     return () => {
+      cancelAnimationFrame(frame);
       removeEventListener('keydown', k);
+      background.forEach(([el, inert]) => { el.inert = inert; });
       if (--openModals <= 0) document.body.classList.remove('noscroll');
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
+}
+export function Modal({ title, onClose, children, cls }) {
+  useDialog('.modal', onClose);
   return html`<${Portal}>
-    <div class="modal-bg" onMouseDown=${(e) => e.target === e.currentTarget && close.current()}>
-      <div class=${cx('modal', cls)} role="dialog" aria-modal="true">
-        <div class="modal-hd"><h3>${title}</h3><button class="icon-btn" aria-label="关闭" onClick=${() => close.current()}>✕</button></div>
+    <div class="modal-bg" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}>
+      <div class=${cx('modal', cls)} role="dialog" aria-modal="true" aria-label=${title} tabIndex=${-1}>
+        <div class="modal-hd"><h3>${title}</h3><button class="icon-btn" aria-label="关闭" onClick=${onClose}>✕</button></div>
         <div class="modal-bd">${children}</div>
       </div>
     </div>
