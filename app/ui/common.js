@@ -1,9 +1,9 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=0cc8a63665';
+import { html, render } from './h.js?v=f8c0c1b1d6';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=0cc8a63665';
-import { compressPair, cx } from '../lib/util.js?v=0cc8a63665';
-import { useLayerClose } from './motion.js?v=0cc8a63665';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=f8c0c1b1d6';
+import { compressPair, cx } from '../lib/util.js?v=f8c0c1b1d6';
+import { useLayerClose } from './motion.js?v=f8c0c1b1d6';
 
 /** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
 export function St({ id, size = 48, cls = '', title, onClick }) {
