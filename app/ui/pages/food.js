@@ -1,12 +1,12 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=575a878181';
+import { html } from '../h.js?v=ad495840f0';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, toast, stId } from '../../lib/ctx.js?v=575a878181';
-import { quickStart } from '../../lib/together.js?v=575a878181';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=575a878181';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=575a878181';
-import { Icon } from '../icons.js?v=575a878181';
-import { Fit } from './fit.js?v=575a878181';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=ad495840f0';
+import { localZone } from '../../lib/time.js?v=ad495840f0';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=ad495840f0';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=ad495840f0';
+import { Icon } from '../icons.js?v=ad495840f0';
+import { Fit } from './fit.js?v=ad495840f0';
 
 // ---------- meals ----------
 const MEALS = [['🌅', '早饭'], ['🍱', '午饭'], ['🌙', '晚饭'], ['🍪', '加餐'], ['🌃', '夜宵']];
@@ -20,17 +20,21 @@ function guessMeal() {
 }
 
 function MealForm({ edit, onDone }) {
-  const [meal, setMeal] = useState(edit ? edit.meal : guessMeal());
+  useNow(30000);
+  const [mealChoice, setMeal] = useState(edit ? edit.meal : '');
+  const meal = mealChoice || guessMeal();
   const [text, setText] = useState(edit ? edit.text : '');
   const [photos, setPhotos] = useState(edit ? edit.photos || [] : []);
-  const [day, setDay] = useState(edit ? edit.day : today());
+  const [dayChoice, setDay] = useState(edit ? edit.day : '');
+  const day = dayChoice || today();
   const save = () => {
     if (!text.trim() && !photos.length) return;
-    const data = { who: app.me, day, meal, text: text.trim().slice(0, 500) || meal, photos, at: edit ? edit.at : Date.now() };
+    const data = { who: app.me, day: dayChoice || today(), meal: mealChoice || guessMeal(), text: text.trim().slice(0, 500) || meal, photos, zone: edit?.zone || localZone(), at: edit ? edit.at : Date.now() };
     if (edit) app.store.put('meal', edit.id, { ...strip(edit), ...data });
     else app.store.put('meal', uid(), data);
     setText('');
     setPhotos([]);
+    if (!edit) { setMeal(''); setDay(''); }
     onDone && onDone();
   };
   return html`<section class="card meal-form">
@@ -49,25 +53,26 @@ function MealForm({ edit, onDone }) {
 }
 
 function Meals() {
-  useCols(['meal', 'react']);
+  useCols(['meal', 'react', 'profile', 'tz']);
+  useNow(30000);
   const [edit, setEdit] = useState(null);
   const [limit, setLimit] = useState(10);
   const all = app.store.list('meal');
   const days = [...new Set(all.map((x) => x.day))].sort().reverse();
   const order = MEALS.map((m) => m[1]);
   return html`<div class="stack">
-    <button class="card cta" onClick=${() => { quickStart('eat'); location.hash = '#/together'; }}>
-      <${St} id="d-eat" size=${64} title="" /><div><b>一起吃饭</b><small class="muted">开个计时，边吃边聊</small></div><${Icon} n="right" />
-    </button>
+    <div class="card cta async-note"><${St} id=${stId(app.me, 'eat')} size=${64} title="" /><div><b>各自好好吃饭</b><small class="muted">吃完顺手留一张，不等同一顿、不催回复。</small></div></div>
     ${edit ? html`<${MealForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${MealForm} key="new" />`}
     ${!days.length && html`<${Empty} st="eat" text="还没有记录，今天吃了什么好吃的？" />`}
     ${days.slice(0, limit).map((d) => html`<section class="card meal-day" key=${d}>
-      <div class="card-hd"><h3>${fmtDay(d)}</h3></div>
+      <div class="card-hd"><h3>${d} · 记录者当地日期</h3></div>
       <div class="meal-cols">
         ${[app.me, app.partner].map((w) => {
           const items = all.filter((x) => x.day === d && x.who === w).sort((a, b) => order.indexOf(a.meal) - order.indexOf(b.meal) || a.at - b.at);
+          if (!items.length) return null;
           return html`<div class=${cx('meal-col', 'p-' + w)}>
             <div class="meal-who"><${Avatar} who=${w} size=${26} /> ${nameOf(w)}</div>
+            <small class="muted">${localDayLabel(w, d)}${items[0].zone ? ' · ' + items[0].zone : ''}</small>
             ${items.length ? items.map((x) => html`<div class="meal-i" key=${x.id}>
               <div class="meal-row"><span class="meal-tag">${(MEALS.find((m) => m[1] === x.meal) || MEALS[3])[0]} ${x.meal}</span><span class="meal-t">${x.text}</span>
                 ${x.who === app.me && html`<span class="meal-ops"><button class="icon-btn xs" aria-label="编辑" onClick=${() => setEdit(x)}><${Icon} n="edit" size=${14} /></button><button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删除这条？') && app.store.del('meal', x.id)}><${Icon} n="x" size=${14} /></button></span>`}</div>
@@ -249,7 +254,7 @@ export const LIFE_TABS = [
 export function Life({ param }) {
   const tab = LIFE_TABS.some((t) => t.value === param) ? param : 'meal';
   return html`<div class="page life">
-    <div class="page-hd"><h2>生活</h2><small class="muted">吃饭、菜谱、想吃的、运动</small></div>
+    <div class="page-hd"><h2>生活</h2><small class="muted">各自生活，有空再分享和回应</small></div>
     <${Seg} value=${tab} onChange=${(v) => (location.hash = '#/life/' + v)} cls="big"
       options=${LIFE_TABS.map((t) => ({ value: t.value, label: t.label, st: stId(app.me, t.key) }))} />
     ${tab === 'meal' && html`<${Meals} />`}

@@ -1,11 +1,11 @@
-// 偏心我 · 运动（生活 › 运动）— 记录运动、这一周的小脚印、一起运动（不比较、不打分）
-import { html } from '../h.js?v=575a878181';
+// 偏心我 · 运动 — 各自记录，方便时再回应，不比较、不要求同时进行
+import { html } from '../h.js?v=ad495840f0';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, toast, stId } from '../../lib/ctx.js?v=575a878181';
-import { quickStart } from '../../lib/together.js?v=575a878181';
-import { uid, today, addDays, weekStart, WEEK, parseDay, fmtDay, fmtHM, cx } from '../../lib/util.js?v=575a878181';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=575a878181';
-import { Icon } from '../icons.js?v=575a878181';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=ad495840f0';
+import { localZone } from '../../lib/time.js?v=ad495840f0';
+import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=ad495840f0';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=ad495840f0';
+import { Icon } from '../icons.js?v=ad495840f0';
 
 export const SPORTS = [
   ['🏃', '跑步'], ['🚶', '散步'], ['🚴', '骑车'], ['🏊', '游泳'], ['🧘', '瑜伽'], ['🏋️', '力量'],
@@ -23,11 +23,13 @@ function LogForm({ edit, onDone }) {
   const [feel, setFeel] = useState(edit ? OLD_FEEL[edit.feel] || edit.feel || '' : '');
   const [note, setNote] = useState(edit ? edit.note || '' : '');
   const [photos, setPhotos] = useState(edit ? edit.photos || [] : []);
-  const [day, setDay] = useState(edit ? edit.day : today());
+  useNow(30000);
+  const [dayChoice, setDay] = useState(edit ? edit.day : '');
+  const day = dayChoice || today();
   const name = (SPORTS.find((s) => s[0] === sport) || SPORTS[15])[1];
   const save = () => {
     const m = Math.max(1, Math.min(600, Math.round(Number(min) || 0)));
-    const data = { who: app.me, day, sport, name, min: m, feel, note: note.trim().slice(0, 1000), photos, at: edit ? edit.at : Date.now() };
+    const data = { who: app.me, day: dayChoice || today(), sport, name, min: m, feel, note: note.trim().slice(0, 1000), photos, zone: edit?.zone || localZone(), at: edit ? edit.at : Date.now() };
     if (edit) app.store.put('workout', edit.id, { ...strip(edit), ...data });
     else {
       app.store.put('workout', uid(), data);
@@ -36,6 +38,7 @@ function LogForm({ edit, onDone }) {
     setNote('');
     setPhotos([]);
     setFeel('');
+    if (!edit) setDay('');
     onDone && onDone();
   };
   return html`<section class="card fit-form">
@@ -64,6 +67,7 @@ function LogForm({ edit, onDone }) {
 }
 
 function WeekStrip({ list }) {
+  useNow(30000);
   const [off, setOff] = useState(0);
   const start = addDays(weekStart(today()), off * 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -86,7 +90,7 @@ function WeekStrip({ list }) {
         </div>`;
       })}
     </div>
-    <p class="hint">只是留个脚印，不比较、不打卡，动一动就很好。</p>
+    <p class="hint">按记录者的当地日期留个脚印。不要求同一天运动，也不比较。</p>
   </section>`;
 }
 
@@ -98,7 +102,7 @@ function Item({ x, onEdit }) {
       <span class="fit-e">${x.sport}</span>
       <div class="entry-meta">
         <b>${nameOf(x.who)} · ${x.name} ${x.min} 分钟</b>
-        <small class="muted">${fmtDay(x.day)} ${x.at ? fmtHM(x.at) : ''}${f ? ` · ${f[1]}` : ''}</small>
+        <small class="muted">${localDayLabel(x.who, x.day)}${x.zone ? ' · ' + x.zone : ''}${f ? ` · ${f[1]}` : ''}</small>
       </div>
       ${f && html`<${St} id=${stId(x.who, f[2])} size=${44} />`}
       ${mine && html`<span class="entry-ops"><button class="icon-btn sm" aria-label="编辑" onClick=${() => onEdit(x)}><${Icon} n="edit" size=${16} /></button><button class="icon-btn sm" aria-label="删除" onClick=${() => confirmDel('删除这条运动记录？') && app.store.del('workout', x.id)}><${Icon} n="trash" size=${16} /></button></span>`}
@@ -116,9 +120,7 @@ export function Fit() {
   const list = app.store.list('workout').sort((a, b) => (b.day > a.day ? 1 : b.day < a.day ? -1 : (b.at || b._t) - (a.at || a._t)));
   return html`<div class="cols">
     <div class="col-a">
-      <button class="card cta" onClick=${() => { quickStart('sport'); location.hash = '#/together'; }}>
-        <${St} id="d-run" size=${64} title="" /><div><b>开始一起运动</b><small class="muted">同一个计时，各练各的</small></div><${Icon} n="right" />
-      </button>
+      <div class="card cta async-note"><${St} id=${stId(app.me, 'run')} size=${64} title="" /><div><b>按自己的节奏动一动</b><small class="muted">运动后再分享。无需同一时间，也不需要相同项目。</small></div></div>
       ${edit ? html`<${LogForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${LogForm} key="new" />`}
       <${WeekStrip} list=${list} />
     </div>

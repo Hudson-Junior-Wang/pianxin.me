@@ -236,6 +236,16 @@ label.btn { cursor: pointer; }
 @media (max-width: 1399px) { .grid2, .cols { grid-template-columns: 1fr; } }
 @media (min-width: 760px) and (max-width: 1099px) { .grid2.keep { grid-template-columns: 1fr 1fr; } }
 
+/* asynchronous companionship */
+.focus-entry { display: flex; align-items: center; gap: 14px; color: var(--ink); padding: 8px 0; }
+.focus-entry > div { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.focus-entry small { color: var(--ink-3); }
+.async-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.async-note { cursor: default; }
+.sc-zone { display: block; font-size: 11px; overflow-wrap: anywhere; margin: 3px 0; }
+.meet-zones { display: flex; flex-direction: column; gap: 5px; color: var(--ink-2); margin-top: 12px; overflow-wrap: anywhere; }
+.meal-cols:has(> :only-child) { grid-template-columns: 1fr; }
+
 /* ---------- avatars & people ---------- */
 .av { --s: 40px; width: var(--s); height: var(--s); border-radius: 50%; background: var(--p-soft, var(--soft)); display: inline-grid; place-items: center; flex: none; overflow: hidden; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--p, var(--accent)) 40%, transparent); }
 .av img { width: 118%; height: 118%; object-fit: cover; object-position: 50% 30%; margin-top: 12%; }

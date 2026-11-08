@@ -2,9 +2,9 @@
 // plus the "一起模式" watcher (phase changes, quiet state, auto-logging).
 // Nothing here keeps score: no streaks, no read receipts, no comparisons.
 
-import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=575a878181';
-import { derive, session, isMember, quietOf, logSession, end, MODES, join } from './together.js?v=575a878181';
-import { pick } from './util.js?v=575a878181';
+import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=ad495840f0';
+import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=ad495840f0';
+import { pick } from './util.js?v=ad495840f0';
 
 const short = (s, n = 18) => {
   s = String(s || '').replace(/\s+/g, ' ').trim();
@@ -66,9 +66,6 @@ function newChat(r, live) {
 }
 
 // ---------- live toasts ----------
-let qToastAt = 0;
-let qBurst = 0;
-
 function onLive(r, prev) {
   const x = r.x;
   const px = prev && prev.x;
@@ -92,16 +89,6 @@ function onLive(r, prev) {
     case 'task':
       if (x.done && !(px && px.done)) toast(`${ta()} 勾掉了「${short(x.text)}」`, { icon: taSt('done'), kind: 'soft' });
       break;
-    case 'qc': {
-      const n = x.n || 0;
-      const was = (px && px.n) || 0;
-      if (n <= was) break;
-      const now = Date.now();
-      qBurst = now - qToastAt < 15000 ? qBurst + (n - was) : n - was;
-      qToastAt = now;
-      toast(qBurst > 1 ? `${ta()} 又做完 ${qBurst} 道题啦` : `${ta()} 做完一道题`, { icon: taSt('study'), kind: 'soft', ms: 3200 });
-      break;
-    }
     case 'status': {
       if (x.need && x.need !== (px && px.need)) {
         const n = NEEDS.find((v) => v.k === x.need);
@@ -117,13 +104,13 @@ function onLive(r, prev) {
     }
     case 'together': {
       const m = MODES[x.mode] || MODES.study;
-      if (x.sid && x.sid !== (px && px.sid) && !x.ended) {
-        toast(`${ta()} 开始了「一起${m.label}」，要来吗？`, {
+      if (x.sid && x.sid !== (px && px.sid) && derive(x, Date.now()).state === 'run') {
+        toast(`${ta()} 开始了一段${m.label}，有空再加入就好`, {
           icon: modeSt(m),
           ms: 12000,
-          action: { label: '加入', fn: () => { join(); location.hash = '#/together'; } },
+          action: { label: '看看', fn: () => { location.hash = '#/together'; } },
         });
-        notify('偏心我', `${ta()} 开始了「一起${m.label}」`);
+        notify('偏心我', `${ta()} 在${m.label}，不需要同步进度`);
       } else if (x.ended && !x.natural && px && !px.ended && x.sid === px.sid && isMember(x)) {
         toast(`${ta()} 结束了这次一起${m.label}`, { icon: taSt('salute'), kind: 'soft' });
       } else if (px && x.sid === px.sid && x.paused !== px.paused && isMember(x)) {
@@ -282,10 +269,23 @@ export function startFeed() {
 // ---------- together watcher ----------
 export function startWatcher() {
   let lastKey = '';
+  let confirmedRevision = '';
+  // Cached startup state is not proof that a partner has not paused it while away.
+  // Only a session record received/changed during this page lifetime may auto-log.
+  const revision = (r) => r ? `${r.t}:${r.d}` : '';
+  app.store.on((r) => { if (r.c === 'together' && r.i === 'main') confirmedRevision = revision(r); });
   const tick = () => {
     const s = session();
     const d = derive(s, Date.now());
     const member = isMember(s);
+    const focus = quietOf(d, s);
+    const quiet = focus || app.store.get('status', app.me)?.need === 'quiet';
+    if (focus !== app.focus || quiet !== app.quiet) {
+      app.focus = focus;
+      app.quiet = quiet;
+      bus.emit('quiet', { focus, quiet });
+      if (!focus && chatVisible()) markChatRead();
+    }
     const key = d.state === 'run' ? `${s.sid}:${d.phase}:${d.round}` : d.state === 'done' ? `${s.sid}:done` : 'idle';
     if (key !== lastKey) {
       const sameSession = s && lastKey.split(':')[0] === s.sid;
@@ -300,32 +300,26 @@ export function startWatcher() {
           if (d.state === 'done' || naturalIdle) {
             chime('end', true);
             toast(`一起${m.label}结束啦，辛苦啦`, { icon: 'd-yay', ms: 6000 });
-            notify('偏心我', `一起${m.label}结束啦`);
+            notify('偏心我', `一起${m.label}结束啦`, true);
           } else if (d.phase === 'break') {
             chime('bell', true);
             toast('休息时间到～可以聊两句了', { icon: stId(app.me, 'tea'), ms: 5000 });
-            notify('偏心我', '休息时间到～');
+            notify('偏心我', '休息时间到～', true);
           } else {
             chime('start', true);
             toast(`第 ${d.round} 轮开始，一起加油`, { icon: modeSt(m, app.me), ms: 3600 });
-            notify('偏心我', `第 ${d.round} 轮开始啦`);
+            notify('偏心我', `第 ${d.round} 轮开始啦`, true);
           }
         } catch (e) {
           console.error(e);
         }
       }
     }
-    if (d.state === 'done' && member) {
-      if (!d.stale) logSession(s, d.round);
-      end(s, false, undefined, true);
-    }
-    const focus = quietOf(d, s);
-    const quiet = focus || app.store.get('status', app.me)?.need === 'quiet';
-    if (focus !== app.focus || quiet !== app.quiet) {
-      app.focus = focus;
-      app.quiet = quiet;
-      bus.emit('quiet', { focus, quiet });
-      if (!focus && chatVisible()) markChatRead();
+    // Never finalize an expired startup cache before receiving the partner's newer state.
+    if (d.state === 'done' && member && confirmedRevision && confirmedRevision === revision(app.store.rec('together', 'main'))) {
+      if (!d.stale) logSession(s, d.round, d.endedAt);
+      // derive() already renders this as finished. Do not publish an automatic ended
+      // record: a stale local timer must never overwrite an unseen remote pause/update.
     }
   };
   app.focus = false;

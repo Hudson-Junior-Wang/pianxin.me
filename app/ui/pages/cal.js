@@ -1,35 +1,34 @@
 // 偏心我 · 日历 — 下次见面、重要的日子、一起的计划、点子罐
-import { html } from '../h.js?v=575a878181';
+import { html } from '../h.js?v=ad495840f0';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, toast, stId } from '../../lib/ctx.js?v=575a878181';
-import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=575a878181';
-import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=575a878181';
-import { Icon } from '../icons.js?v=575a878181';
+import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=ad495840f0';
+import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=ad495840f0';
+import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=ad495840f0';
+import { Icon } from '../icons.js?v=ad495840f0';
+import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=ad495840f0';
 
 const DAY_EMOJI = ['🎂', '🎓', '📝', '✈️', '🎉', '🏠', '🐾', '⭐', '🍰', '📅'];
 
 // ---------- next meet-up ----------
 function MeetCard() {
-  useCols('meet');
+  useCols(['meet', 'tz', 'profile']);
   const now = useNow(1000);
   const [form, setForm] = useState(false);
   const t = today();
-  const list = app.store.list('meet').sort((a, b) => (a.date > b.date ? 1 : -1));
-  const next = list.find((m) => m.date >= t);
-  const past = list.filter((m) => m.date < t).slice(-3).reverse();
+  const key = (m) => meetInstant(m) ?? parseDay(m.date).getTime();
+  const list = app.store.list('meet').sort((a, b) => key(a) - key(b));
+  const next = list.find((m) => meetUpcoming(m, now, t));
+  const past = list.filter((m) => !meetUpcoming(m, now, t)).slice(-3).reverse();
   let main = null;
   if (next) {
-    const target = parseDay(next.date);
-    if (next.time) {
-      const [h, mi] = next.time.split(':').map(Number);
-      target.setHours(h, mi, 0, 0);
-    }
-    const ms = target - now;
-    const days = diffDays(t, next.date);
+    const instant = meetInstant(next);
+    const ms = instant == null ? 0 : instant - now;
+    const days = instant == null ? diffDays(t, next.date) : Math.floor(Math.max(0, ms) / 864e5);
     main = html`<div class="meet-main">
       <${St} id="d-five" size=${96} title="" />
-      <div class="meet-big">${days > 0 ? html`还有 <em>${days}</em> 天` : ms > 0 && next.time ? html`今天！还有 <em>${Math.floor(ms / 3600000)}</em> 小时 <em>${Math.floor((ms % 3600000) / 60000)}</em> 分` : html`<em>就是今天</em>`}</div>
-      <div class="meet-sub">${fmtDayFull(next.date)}${next.time ? ' ' + next.time : ''}${next.where ? ` · ${next.where}` : ''}</div>
+      <div class="meet-big">${instant == null && next.time ? html`<em>时间待确认</em>` : days > 0 ? html`还有 <em>${days}</em> 天` : ms > 0 ? html`还有 <em>${Math.floor(ms / 3600000)}</em> 小时 <em>${Math.floor((ms % 3600000) / 60000)}</em> 分` : html`<em>就是今天</em>`}</div>
+      <div class="meet-sub">${next.date}${next.time ? ' ' + next.time : ' · 只定日期'}${next.zone ? ' · ' + next.zone : next.time ? ' · 旧记录时区待确认' : ''}${next.where ? ` · ${next.where}` : ''}</div>
+      ${instant != null && html`<div class="meet-zones"><small>我这里：${zonedStamp(instant)}</small><small>${nameOf(app.partner)}：${zoneOf(app.partner) ? zonedStamp(instant, zoneOf(app.partner)) : '当地时区待同步'}</small></div>`}
       ${next.note && html`<div class="meet-note">${next.note}</div>`}
       <div class="row center">
         <button class="btn xs ghost" onClick=${() => setForm({ edit: next })}>改一下</button>
@@ -50,15 +49,21 @@ function MeetForm({ edit, onClose }) {
   const [time, setTime] = useState(edit ? edit.time || '' : '');
   const [where, setWhere] = useState(edit ? edit.where || '' : '');
   const [note, setNote] = useState(edit ? edit.note || '' : '');
+  const [zone, setZone] = useState(edit?.time ? edit.zone || '' : localZone());
+  const [err, setErr] = useState('');
   const save = () => {
     if (!date) return;
-    const data = { date, time, where: where.trim().slice(0, 60), note: note.trim().slice(0, 200), who: edit ? edit.who : app.me };
+    const when = time ? wallInstant(date, time, zone.trim()) : null;
+    if (time && !Number.isFinite(when)) return setErr('请确认有效的 IANA 时区。这个时间若在夏令时切换的重复或跳过区间，请换一个明确的时间。');
+    const data = { date, time, zone: time ? zone.trim() : '', when, where: where.trim().slice(0, 60), note: note.trim().slice(0, 200), who: edit ? edit.who : app.me };
     app.store.put('meet', edit ? edit.id : uid(), edit ? { ...strip(edit), ...data } : data);
     onClose();
   };
   return html`<${Modal} title="下次见面" onClose=${onClose}>
     <label class="lbl">日期</label><input class="inp" type="date" value=${date} onInput=${(e) => setDate(e.target.value)} />
     <label class="lbl">时间（选填）</label><input class="inp" type="time" value=${time} onInput=${(e) => setTime(e.target.value)} />
+    ${time && html`<label class="lbl">上面日期和时间所属的时区</label><input class="inp event-zone" aria-label="见面时区" value=${zone} placeholder="例如 Australia/Sydney" onInput=${(e) => setZone(e.target.value)} /><div class="chips"><button class="chip" onClick=${() => setZone(localZone())}>用我这里：${localZone()}</button>${zoneOf(app.partner) && html`<button class="chip" onClick=${() => setZone(zoneOf(app.partner))}>用 ${nameOf(app.partner)} 那边：${zoneOf(app.partner)}</button>`}</div><p class="hint">不是自动猜见面城市的时区，请按实际地点选择。双方会看到同一时刻的各自当地时间。</p>`}
+    ${err && html`<p class="err">${err}</p>`}
     <label class="lbl">在哪（选填）</label><input class="inp" maxlength="60" placeholder="比如：图书馆门口 / 地铁站" value=${where} onInput=${(e) => setWhere(e.target.value)} />
     <label class="lbl">备注（选填）</label><input class="inp" maxlength="200" placeholder="比如：记得带上那本书" value=${note} onInput=${(e) => setNote(e.target.value)} />
     <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!date} onClick=${save}>好</button></div>
@@ -79,15 +84,16 @@ function DayForm({ edit, onClose }) {
   };
   return html`<${Modal} title=${edit ? '改一下' : '加一个重要的日子'} onClose=${onClose}>
     <div class="emo-pick">${DAY_EMOJI.map((e) => html`<button type="button" class=${cx(emoji === e && 'on')} onClick=${() => setEmoji(e)}>${e}</button>`)}</div>
-    <label class="lbl">名字</label><input class="inp" maxlength="40" placeholder="TA 的生日 / 期末考试 / 认识的那天" value=${title} onInput=${(e) => setTitle(e.target.value)} />
+    <label class="lbl">名字</label><input class="inp" maxlength="40" placeholder="TA 的生日 / 出发的日子 / 见面的日子" value=${title} onInput=${(e) => setTitle(e.target.value)} />
     <label class="lbl">日期</label><input class="inp" type="date" value=${date} onInput=${(e) => setDate(e.target.value)} />
-    <label class="check"><input type="checkbox" checked=${yearly} onChange=${(e) => setYearly(e.target.checked)} /> 每年都提醒（比如生日）</label>
+    <label class="check"><input type="checkbox" checked=${yearly} onChange=${(e) => setYearly(e.target.checked)} /> 每年重复显示倒数（比如生日）</label>
     <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!title.trim() || !date} onClick=${save}>好</button></div>
   <//>`;
 }
 
 function Days() {
   useCols('anniv');
+  useNow(30000);
   const [form, setForm] = useState(null);
   const t = today();
   const list = app.store.list('anniv').map((a) => {
@@ -101,11 +107,11 @@ function Days() {
       <span class="anniv-e">${a.emoji || '📅'}</span>
       <div class="anniv-m">
         <b>${a.title}</b>
-        <small class="muted">${fmtDayFull(a.date)}${a.yearly !== false && a.years > 0 ? ` · 第 ${a.years} 年` : ''}${a.since > 0 ? ` · 已经 ${a.since} 天` : ''}</small>
+        <small class="muted">${fmtDayFull(a.day)}${a.yearly !== false && a.years > 0 ? ` · 第 ${a.years} 年` : ''}${a.since > 0 ? ` · 已经 ${a.since} 天` : ''}</small>
       </div>
       <span class="anniv-d">${a.days === 0 ? html`<em>今天</em>` : a.days > 0 ? html`<em>${a.days}</em><small>天后</small>` : html`<small>已过去</small>`}</span>
       <span class="anniv-ops"><button class="icon-btn xs" aria-label="编辑" onClick=${() => setForm({ edit: a })}><${Icon} n="edit" size=${14} /></button><button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel(`删除「${a.title}」？`) && app.store.del('anniv', a.id)}><${Icon} n="x" size=${14} /></button></span>
-    </li>`)}</ul>` : html`<${Empty} st="idea" text="生日、考试、出发的日子…都可以记下来" />`}
+    </li>`)}</ul>` : html`<${Empty} st="idea" text="生日、出发、重要安排…都可以记下来" />`}
     ${form && html`<${DayForm} edit=${form.edit} onClose=${() => setForm(null)} />`}
   </section>`;
 }
@@ -122,9 +128,9 @@ function PlanForm({ edit, date0, onClose }) {
     onClose();
   };
   return html`<${Modal} title=${edit ? '改计划' : '一起的计划'} onClose=${onClose}>
-    <label class="lbl">要一起做什么</label><input class="inp" maxlength="60" placeholder="一起去图书馆 / 周末去爬山 / 学会做蛋糕" value=${title} onInput=${(e) => setTitle(e.target.value)} />
+    <label class="lbl">想做的事</label><input class="inp" maxlength="60" placeholder="各自试一道新菜 / 分享一本书 / 见面时去爬山" value=${title} onInput=${(e) => setTitle(e.target.value)} />
     <label class="lbl">哪天（选填，不填就是“总有一天”）</label><input class="inp" type="date" value=${date} onInput=${(e) => setDate(e.target.value)} />
-    <label class="lbl">备注（选填）</label><${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${500} placeholder="要带什么、怎么去…" />
+    <label class="lbl">备注（选填）</label><${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${500} placeholder="各自完成，还是以后见面再做…" />
     <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!title.trim()} onClick=${save}>好</button></div>
   <//>`;
 }
@@ -156,6 +162,7 @@ function MonthGrid({ ym, setYm, marks, onPick }) {
 
 function Plans() {
   useCols(['plan', 'meet', 'anniv']);
+  useNow(30000);
   const [form, setForm] = useState(null);
   const [ym, setYm] = useState(today().slice(0, 7));
   const [showDone, setShowDone] = useState(false);
@@ -180,8 +187,9 @@ function Plans() {
   const toggle = (p) => app.store.put('plan', p.id, { ...strip(p), done: !p.done, doneAt: p.done ? 0 : Date.now() });
   return html`<section class="card plans">
     <div class="card-hd"><h3>一起的计划</h3><button class="btn xs" onClick=${() => setForm({})}><${Icon} n="plus" size=${14} /> 计划</button></div>
+    <p class="hint">可以各自完成，也可以留到见面。日期是计划，不是催促；这里只显示倒数，不保证到时推送。</p>
     <${MonthGrid} ym=${ym} setYm=${setYm} marks=${marks} onPick=${(d) => setForm({ date: d })} />
-    ${todo.length ? html`<ul class="plan-ul">${todo.map((p) => html`<li key=${p.id} class=${cx(p.date && p.date < t && 'late')}>
+    ${todo.length ? html`<ul class="plan-ul">${todo.map((p) => html`<li key=${p.id} class="plan">
       <label class="ck"><input type="checkbox" checked=${false} onChange=${() => toggle(p)} /><span class="ck-box"></span></label>
       <div class="plan-m" onClick=${() => setForm({ edit: p })}>
         <b>${p.title}</b>
@@ -243,7 +251,7 @@ function IdeaJar() {
       </div>
     </div>
     <form class="row" onSubmit=${add}>
-      <input class="inp" maxlength="120" placeholder="写一个点子：一起拼乐高 / 去吃那家火锅…" value=${text} onInput=${(e) => setText(e.target.value)} />
+      <input class="inp" maxlength="120" placeholder="写个点子：各自试一道菜 / 见面时拼乐高…" value=${text} onInput=${(e) => setText(e.target.value)} />
       <button class="btn" disabled=${!text.trim()}>放进去</button>
     </form>
     ${used.length > 0 && html`<button class="link sm" onClick=${() => setShowUsed(!showUsed)}>${showUsed ? '收起' : `摇出来过的 ${used.length} 个点子`}</button>`}

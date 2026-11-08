@@ -1,11 +1,12 @@
 // 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
+import { localZone, validZone, zoneParts } from './time.js?v=ad495840f0';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
-  zhengwang: { name: '小郑王', ch: 'bear' },
-  xiaoha: { name: '小哈森', ch: 'bunny' },
+  zhengwang: { name: '小郑王', ch: 'bunny', roleV: 2 },
+  xiaoha: { name: '小哈森', ch: 'bear', roleV: 2 },
 };
 
 export const app = {
@@ -128,6 +129,8 @@ export function profileOf(who) {
   const p = { ...DEFAULT_PROFILE[who], ...((app.store && app.store.get('profile', who)) || {}) };
   // Old profiles saved the URL identifier as their default name. Keep custom nicknames.
   if (!p.name || p.name === who) p.name = DEFAULT_PROFILE[who]?.name || who;
+  const saved = app.store?.get('profile', who);
+  if (saved && saved.roleV !== 2 && !saved.chCustom) p.ch = DEFAULT_PROFILE[who]?.ch || p.ch;
   return p;
 }
 export const nameOf = (who) => profileOf(who).name || who;
@@ -154,9 +157,9 @@ export const DUO = Object.keys(DUO_LABEL);
 
 export function chOf(who) {
   const ch = profileOf(who).ch;
-  return CHARS[ch] ? ch : who === 'xiaoha' ? 'bunny' : 'bear';
+  return CHARS[ch] ? ch : DEFAULT_PROFILE[who]?.ch || 'bear';
 }
-/** sticker id for a person: stId('xiaoha', 'cheer') → 'r-cheer'; duo ids pass through */
+/** sticker id for a person: stId('zhengwang', 'cheer') → 'r-cheer'; duo ids pass through */
 export function stId(who, key) {
   if (!key) return '';
   if (key.startsWith('d-')) return key;
@@ -197,6 +200,7 @@ export const MOODS = [
   { k: 'great', label: '超顺利', st: 'ok' },
   { k: 'hungry', label: '饿了', st: 'eat' },
   { k: 'sleepy', label: '困困', st: 'yawn' },
+  { k: 'sleeping', label: '休息中', st: 'sleep' },
   { k: 'tired', label: '累了', st: 'sorry' },
   { k: 'busy', label: '忙炸了', st: 'dizzy' },
   { k: 'annoyed', label: '烦躁', st: 'pout' },
@@ -218,26 +222,31 @@ export const NEEDS = [
   { k: 'vent', label: '只想吐槽', st: 'pout', hint: '只想吐槽，听着就好', ta: '只想吐槽，听着就好，不用讲道理' },
 ];
 
-// ---------- the other person's local day / time ----------
-function shifted(who) {
-  const o = app.store.get('tz', who)?.o;
-  if (o == null || who === app.me) return null;
-  return new Date(Date.now() - o * 60000);
+// ---------- local clocks: IANA zone handles DST even while the other person is offline ----------
+export function syncTimezone() {
+  const zone = localZone(), o = new Date().getTimezoneOffset();
+  const old = app.store.get('tz', app.me);
+  if (old?.zone !== zone || old?.o !== o) app.store.put('tz', app.me, { zone, o, at: Date.now() });
+}
+export function zoneOf(who) {
+  if (who === app.me) return localZone();
+  const z = app.store?.get('tz', who)?.zone;
+  return validZone(z) ? z : '';
+}
+function personParts(who, ts = Date.now()) {
+  const zone = zoneOf(who);
+  if (zone) return zoneParts(ts, zone);
+  const o = app.store?.get('tz', who)?.o;
+  if (o != null) return zoneParts(ts - o * 60000, 'UTC');
+  return null;
 }
 export function dayOf(who) {
-  const d = shifted(who);
-  if (!d) {
-    const n = new Date();
-    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
-  }
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  return personParts(who)?.day || zoneParts().day;
 }
-/** "HH:MM" in the other person's timezone, or '' when it matches ours */
-export function timeOf(who) {
-  const o = app.store.get('tz', who)?.o;
-  if (o == null || who === app.me || o === new Date().getTimezoneOffset()) return '';
-  const d = new Date(Date.now() - o * 60000);
-  return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+export const timeOf = (who) => personParts(who)?.time || '';
+export function localDayLabel(who, day) {
+  const current = personParts(who)?.day;
+  return `${day}${current === day ? ' · 当地今天' : ''}`;
 }
 
 // ---------- toasts ----------
@@ -289,6 +298,7 @@ const TUNES = {
 };
 export function chime(kind = 'soft', force = false) {
   if (!app.settings.sound) return;
+  if (app.store?.get('status', app.me)?.need === 'quiet') return;
   if (app.quiet && !force) return;
   try {
     const ac = audio();
@@ -313,8 +323,8 @@ export function vibrate(p) {
   try { if (navigator.vibrate) navigator.vibrate(p); } catch {}
 }
 
-export function notify(title, body) {
-  if (!app.settings.notify || app.quiet) return;
+export function notify(title, body, timer = false) {
+  if (!app.settings.notify || (app.quiet && !timer) || app.store?.get('status', app.me)?.need === 'quiet') return;
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return;
   try { new Notification(title, { body, tag: 'pianxin-' + Date.now(), icon: '/app/icon-192.png' }); } catch {}

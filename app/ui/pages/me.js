@@ -1,9 +1,9 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=575a878181';
+import { html } from '../h.js?v=ad495840f0';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=575a878181';
-import { download, today, cx } from '../../lib/util.js?v=575a878181';
-import { St } from '../common.js?v=575a878181';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=ad495840f0';
+import { download, today, cx } from '../../lib/util.js?v=ad495840f0';
+import { St } from '../common.js?v=ad495840f0';
 
 function Profile() {
   useCols('profile');
@@ -20,7 +20,7 @@ function Profile() {
     </div>
     <label class="lbl">我的角色（表情包和头像都会跟着换）</label>
     <div class="ch-pick">
-      ${Object.entries(CHARS).map(([k, c]) => html`<button type="button" class=${cx('ch-b', ch === k && 'on')} onClick=${() => save({ ch: k })}>
+      ${Object.entries(CHARS).map(([k, c]) => html`<button type="button" class=${cx('ch-b', ch === k && 'on')} onClick=${() => save({ ch: k, roleV: 2, chCustom: true })}>
         <${St} id=${k === 'bear' ? 'av-bear' : 'av-bunny'} size=${72} title="" /><span>${c.name}</span>
       </button>`)}
     </div>
@@ -34,15 +34,21 @@ function Prefs() {
   const perm = 'Notification' in window ? Notification.permission : 'unsupported';
   const askNotify = async () => {
     if (!('Notification' in window)) return toast('这个浏览器不支持通知', { icon: stId(app.me, 'what') });
-    const r = await Notification.requestPermission();
-    saveSettings({ notify: r === 'granted' });
-    if (r !== 'granted') toast('没有拿到通知权限，可以在浏览器设置里打开', { icon: stId(app.me, 'sorry') });
+    try {
+      const r = await Notification.requestPermission();
+      saveSettings({ notify: r === 'granted' });
+      if (r !== 'granted') toast('没有拿到通知权限，可以在浏览器设置里打开', { icon: stId(app.me, 'sorry') });
+    } catch {
+      saveSettings({ notify: false });
+      toast('这个浏览器暂时不能开启系统通知，页面内提示仍可用', { icon: stId(app.me, 'sorry') });
+    }
   };
   return html`<section class="card">
     <div class="card-hd"><h3>提醒方式</h3></div>
-    <label class="switch"><input type="checkbox" checked=${s.sound} onChange=${(e) => saveSettings({ sound: e.target.checked })} /><span></span> 提示音（专注时、想安静时自动静音）</label>
+    <label class="switch"><input type="checkbox" checked=${s.sound} onChange=${(e) => saveSettings({ sound: e.target.checked })} /><span></span> 消息提示音（专注时静音，计时切换仍轻声提醒）</label>
     <label class="switch"><input type="checkbox" checked=${s.notify && perm === 'granted'} onChange=${(e) => (e.target.checked ? askNotify() : saveSettings({ notify: false }))} /><span></span> 页面在后台时弹系统通知</label>
     ${perm === 'denied' && html`<p class="hint">通知权限被拒绝了，需要在浏览器的网站设置里重新允许。</p>`}
+    <p class="hint">选「想安静」时，消息、戳一下和计时切换都不响。网页关闭后不能保证系统提醒，重要安排请另设手机闹钟。</p>
     <p class="hint">这里没有“已读”、没有连续打卡、也没有谁陪伴更久的比较。想回就回，不用有负担。</p>
   </section>`;
 }

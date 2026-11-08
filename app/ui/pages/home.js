@@ -1,17 +1,19 @@
-// 偏心我 · 今天 — 两个人的状态卡、戳一下、一起模式入口、今天的小目标与任务
-import { html } from '../h.js?v=575a878181';
+// 偏心我 · 今天 — 各自的状态、当地时间、专注入口与可选待办
+import { html } from '../h.js?v=ad495840f0';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, toast, stId, openChat } from '../../lib/ctx.js?v=575a878181';
-import { derive, session, members, isMember, MODES, MODE_KEYS, join, phaseText } from '../../lib/together.js?v=575a878181';
-import { poke, POKE_KINDS } from '../../lib/feed.js?v=575a878181';
-import { uid, today, fmtClock, nextOccurrence, cx, fmtDayFull } from '../../lib/util.js?v=575a878181';
-import { Avatar, Dot, Modal, St, strip } from '../common.js?v=575a878181';
-import { Icon } from '../icons.js?v=575a878181';
+import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=ad495840f0';
+import { derive, session, members, isMember, join, phaseText } from '../../lib/together.js?v=ad495840f0';
+import { poke, POKE_KINDS } from '../../lib/feed.js?v=ad495840f0';
+import { uid, today, fmtClock, nextOccurrence, cx, fmtDayFull } from '../../lib/util.js?v=ad495840f0';
+import { Avatar, Dot, Modal, St, strip } from '../common.js?v=ad495840f0';
+import { Icon } from '../icons.js?v=ad495840f0';
+import { meetUpcoming, meetInstant } from '../../lib/time.js?v=ad495840f0';
 
 // ---------- status card ----------
 function StatusCard({ who }) {
   useCols(['status', 'profile', 'tz']);
   useSyncEvent('presence');
+  useNow(30000);
   const mine = who === app.me;
   const st = app.store.get('status', who);
   const mood = st && moodOf(st.mood);
@@ -24,7 +26,8 @@ function StatusCard({ who }) {
     <div class="sc-main">
       <div class="sc-st"><${St} id=${stId(who, face)} size=${96} /></div>
       <div class="sc-id">
-        <div class="sc-name">${nameOf(who)} <${Dot} on=${on} /><small class="muted">${mine ? '我' : on ? '在线' : '不在线'}${clock ? ` · 那边 ${clock}` : ''}</small></div>
+        <div class="sc-name">${nameOf(who)} <${Dot} on=${on} /><small class="muted">${mine ? '我' : on ? '在线' : '不在线'}${clock ? ` · ${mine ? '这里' : '那边'} ${clock}` : ''}</small></div>
+        <small class="muted sc-zone">${zoneOf(who) ? `${dayOf(who)} · ${zoneOf(who)}` : '当地时间待同步'}</small>
         <div class="sc-line">
           ${mood ? html`<span class="tag mood">${mood.label}</span>` : null}
           ${st?.note ? html`<span class="sc-note">${st.note}</span>` : !mood && html`<span class="muted">${mine ? '还没写现在的状态' : '还没有状态'}</span>`}
@@ -43,16 +46,14 @@ function StatusCard({ who }) {
 
 /** what the other person is up to right now (never a score) */
 function TaGlance() {
-  useCols(['goal', 'together', 'tjoin', 'tz']);
+  useCols(['together', 'tjoin']);
   useNow(30000);
   const s = session();
   const d = derive(s, Date.now());
   const inS = d.state === 'run' && members(s).includes(app.partner);
-  const goal = app.store.get('goal', `${app.partner}~${dayOf(app.partner)}`);
-  if (!inS && !goal?.text) return null;
+  if (!inS) return null;
   return html`<div class="ta-glance">
     ${inS && html`<a class="tg-row" href="#/together"><${Icon} n="together" size=${16} /> 正在${members(s).length > 1 ? '和你一起' : ''}${d.mode.label} · ${phaseText(d)}</a>`}
-    ${goal?.text && html`<div class="tg-row"><${Icon} n="pin" size=${16} /> 今天的小目标：<b>${goal.text}</b></div>`}
   </div>`;
 }
 
@@ -114,54 +115,31 @@ function TogetherCard() {
   const d = derive(s, now);
   if (d.state !== 'run') {
     return html`<section class="card together-card idle">
-      <div class="card-hd"><h3>一起模式</h3><a class="link sm" href="#/together">设置时长 <${Icon} n="right" size=${14} /></a></div>
-      <div class="mode-strip">
-        ${MODE_KEYS.map((k) => html`<a class="ms-b" href=${'#/together/' + k}><${St} id=${MODES[k].st.startsWith('d-') ? MODES[k].st : stId(app.me, MODES[k].st)} size=${56} title="" /><span>${MODES[k].label}</span></a>`)}
-      </div>
-      <p class="hint">同一个计时，各做各的，彼此作伴。</p>
+      <div class="card-hd"><h3>有空时一起专注</h3><a class="link sm" href="#/together">设置时长 <${Icon} n="right" size=${14} /></a></div>
+      <a class="focus-entry" href="#/together"><${St} id=${stId(app.me, 'study')} size=${72} title="" /><div><b>开一段专注时间</b><small>独自开始，或在空闲重叠时作伴</small></div><${Icon} n="right" /></a>
+      <p class="hint">专业不同也没关系，各做各的。可以自己先开始，不要求同时上线。</p>
+      <div class="async-links"><a class="chip" href="#/life/meal">各自的饭</a><a class="chip" href="#/life/fit">运动记录</a><a class="chip" href="#/journal">留点生活碎片</a></div>
     </section>`;
   }
   const who = members(s);
   const me = isMember(s);
   return html`<a class=${cx('card together-card live', d.phase)} href="#/together">
     <${St} id=${d.mode.st.startsWith('d-') ? d.mode.st : stId(app.me, d.mode.st)} size=${72} title="" />
-    <div class="tc-m"><b>一起${d.mode.label} · ${phaseText(d)}</b><small>${who.length === 2 ? '两个人都在' : who.includes(app.me) ? `等 ${nameOf(app.partner)} 加入` : `${nameOf(app.partner)} 开始了，要来吗？`}</small></div>
+    <div class="tc-m"><b>一起${d.mode.label} · ${phaseText(d)}</b><small>${who.length === 2 ? '两个人都在' : who.includes(app.me) ? `你先专注，${nameOf(app.partner)} 有空再来` : `${nameOf(app.partner)} 在专注，有空再加入`}</small></div>
     <span class="tc-c">${fmtClock(d.remaining)}</span>
-    ${!me && html`<button class="btn sm" onClick=${(e) => { e.preventDefault(); join(); location.hash = '#/together'; }}>加入</button>`}
+    ${!me && html`<button class="btn sm" onClick=${(e) => { e.preventDefault(); join(s.sid); location.hash = '#/together'; }}>加入</button>`}
   </a>`;
 }
 
-// ---------- tasks & question counter ----------
-function QuestionCounter({ who, day }) {
-  useCols('qc');
-  const mine = who === app.me;
-  const id = `${who}~${day}`;
-  const n = app.store.get('qc', id)?.n || 0;
-  const [bump, setBump] = useState(0);
-  const add = (d) => {
-    const currentDay = dayOf(who);
-    const currentId = `${who}~${currentDay}`;
-    const v = Math.max(0, (app.store.get('qc', currentId)?.n || 0) + d);
-    app.store.put('qc', currentId, { who, day: currentDay, n: v });
-    if (d > 0) setBump(Date.now());
-  };
-  return html`<div class="qc">
-    <span class="qc-l">做题</span>
-    <b class=${cx('qc-n', bump && 'bump')} key=${bump}>${n}</b><span class="muted">道</span>
-    ${mine && html`<span class="qc-btns"><button class="btn xs ghost" disabled=${!n} onClick=${() => add(-1)}>−1</button><button class="btn xs" onClick=${() => add(1)}>做完一道 +1</button></span>`}
-  </div>`;
-}
+// ---------- optional, subject-neutral tasks ----------
 
 export function TaskList({ who, compact }) {
-  useCols(['task', 'tz', 'goal']);
+  useCols(['task', 'tz']);
   useNow(30000);
   const mine = who === app.me;
   const day = dayOf(who);
   const list = app.store.list('task', (x) => x.who === who && (x.day === day || (!x.done && x.day < day))).sort((a, b) => (a.done - b.done) || (a.o || a._t) - (b.o || b._t));
-  const goal = app.store.get('goal', `${who}~${day}`);
   const [text, setText] = useState('');
-  const [editGoal, setEditGoal] = useState(false);
-  const [g, setG] = useState('');
   const add = (e) => {
     e.preventDefault();
     const t = text.trim();
@@ -173,25 +151,13 @@ export function TaskList({ who, compact }) {
     const done = !x.done;
     app.store.put('task', x.id, { ...strip(x), done, doneAt: done ? Date.now() : 0, day: done ? dayOf(who) : x.day });
   };
-  const saveGoal = () => {
-    const currentDay = dayOf(who);
-    app.store.put('goal', `${who}~${currentDay}`, { who, day: currentDay, text: g.trim().slice(0, 80) });
-    setEditGoal(false);
-  };
   const doneN = list.filter((x) => x.done).length;
   return html`<section class=${cx('card tasks', 'p-' + who, compact && 'compact')}>
     <div class="card-hd">
-      <h3><${Avatar} who=${who} size=${28} /> ${mine ? '我的今天' : `${nameOf(who)} 的今天`}</h3>
+      <h3><${Avatar} who=${who} size=${28} /> ${mine ? '我的待办' : `${nameOf(who)} 的待办`}</h3>
       <span class="muted sm">${list.length ? `${doneN}/${list.length}` : ''}</span>
     </div>
-    <div class="goal">
-      ${editGoal
-        ? html`<form class="row" onSubmit=${(e) => { e.preventDefault(); saveGoal(); }}><input class="inp" autoFocus maxlength="80" placeholder="今天最想完成的一件事" value=${g} onInput=${(e) => setG(e.target.value)} /><button class="btn sm">好</button></form>`
-        : html`<div class=${cx('goal-t', mine && 'editable')} onClick=${() => { if (mine) { setG(goal?.text || ''); setEditGoal(true); } }}>
-            <${Icon} n="pin" size=${16} /> ${goal?.text ? html`<b>${goal.text}</b>` : html`<span class="muted">${mine ? '点这里写今天的小目标' : '还没写今天的目标'}</span>`}
-          </div>`}
-    </div>
-    <${QuestionCounter} who=${who} day=${day} />
+    <p class="hint">${localDayLabel(who, day)} · 按各自当地日期，不要求进度一致</p>
     <ul class="task-ul">
       ${list.map(
         (x) => html`<li key=${x.id} class=${cx('task', x.done && 'done')}>
@@ -201,7 +167,7 @@ export function TaskList({ who, compact }) {
         </li>`,
       )}
     </ul>
-    ${!list.length && html`<p class="hint">${mine ? '写下今天要做的事，勾掉的时候 TA 会收到一个小提示。' : 'TA 还没写任务'}</p>`}
+    ${!list.length && html`<p class="hint">${mine ? '待办可写可不写，按自己的节奏来。' : '暂时没有分享待办，不代表没有在忙。'}</p>`}
     ${mine && html`<form class="row add-row" onSubmit=${add}><input class="inp" maxlength="120" placeholder="加一项任务" value=${text} onInput=${(e) => setText(e.target.value)} /><button class="btn sm" disabled=${!text.trim()}>添加</button></form>`}
   </section>`;
 }
@@ -209,18 +175,21 @@ export function TaskList({ who, compact }) {
 // ---------- calendar glance ----------
 function CalGlance() {
   useCols(['meet', 'anniv']);
-  const meets = app.store.list('meet').map((m) => ({ ...m, days: nextOccurrence(m.date, false).days })).filter((m) => m.days >= 0).sort((a, b) => a.days - b.days);
+  useNow(30000);
+  const now = Date.now();
+  const meets = app.store.list('meet').filter((m) => meetUpcoming(m, now)).map((m) => ({ ...m, days: meetInstant(m) == null ? nextOccurrence(m.date, false).days : Math.floor((m.when - now) / 864e5) })).sort((a, b) => a.days - b.days);
   const annivs = app.store.list('anniv').map((a) => ({ ...a, ...nextOccurrence(a.date, a.yearly !== false) })).filter((a) => a.days >= 0).sort((a, b) => a.days - b.days);
   const meet = meets[0];
   const ann = annivs[0];
   if (!meet && !ann) return null;
   return html`<a class="card cal-glance" href="#/cal">
-    ${meet && html`<div class="cg"><${St} id="d-five" size=${56} title="" /><div><small>下次见面</small><b>${meet.days === 0 ? '就是今天' : html`还有 <em>${meet.days}</em> 天`}</b><small class="muted">${meet.note || fmtDayFull(meet.date)}</small></div></div>`}
+    ${meet && html`<div class="cg"><${St} id="d-five" size=${56} title="" /><div><small>下次见面</small><b>${meet.time && meetInstant(meet) == null ? '时区待确认' : meet.days === 0 ? (meetInstant(meet) == null ? '就是今天' : '不到 1 天') : html`还有 <em>${meet.days}</em> 天`}</b><small class="muted">${meet.note || fmtDayFull(meet.date)}</small></div></div>`}
     ${ann && html`<div class="cg"><${St} id=${stId(app.me, 'cheer')} size=${56} title="" /><div><small>${ann.title}</small><b>${ann.days === 0 ? '就是今天' : html`还有 <em>${ann.days}</em> 天`}</b>${ann.years > 0 && html`<small class="muted">第 ${ann.years} 年</small>`}</div></div>`}
   </a>`;
 }
 
 export function Home() {
+  useNow(30000);
   const hour = new Date().getHours();
   const hi = hour < 5 ? '夜深了' : hour < 11 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
   return html`<div class="page home">

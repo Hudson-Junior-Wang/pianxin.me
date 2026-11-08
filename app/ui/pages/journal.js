@@ -1,10 +1,11 @@
 // 偏心我 · 记录 — 日历形式的生活点滴：图片、文字、留言给 TA、只给自己看
-import { html } from '../h.js?v=575a878181';
+import { html } from '../h.js?v=ad495840f0';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=575a878181';
-import { uid, today, addMonths, pad2, fmtDayFull, fmtHM, cx } from '../../lib/util.js?v=575a878181';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=575a878181';
-import { Icon } from '../icons.js?v=575a878181';
+import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=ad495840f0';
+import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=ad495840f0';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=ad495840f0';
+import { Icon } from '../icons.js?v=ad495840f0';
+import { localZone } from '../../lib/time.js?v=ad495840f0';
 
 const TO = {
   day: { label: '生活点滴', st: 'read', hint: '两个人都能看到' },
@@ -102,7 +103,7 @@ function Entry({ x, onEdit }) {
       <${Avatar} who=${x.who} size=${36} />
       <div class="entry-meta">
         <b>${nameOf(x.who)}</b>
-        <small class="muted">${fmtHM(x.at || x._t)} · ${x.to === 'ta' ? (mine ? `留言给 ${nameOf(app.partner)}` : '给你的留言') : to.label}</small>
+        <small class="muted">记录于 ${localDayLabel(x.who, x.day)} · ${x.to === 'ta' ? (mine ? `留言给 ${nameOf(app.partner)}` : '给你的留言') : to.label}</small>
       </div>
       ${mood && html`<${St} id=${stId(x.who, mood.st)} size=${48} title=${mood.label} />`}
       ${mine && html`<span class="entry-ops"><button class="icon-btn sm" aria-label="编辑" onClick=${() => onEdit(x)}><${Icon} n="edit" size=${16} /></button>
@@ -134,7 +135,7 @@ function Composer({ day, edit, onDone }) {
         return rest;
       });
     }
-    const data = { who: app.me, day, to, text: text.trim().slice(0, 5000), photos: ph, mood, at: edit ? edit.at || edit._t : Date.now() };
+    const data = { who: app.me, day, to, text: text.trim().slice(0, 5000), photos: ph, mood, zone: edit?.zone || localZone(), at: edit ? edit.at || edit._t : Date.now() };
     if (edit) {
       const oldCol = edit._local ? '_journal' : 'journal';
       const newCol = colOf(to);
@@ -171,7 +172,8 @@ function Composer({ day, edit, onDone }) {
 }
 
 export function Journal({ param }) {
-  useCols(['journal', '_journal', 'react', 'cmt', 'profile']);
+  useCols(['journal', '_journal', 'react', 'cmt', 'profile', 'tz']);
+  useNow(30000);
   const initial = /^\d{4}-\d{2}-\d{2}$/.test(param || '') ? param : today();
   const [sel, setSel] = useState(initial);
   const [ym, setYm] = useState(initial.slice(0, 7));
@@ -189,7 +191,8 @@ export function Journal({ param }) {
   };
   const list = entriesFor(sel);
   return html`<div class="page journal">
-    <div class="page-hd"><h2>记录</h2><small class="muted">生活的点点滴滴，按日子收好</small></div>
+    <div class="page-hd"><h2>记录</h2><small class="muted">按记录者当地日期收好，不要求同一天写</small></div>
+    <div class="chips journal-dates"><button class="chip" onClick=${() => { setYm(today().slice(0, 7)); pick(today()); }}>我的今天 · ${today()}</button>${app.store.get('tz', app.partner) && html`<button class="chip" onClick=${() => { const d = dayOf(app.partner); setYm(d.slice(0, 7)); pick(d); }}>${nameOf(app.partner)} 的今天 · ${dayOf(app.partner)}</button>`}</div>
     <div class="journal-wrap">
       <div class="journal-cal"><${Calendar} ym=${ym} setYm=${setYm} sel=${sel} onPick=${pick} /></div>
       <div class="journal-day">
