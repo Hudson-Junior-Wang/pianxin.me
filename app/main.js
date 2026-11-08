@@ -1,27 +1,27 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=81eb25e2e5';
+import { html, render } from './ui/h.js?v=84b24374a3';
 import { useState, useEffect, useRef } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=81eb25e2e5';
-import { Store } from './lib/store.js?v=81eb25e2e5';
-import { initViewport } from './lib/viewport.js?v=81eb25e2e5';
-import { Sync } from './lib/sync.js?v=81eb25e2e5';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=81eb25e2e5';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=81eb25e2e5';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=81eb25e2e5';
-import { cx, fmtClock } from './lib/util.js?v=81eb25e2e5';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=81eb25e2e5';
-import { Icon } from './ui/icons.js?v=81eb25e2e5';
-import { Chat } from './ui/chat.js?v=81eb25e2e5';
-import { Home } from './ui/pages/home.js?v=81eb25e2e5';
-import { Learn } from './ui/pages/learn.js?v=81eb25e2e5';
-import { Together } from './ui/pages/together.js?v=81eb25e2e5';
-import { Journal } from './ui/pages/journal.js?v=81eb25e2e5';
-import { Life } from './ui/pages/food.js?v=81eb25e2e5';
-import { Me } from './ui/pages/me.js?v=81eb25e2e5';
-import { useLayerClose, useRouteMotion } from './ui/motion.js?v=81eb25e2e5';
-import { Fingerprint } from './ui/pictograms.js?v=81eb25e2e5';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=84b24374a3';
+import { Store } from './lib/store.js?v=84b24374a3';
+import { initViewport } from './lib/viewport.js?v=84b24374a3';
+import { Sync } from './lib/sync.js?v=84b24374a3';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=84b24374a3';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=84b24374a3';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=84b24374a3';
+import { cx, fmtClock } from './lib/util.js?v=84b24374a3';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=84b24374a3';
+import { Icon } from './ui/icons.js?v=84b24374a3';
+import { Chat } from './ui/chat.js?v=84b24374a3';
+import { Home } from './ui/pages/home.js?v=84b24374a3';
+import { Learn } from './ui/pages/learn.js?v=84b24374a3';
+import { Together } from './ui/pages/together.js?v=84b24374a3';
+import { Journal } from './ui/pages/journal.js?v=84b24374a3';
+import { Life } from './ui/pages/food.js?v=84b24374a3';
+import { Me } from './ui/pages/me.js?v=84b24374a3';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=84b24374a3';
+import { Fingerprint } from './ui/pictograms.js?v=84b24374a3';
 
 initViewport();
 
@@ -33,7 +33,7 @@ const NAV = [
 ];
 const PAGES = Object.fromEntries([...NAV.map((n) => [n.k, n]), ['me', { k: 'me', label: '设置', icon: 'gear', C: Me }], ['together', { k: 'together', label: '专注小工具', icon: 'clock', C: Together }]]);
 // old links keep working
-const ALIAS = { food: ['life', null], fit: ['life', 'fit'], cal: ['life', 'cal'] };
+const ALIAS = { food: ['life', null], fit: ['life', 'fit'], cal: ['journal', 'cal'] };
 
 function parseHash() {
   let h = location.hash.replace(/^#\/?/, '');
@@ -44,6 +44,9 @@ function parseHash() {
     param = fixed || param;
     page = p;
   }
+  // Calendar used to live under Life. Keep bookmarked routes compatible while
+  // rendering the Records destination and its selected navigation state.
+  if (page === 'life' && (param === 'cal' || param === 'cal-personal')) return { page: 'journal', param };
   if (page === 'together' && param && !['study', 'read', 'drafts'].includes(param)) {
     if (param === 'eat' || param === 'sport') return { page: 'life', param: param === 'eat' ? 'meal' : 'fit' };
     return { page: 'journal', param: '' };

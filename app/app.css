@@ -172,7 +172,7 @@ label.btn { cursor: pointer; }
 .seg.big button { flex: 1; justify-content: center; padding: 6px 8px; font-size: 14.5px; min-height: 40px; white-space: nowrap; }
 @media (max-width: 480px) {
   .life > .seg.big { border-radius: 18px; gap: 4px; }
-  .life > .seg.big button { flex: 1 1 calc(33.333% - 4px); padding: 6px 3px; gap: 3px; font-size: 12.5px; }
+  .life > .seg.big button { flex: 1 1 calc(50% - 4px); padding: 6px 3px; gap: 3px; font-size: 12.5px; }
   .life > .seg.big .st { width: 20px; height: 20px; }
 }
 .seg.tiny button { padding: 2px 10px; font-size: 12px; }
@@ -558,6 +558,7 @@ a.tg-row { color: var(--ink); }
 .mk-plan { background: var(--accent); }
 .mk-meet { background: var(--break); }
 .mk-day { background: var(--focus); }
+.journal-entries > * + * { margin-top: 16px; }
 .journal-wrap { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
 .journal-cal { position: sticky; top: 12px; }
 @media (max-width: 1399px) { .journal-wrap { grid-template-columns: 1fr; } .journal-cal { position: static; } }

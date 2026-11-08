@@ -1,14 +1,13 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=81eb25e2e5';
+import { html } from '../h.js?v=84b24374a3';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=81eb25e2e5';
-import { localZone } from '../../lib/time.js?v=81eb25e2e5';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=81eb25e2e5';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=81eb25e2e5';
-import { Icon } from '../icons.js?v=81eb25e2e5';
-import { Fit } from './fit.js?v=81eb25e2e5';
-import { Cal } from './cal.js?v=81eb25e2e5';
-import { Pic } from '../pictograms.js?v=81eb25e2e5';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=84b24374a3';
+import { localZone } from '../../lib/time.js?v=84b24374a3';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=84b24374a3';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=84b24374a3';
+import { Icon } from '../icons.js?v=84b24374a3';
+import { Fit } from './fit.js?v=84b24374a3';
+import { Pic } from '../pictograms.js?v=84b24374a3';
 
 // ---------- meals ----------
 const MEALS = [['breakfast', '早饭'], ['lunch', '午饭'], ['dinner', '晚饭'], ['snack', '加餐'], ['supper', '夜宵']];
@@ -251,11 +250,10 @@ export const LIFE_TABS = [
   { value: 'recipe', label: '菜谱', key: 'idea' },
   { value: 'wish', label: '想吃的', key: 'tea' },
   { value: 'fit', label: '运动', key: 'run' },
-  { value: 'cal', label: '日历', key: 'salute' },
 ];
 
 export function Life({ param }) {
-  const tab = param === 'cal-personal' ? 'cal' : LIFE_TABS.some((t) => t.value === param) ? param : 'meal';
+  const tab = LIFE_TABS.some((t) => t.value === param) ? param : 'meal';
   return html`<div class="page life">
     <div class="page-hd"><h2>生活</h2></div>
     <${Seg} value=${tab} onChange=${(v) => (location.hash = '#/life/' + v)} cls="big"
@@ -264,6 +262,5 @@ export function Life({ param }) {
     ${tab === 'recipe' && html`<${Recipes} />`}
     ${tab === 'wish' && html`<${Wishes} />`}
     ${tab === 'fit' && html`<${Fit} />`}
-    ${tab === 'cal' && html`<${Cal} scope=${param === 'cal-personal' ? 'personal' : 'together'} />`}
   </div>`;
 }

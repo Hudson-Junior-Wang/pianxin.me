@@ -1,12 +1,12 @@
 // Recent shared moments: people first, content next, newest updated first.
-import { html } from './h.js?v=81eb25e2e5';
+import { html } from './h.js?v=84b24374a3';
 import { useState, useEffect } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel, stId } from '../lib/ctx.js?v=81eb25e2e5';
-import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=81eb25e2e5';
-import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=81eb25e2e5';
-import { Img, Empty, Modal, St, Avatar } from './common.js?v=81eb25e2e5';
-import { ShareDetail } from './shares.js?v=81eb25e2e5';
-import { Icon } from './icons.js?v=81eb25e2e5';
+import { app, useCols, nameOf, localDayLabel, stId } from '../lib/ctx.js?v=84b24374a3';
+import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=84b24374a3';
+import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=84b24374a3';
+import { Img, Empty, Modal, St, Avatar } from './common.js?v=84b24374a3';
+import { ShareDetail } from './shares.js?v=84b24374a3';
+import { Icon } from './icons.js?v=84b24374a3';
 
 const SHARE_CHOICES = [
   { key: 'journal', label: '生活点滴', hint: '文字、照片或留言', st: 'read', route: '#/journal' },
@@ -15,8 +15,8 @@ const SHARE_CHOICES = [
   { key: 'recipe', label: '分享菜谱', hint: '食材和做法', st: 'idea', route: '#/life/recipe' },
   { key: 'wish', label: '想吃的', hint: '菜、店或零食', st: 'tea', route: '#/life/wish' },
   { key: 'fit', label: '运动记录', hint: '记一次运动', st: 'run', route: '#/life/fit' },
-  { key: 'personal', label: '各自的计划', hint: '放下自己的安排', st: 'done', route: '#/life/cal-personal' },
-  { key: 'together', label: '一起的计划', hint: '收好共同的安排', st: 'salute', route: '#/life/cal' },
+  { key: 'personal', label: '各自的计划', hint: '放下自己的安排', st: 'done', route: '#/journal/cal-personal' },
+  { key: 'together', label: '一起的计划', hint: '收好共同的安排', st: 'salute', route: '#/journal/cal' },
 ];
 
 function ShareChooser({ onClose }) {

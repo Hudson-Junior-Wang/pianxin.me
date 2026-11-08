@@ -1,12 +1,13 @@
-// 偏心我 · 记录 — 日历形式的生活点滴：图片、文字、留言给 TA、只给自己看
-import { html } from '../h.js?v=81eb25e2e5';
+// 偏心我 · 记录 — 生活点滴与日历安排：文字、照片、留言、计划和重要日子
+import { html } from '../h.js?v=84b24374a3';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=81eb25e2e5';
-import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=81eb25e2e5';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=81eb25e2e5';
-import { Icon } from '../icons.js?v=81eb25e2e5';
-import { localZone } from '../../lib/time.js?v=81eb25e2e5';
-import { Comments } from '../shares.js?v=81eb25e2e5';
+import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=84b24374a3';
+import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=84b24374a3';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=84b24374a3';
+import { Icon } from '../icons.js?v=84b24374a3';
+import { localZone } from '../../lib/time.js?v=84b24374a3';
+import { Comments } from '../shares.js?v=84b24374a3';
+import { Cal } from './cal.js?v=84b24374a3';
 
 const TO = {
   day: { label: '生活点滴', st: 'read', hint: '两个人都能看到' },
@@ -157,6 +158,7 @@ function Composer({ day, edit, onDone }) {
 export function Journal({ param }) {
   useCols(['journal', '_journal', 'react', 'cmt', 'profile', 'tz']);
   useNow(30000);
+  const tab = param === 'cal' || param === 'cal-personal' ? 'cal' : 'entries';
   const initial = /^\d{4}-\d{2}-\d{2}$/.test(param || '') ? param : today();
   const [sel, setSel] = useState(initial);
   const [ym, setYm] = useState(initial.slice(0, 7));
@@ -175,6 +177,9 @@ export function Journal({ param }) {
   const list = entriesFor(sel);
   return html`<div class="page journal">
     <div class="page-hd"><h2>记录</h2></div>
+    <${Seg} value=${tab} onChange=${(value) => { location.hash = value === 'cal' ? '#/journal/cal' : '#/journal/' + sel; }} cls="big records-tabs"
+      options=${[{value:'entries',label:'生活点滴',st:stId(app.me,'read')},{value:'cal',label:'日历',st:stId(app.me,'salute')}]} />
+    <div class="journal-entries" hidden=${tab !== 'entries'}>
     <div class="chips journal-dates"><button class="chip" onClick=${() => { setYm(today().slice(0, 7)); pick(today()); }}>我的今天 · ${today()}</button>${app.store.get('tz', app.partner) && html`<button class="chip" onClick=${() => { const d = dayOf(app.partner); setYm(d.slice(0, 7)); pick(d); }}>${nameOf(app.partner)} 的今天 · ${dayOf(app.partner)}</button>`}</div>
     <div class="journal-wrap">
       <div class="journal-cal"><${Calendar} ym=${ym} setYm=${setYm} sel=${sel} onPick=${pick} /></div>
@@ -188,5 +193,7 @@ export function Journal({ param }) {
           : html`<${Empty} st="read" text="当天暂无记录" />`}
       </div>
     </div>
+    </div>
+    ${tab === 'cal' && html`<${Cal} scope=${param === 'cal-personal' ? 'personal' : 'together'} />`}
   </div>`;
 }

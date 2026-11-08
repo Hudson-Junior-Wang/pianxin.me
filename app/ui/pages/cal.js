@@ -1,13 +1,13 @@
 // 偏心我 · 日历 — 下次见面、重要的日子、一起的计划、点子罐
-import { html } from '../h.js?v=81eb25e2e5';
+import { html } from '../h.js?v=84b24374a3';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=81eb25e2e5';
-import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=81eb25e2e5';
-import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=81eb25e2e5';
-import { Icon } from '../icons.js?v=81eb25e2e5';
-import { planScope, planOwner, canEditPlan } from '../../lib/plans.js?v=81eb25e2e5';
-import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=81eb25e2e5';
-import { Pic } from '../pictograms.js?v=81eb25e2e5';
+import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=84b24374a3';
+import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=84b24374a3';
+import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=84b24374a3';
+import { Icon } from '../icons.js?v=84b24374a3';
+import { planScope, planOwner, canEditPlan } from '../../lib/plans.js?v=84b24374a3';
+import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=84b24374a3';
+import { Pic } from '../pictograms.js?v=84b24374a3';
 
 // Original keys remain in old/new records so edits and sync need no migration.
 const DAY_ART = [['🎂','birthday','生日'],['🎓','graduation','毕业'],['📝','note','记事'],['✈️','travel','旅行'],['🎉','party','庆祝'],['🏠','home','家'],['🐾','paw','小脚印'],['⭐','star','星星'],['🍰','dessert','甜品'],['📅','calendar','日历']];
@@ -230,14 +230,14 @@ function Plans({ scope = 'together' }) {
   };
   return html`<section class="card plans">
     <div class="card-hd"><h3>计划与日历</h3><button type="button" class="btn xs" onClick=${() => setForm({ scope })}><${Icon} n="plus" size=${14} /> ${scope === 'personal' ? '我的计划' : '计划'}</button></div>
-    <div class="chips plan-tabs" role="group" aria-label="计划类型">${[['personal', '各自的计划'], ['together', '一起的计划']].map(([value, label]) => html`<button type="button" class=${cx('chip', scope === value && 'on')} aria-pressed=${scope === value} onClick=${() => { location.hash = value === 'personal' ? '#/life/cal-personal' : '#/life/cal'; setShowDone(false); }}>${label}</button>`)}</div>
+    <div class="chips plan-tabs" role="group" aria-label="计划类型">${[['personal', '各自的计划'], ['together', '一起的计划']].map(([value, label]) => html`<button type="button" class=${cx('chip', scope === value && 'on')} aria-pressed=${scope === value} onClick=${() => { location.hash = value === 'personal' ? '#/journal/cal-personal' : '#/journal/cal'; setShowDone(false); }}>${label}</button>`)}</div>
     ${scope === 'personal' && html`<div class="chips plan-people" role="group" aria-label="个人计划筛选">${[['', '两个人的'], [app.me, '我的'], [app.partner, nameOf(app.partner) + ' 的']].map(([value, label]) => html`<button type="button" class=${cx('chip', person === value && 'on')} aria-pressed=${person === value} onClick=${() => setPerson(value)}>${label}</button>`)}</div>`}
     <p class="hint">${scope === 'personal' ? '双方可见，由本人修改。' : '两个人都可以修改和标记完成。'}仅显示日期，不提供到时推送。</p>
     <${MonthGrid} ym=${ym} setYm=${setYm} marks=${marks} onPick=${(d) => setForm({ date: d, scope })} />
     ${todo.length ? html`<ul class="plan-ul">${todo.map(row)}</ul>` : html`<p class="hint">${scope === 'personal' ? '暂无个人计划' : '暂无一起的计划'}</p>`}
     ${done.length > 0 && html`<button type="button" class="link sm plan-done-toggle" onClick=${() => setShowDone(!showDone)}>${showDone ? '收起' : `已完成 ${done.length} 件`}</button>`}
     ${showDone && html`<ul class="plan-ul done">${done.map(row)}</ul>`}
-    ${form && html`<${PlanForm} edit=${form.edit} date0=${form.date} scope0=${form.scope} onClose=${() => setForm(null)} onSaved=${(value) => { setForm(null); setPerson(''); setShowDone(false); location.hash = value === 'personal' ? '#/life/cal-personal' : '#/life/cal'; }} />`}
+    ${form && html`<${PlanForm} edit=${form.edit} date0=${form.date} scope0=${form.scope} onClose=${() => setForm(null)} onSaved=${(value) => { setForm(null); setPerson(''); setShowDone(false); location.hash = value === 'personal' ? '#/journal/cal-personal' : '#/journal/cal'; }} />`}
   </section>`;
 }
 
