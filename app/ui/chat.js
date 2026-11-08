@@ -1,11 +1,11 @@
 // 偏心我 · chat (lives in the right column on wide screens, in a bottom sheet on phones)
-import { html } from './h.js?v=5e2c5948d8';
+import { html } from './h.js?v=2b526ea3b9';
 import { useState, useEffect, useRef, useLayoutEffect, useMemo } from '../vendor/hooks.js';
-import { app, useCols, useBus, useForce, nameOf, stId, isSt, stLabel, CHARS, chOf } from '../lib/ctx.js?v=5e2c5948d8';
-import { markChatRead } from '../lib/feed.js?v=5e2c5948d8';
-import { uid, fmtHM, cx, dayKey, fmtDay } from '../lib/util.js?v=5e2c5948d8';
-import { Avatar, St, StickerPanel, confirmDel } from './common.js?v=5e2c5948d8';
-import { Icon } from './icons.js?v=5e2c5948d8';
+import { app, useCols, useBus, useForce, nameOf, stId, isSt, stLabel, CHARS, chOf } from '../lib/ctx.js?v=2b526ea3b9';
+import { markChatRead } from '../lib/feed.js?v=2b526ea3b9';
+import { uid, fmtHM, cx, dayKey, fmtDay } from '../lib/util.js?v=2b526ea3b9';
+import { Avatar, St, StickerPanel, confirmDel } from './common.js?v=2b526ea3b9';
+import { Icon } from './icons.js?v=2b526ea3b9';
 
 // quick stickers allowed while focusing (my own character)
 const QUIET_KEYS = ['cheer', 'ok', 'study', 'tea', 'yawn', 'dizzy', 'salute', 'done', 'pat', 'okay', 'sleep', 'hi'];

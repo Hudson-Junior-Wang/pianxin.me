@@ -1,27 +1,28 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=5e2c5948d8';
+import { html, render } from './ui/h.js?v=2b526ea3b9';
 import { useState, useEffect, useRef } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=5e2c5948d8';
-import { Store } from './lib/store.js?v=5e2c5948d8';
-import { initViewport } from './lib/viewport.js?v=5e2c5948d8';
-import { Sync } from './lib/sync.js?v=5e2c5948d8';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=5e2c5948d8';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=5e2c5948d8';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=5e2c5948d8';
-import { cx, fmtClock } from './lib/util.js?v=5e2c5948d8';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=5e2c5948d8';
-import { Icon } from './ui/icons.js?v=5e2c5948d8';
-import { Chat } from './ui/chat.js?v=5e2c5948d8';
-import { Home } from './ui/pages/home.js?v=5e2c5948d8';
-import { Learn } from './ui/pages/learn.js?v=5e2c5948d8';
-import { Together } from './ui/pages/together.js?v=5e2c5948d8';
-import { Journal } from './ui/pages/journal.js?v=5e2c5948d8';
-import { Life } from './ui/pages/food.js?v=5e2c5948d8';
-import { Me } from './ui/pages/me.js?v=5e2c5948d8';
-import { useLayerClose, useRouteMotion } from './ui/motion.js?v=5e2c5948d8';
-import { Fingerprint } from './ui/pictograms.js?v=5e2c5948d8';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=2b526ea3b9';
+import { Store } from './lib/store.js?v=2b526ea3b9';
+import { initViewport } from './lib/viewport.js?v=2b526ea3b9';
+import { Sync } from './lib/sync.js?v=2b526ea3b9';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=2b526ea3b9';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=2b526ea3b9';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=2b526ea3b9';
+import { cx, fmtClock } from './lib/util.js?v=2b526ea3b9';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=2b526ea3b9';
+import { Icon } from './ui/icons.js?v=2b526ea3b9';
+import { Chat } from './ui/chat.js?v=2b526ea3b9';
+import { Home } from './ui/pages/home.js?v=2b526ea3b9';
+import { Learn } from './ui/pages/learn.js?v=2b526ea3b9';
+import { Together } from './ui/pages/together.js?v=2b526ea3b9';
+import { Journal } from './ui/pages/journal.js?v=2b526ea3b9';
+import { Life } from './ui/pages/food.js?v=2b526ea3b9';
+import { Me } from './ui/pages/me.js?v=2b526ea3b9';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=2b526ea3b9';
+import { Fingerprint } from './ui/pictograms.js?v=2b526ea3b9';
+import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=2b526ea3b9';
 
 initViewport();
 
@@ -216,30 +217,35 @@ function App() {
 }
 
 // ---------- lock screen ----------
-function Lock({ onDone }) {
+function Lock({ onDone, issue = '' }) {
   const [pw, setPw] = useState('');
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState(issue);
   const [res, setRes] = useState(null);
   const ch = chOf(app.me) === 'bunny' ? 'r' : 'b';
   const submit = async (e) => {
     e.preventDefault();
-    if (pw.trim().length < 6) return setErr('暗号至少 6 个字，长一点更安全');
+    if (busy) return;
+    if (!roomIsBound()) return setErr('正在绑定电脑上的固定暗号，暂不开放新解锁，不会创建新空间。请从仍已登录的电脑「设置 → 连接」复制固定空间校验码。');
+    if (pw.trim().length < 6) return setErr('请输入原来的完整暗号');
     setErr('');
     setBusy(true);
     try {
       const seed = await deriveSeed(pw);
       const kr = await keyringFromSeed(seed);
+      const issue = await roomAccessIssue(kr);
+      if (issue) { setErr(issue); setBusy(false); return; }
       setRes({ seed, fp: kr.fp });
     } catch (x) {
       setErr('这个浏览器不支持加密功能，换个新一点的浏览器试试');
     }
     setBusy(false);
   };
-  const enter = () => {
-    localStorage.setItem(`px:${app.me}:kr`, res.seed);
-    onDone(res.seed);
+  const enter = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await onDone(res.seed); } finally { setBusy(false); }
   };
   return html`<div class="lock">
     <div class="lock-card">
@@ -250,18 +256,18 @@ function Lock({ onDone }) {
         ? html`<div class="fp-box">
             <p>这是你们这把钥匙的指纹：</p>
             <div class="fp"><${Fingerprint} value=${res.fp} /></div>
-            <p class="hint">和 ${nameOf(app.partner)} 那边的四组编号一模一样，就说明暗号对上啦。</p>
-            <button class="btn big" onClick=${enter}>进入</button>
-            <button class="link sm" onClick=${() => setRes(null)}>重新输入</button>
+            <p class="hint">固定空间校验通过。这里只使用你们确认的同一把钥匙。</p>
+            <button class="btn big" disabled=${busy} onClick=${enter}>${busy ? '正在打开…' : '进入'}</button>
+            <button class="link sm" disabled=${busy} onClick=${() => setRes(null)}>重新输入</button>
           </div>`
         : html`<form onSubmit=${submit}>
-            <p class="hint">输入你们约定好的暗号。两个人要输入<b>一模一样</b>的暗号，才会进到同一个小空间。</p>
+            <p class="hint">${roomIsBound() ? '这里只属于你们两个人。请输入原来确认的暗号；暗号错误不会另建空间。' : '正在将网站绑定到电脑上的固定暗号。现有记录保留，暂不接受新解锁。'}</p>
             <div class="pw-row">
               <input class="inp" type=${show ? 'text' : 'password'} autocomplete="current-password" placeholder="我们的暗号" value=${pw} onInput=${(e) => setPw(e.target.value)} autoFocus />
               <button type="button" class="btn ghost sm" onClick=${() => setShow(!show)}>${show ? '隐藏' : '显示'}</button>
             </div>
-            ${err && html`<p class="err">${err}</p>`}
-            <button class="btn big" disabled=${busy || !pw.trim()}>${busy ? '正在配钥匙…' : '开门'}</button>
+            ${err && html`<p class="err" role="alert">${err}</p>`}
+            <button class="btn big" disabled=${busy || !pw.trim()}>${busy ? '正在核对暗号…' : '开门'}</button>
             <p class="hint small">所有内容都会先用这个暗号加密，再离开你的设备。暗号本身不会被上传，忘了就找不回，请记好。</p>
           </form>`}
     </div>
@@ -269,29 +275,48 @@ function Lock({ onDone }) {
 }
 
 // ---------- boot ----------
-async function start(seed) {
+function showLock(issue = '') {
+  render(html`<${Lock} key=${issue} issue=${issue} onDone=${(seed) => start(seed).catch(showStartError)} />`, document.getElementById('app'));
+}
+
+function showStartError(e) {
+  console.error(e);
+  showLock('打开时出了点问题，请保留本机数据后刷新重试。');
+}
+
+let starting = null;
+function start(seed, options = {}) {
+  if (!starting) starting = openApp(seed, options).finally(() => { starting = null; });
+  return starting;
+}
+
+async function openApp(seed, { existing = false } = {}) {
   const root = document.getElementById('app');
   let kr;
   try {
     kr = await keyringFromSeed(seed);
   } catch {
-    localStorage.removeItem(`px:${app.me}:kr`);
-    location.reload();
+    showLock('这台设备保存的钥匙无法读取。原有记录没有清除，请输入原来的暗号。');
     return;
   }
-  app.kr = kr;
+  const issue = await roomAccessIssue(kr, { existing });
+  if (issue) { showLock(issue); return; }
   const store = new Store(app.me);
   await store.open();
+  const room = await store.getMeta('room');
+  // Never rekey a device's surviving history merely because a different
+  // passphrase was entered. Migration requires an explicit recovery flow.
+  if (room && room !== kr.room) {
+    store.db.close();
+    showLock('这台设备的记录属于另一把钥匙，已停止切换空间。原记录与照片均保留；请先在原设备导出备份，再确认合并。');
+    return;
+  }
+  if (room !== kr.room) await store.setMeta('room', kr.room);
+  localStorage.setItem(`px:${app.me}:kr`, seed);
+  app.kr = kr;
   app.store = store;
   const sync = new Sync(store, kr, app.me, app.partner);
   app.sync = sync;
-  const room = await store.getMeta('room');
-  if (room && room !== kr.room) {
-    store.rekey();
-    await sync.reshareAll();
-    await store.setMeta('lastSync', null);
-  }
-  if (room !== kr.room) await store.setMeta('room', kr.room);
   syncTimezone();
   setInterval(syncTimezone, 60000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncTimezone(); });
@@ -338,13 +363,10 @@ function boot() {
   }
   const seed = localStorage.getItem(`px:${me}:kr`);
   if (!seed) {
-    render(html`<${Lock} onDone=${(s) => { render(null, root); start(s); }} />`, root);
+    showLock();
     return;
   }
-  start(seed).catch((e) => {
-    console.error(e);
-    root.innerHTML = '<div class="lock"><div class="lock-card"><h1>偏心我</h1><p>打开时出了点问题，刷新一下试试。</p></div></div>';
-  });
+  start(seed, { existing: true }).catch(showStartError);
 }
 
 boot();

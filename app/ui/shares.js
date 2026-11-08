@@ -1,12 +1,12 @@
 // Shared content reader used by Home Recent and the Learning shelf.
-import { html } from './h.js?v=5e2c5948d8';
+import { html } from './h.js?v=2b526ea3b9';
 import { useState } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=5e2c5948d8';
-import { uid, cx } from '../lib/util.js?v=5e2c5948d8';
-import { SHARE_TYPES, safeLink, shareTitle, shareRoute } from '../lib/shares.js?v=5e2c5948d8';
-import { planScope, planOwner } from '../lib/plans.js?v=5e2c5948d8';
-import { Avatar, Modal, Photos, Reacts, confirmDel } from './common.js?v=5e2c5948d8';
-import { Icon } from './icons.js?v=5e2c5948d8';
+import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=2b526ea3b9';
+import { uid, cx } from '../lib/util.js?v=2b526ea3b9';
+import { SHARE_TYPES, safeLink, shareTitle, shareRoute } from '../lib/shares.js?v=2b526ea3b9';
+import { planScope, planOwner } from '../lib/plans.js?v=2b526ea3b9';
+import { Avatar, Modal, Photos, Reacts, confirmDel } from './common.js?v=2b526ea3b9';
+import { Icon } from './icons.js?v=2b526ea3b9';
 
 export function Comments({ target }) {
   useCols('cmt');

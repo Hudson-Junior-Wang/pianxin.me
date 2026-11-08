@@ -1,11 +1,12 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=5e2c5948d8';
-import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=5e2c5948d8';
-import { download, today, cx } from '../../lib/util.js?v=5e2c5948d8';
-import { St } from '../common.js?v=5e2c5948d8';
-import { Fingerprint } from '../pictograms.js?v=5e2c5948d8';
-import { installPlatform } from '../../lib/install.js?v=5e2c5948d8';
+import { html } from '../h.js?v=2b526ea3b9';
+import { useState, useEffect } from '../../vendor/hooks.js';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=2b526ea3b9';
+import { download, today, cx } from '../../lib/util.js?v=2b526ea3b9';
+import { St } from '../common.js?v=2b526ea3b9';
+import { Fingerprint } from '../pictograms.js?v=2b526ea3b9';
+import { installPlatform } from '../../lib/install.js?v=2b526ea3b9';
+import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=2b526ea3b9';
 
 function Profile() {
   useCols('profile');
@@ -58,6 +59,18 @@ function Network() {
   useSyncEvent(['net', 'presence', 'sweep']);
   const st = app.sync.status();
   const [busy, setBusy] = useState(false);
+  const [binding, setBinding] = useState('');
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { let active = true; roomBindingCode(app.kr).then((value) => { if (active) setBinding(value); }).catch(() => {}); return () => { active = false; }; }, []);
+  const copyBinding = async () => {
+    if (!binding) return;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+      await navigator.clipboard.writeText(binding);
+      setCopied(true);
+      toast('固定空间校验码已复制；不用提供暗号', { icon: stId(app.me, 'ok') });
+    } catch { setCopied(false); toast('自动复制不可用，请长按或选中下方校验码复制', { icon: stId(app.me, 'idea') }); }
+  };
   const repair = async () => {
     setBusy(true);
     const n = await app.sync.repairAll();
@@ -69,6 +82,13 @@ function Network() {
     <div class="card-hd network-hd"><h3>连接</h3><span class="network-fingerprint"><small class="muted">钥匙指纹</small><${Fingerprint} value=${app.kr.fp} compact /></span></div>
     <ul class="net-ul">${st.map((l) => html`<li><i class=${cx('dot', l.state === 'up' && 'on')}></i><b>${l.name}</b><span class="muted">${label[l.state] || l.state}</span></li>`)}</ul>
     <p class="hint">内容在离开你的设备之前就已经用你们的暗号加密（AES-256-GCM），中转服务器只看得到乱码。两边的“钥匙指纹”四组编号一模一样，说明暗号一致。</p>
+    <div class="room-binding">
+      <b>${roomIsBound() ? '固定空间已绑定' : '固定空间待绑定'}</b>
+      <p class="hint">${roomIsBound() ? '网站只接受已确认的暗号；错误暗号不会另建空间。' : '请只在保留正确记录的电脑上复制此校验码，用于绑定唯一空间。手机原来的记录先保留，不要退出或清除数据。'}</p>
+      <button type="button" class="btn ghost sm" disabled=${!binding} onClick=${copyBinding}>${copied ? '已复制固定空间校验码' : '复制固定空间校验码'}</button>
+      <label class="lbl" for="room-binding-code">固定空间校验码（不是暗号）</label><textarea id="room-binding-code" class="inp room-binding-code" readonly rows="3" value=${binding} spellcheck="false" aria-label="固定空间校验码" onFocus=${(e) => e.target.select()}></textarea>
+      <p class="hint">这里只包含单向校验值，不含暗号、解密钥匙或房间地址。无需发送暗号，也不要复制浏览器里的其他数据。</p>
+    </div>
     <p class="hint">数据主要存在每个人的浏览器里，通过公共中转线路同步。公共服务不保证长期保存，不能代替备份；换手机或清理浏览器前，请先导出文字记录，照片另行保存。</p>
     <div class="row wrap">
       <button class="btn ghost sm" disabled=${busy || !app.sync.online} onClick=${repair}>${busy ? '上传中…' : '重新上传我这边的记录'}</button>
@@ -147,11 +167,13 @@ function Install() {
 
 function Danger() {
   const lock = () => {
-    if (!confirm('退出后，这台设备需要重新输入暗号才能进来（记录还在）。确定吗？')) return;
+    if (!roomIsBound()) return toast('固定空间绑定前请保留当前登录，先复制电脑校验码并导出备份。', { icon: stId(app.me, 'idea') });
+    if (!confirm('退出后，这台设备需要重新输入原来的暗号才能进来（记录还在）。确定吗？')) return;
     localStorage.removeItem(`px:${app.me}:kr`);
     location.reload();
   };
   const wipe = async () => {
+    if (!roomIsBound()) return toast('正在保留两台设备的记录，请先完成空间绑定与备份。', { icon: stId(app.me, 'idea') });
     if (!confirm('清除这台设备上的所有数据？（已经同步到 TA 那边的不会受影响）')) return;
     localStorage.removeItem(`px:${app.me}:kr`);
     await app.store.destroy();
@@ -160,9 +182,10 @@ function Danger() {
   return html`<section class="card">
     <div class="card-hd"><h3>这台设备</h3></div>
     <div class="row wrap">
-      <button class="btn ghost sm" onClick=${lock}>退出（下次重新输入暗号）</button>
-      <button class="btn ghost sm danger" onClick=${wipe}>清除本机数据</button>
+      <button class="btn ghost sm" disabled=${!roomIsBound()} onClick=${lock}>退出（下次重新输入暗号）</button>
+      <button class="btn ghost sm danger" disabled=${!roomIsBound()} onClick=${wipe}>清除本机数据</button>
     </div>
+    ${!roomIsBound() && html`<p class="hint">固定空间绑定前暂不退出或清除数据，以便先备份手机和电脑各自的历史。</p>`}
     <p class="hint">${nameOf(app.partner)} 的页面是 <a href=${'/' + app.partner}>pianxin.me/${app.partner}</a>，两个人用同一个暗号。</p>
   </section>`;
 }

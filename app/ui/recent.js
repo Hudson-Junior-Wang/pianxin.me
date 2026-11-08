@@ -1,12 +1,12 @@
 // Recent shared moments: people first, content next, newest updated first.
-import { html } from './h.js?v=5e2c5948d8';
+import { html } from './h.js?v=2b526ea3b9';
 import { useState, useEffect } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel, stId } from '../lib/ctx.js?v=5e2c5948d8';
-import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=5e2c5948d8';
-import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=5e2c5948d8';
-import { Img, Empty, Modal, St, Avatar } from './common.js?v=5e2c5948d8';
-import { ShareDetail } from './shares.js?v=5e2c5948d8';
-import { Icon } from './icons.js?v=5e2c5948d8';
+import { app, useCols, nameOf, localDayLabel, stId } from '../lib/ctx.js?v=2b526ea3b9';
+import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=2b526ea3b9';
+import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=2b526ea3b9';
+import { Img, Empty, Modal, St, Avatar } from './common.js?v=2b526ea3b9';
+import { ShareDetail } from './shares.js?v=2b526ea3b9';
+import { Icon } from './icons.js?v=2b526ea3b9';
 
 const SHARE_CHOICES = [
   { key: 'journal', label: '生活点滴', hint: '文字、照片或留言', st: 'read', route: '#/journal' },
