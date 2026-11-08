@@ -2,9 +2,9 @@
 // plus the "一起模式" watcher (phase changes, quiet state, auto-logging).
 // Nothing here keeps score: no streaks, no read receipts, no comparisons.
 
-import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=3a8f362184';
-import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=3a8f362184';
-import { pick } from './util.js?v=3a8f362184';
+import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=6f1645891f';
+import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=6f1645891f';
+import { pick } from './util.js?v=6f1645891f';
 
 const short = (s, n = 18) => {
   s = String(s || '').replace(/\s+/g, ' ').trim();
@@ -105,12 +105,12 @@ function onLive(r, prev) {
     case 'together': {
       const m = MODES[x.mode] || MODES.study;
       if (x.sid && x.sid !== (px && px.sid) && derive(x, Date.now()).state === 'run') {
-        toast(`${ta()} 开始了一段${m.label}，有空再加入就好`, {
+        toast(`${ta()} 开始了${m.label}计时`, {
           icon: modeSt(m),
           ms: 12000,
           action: { label: '看看', fn: () => { location.hash = '#/together'; } },
         });
-        notify('偏心我', `${ta()} 在${m.label}，不需要同步进度`);
+        notify('偏心我', `${ta()} 开始了${m.label}计时`);
       } else if (x.ended && !x.natural && px && !px.ended && x.sid === px.sid && isMember(x)) {
         toast(`${ta()} 结束了这次一起${m.label}`, { icon: taSt('salute'), kind: 'soft' });
       } else if (px && x.sid === px.sid && x.paused !== px.paused && isMember(x)) {

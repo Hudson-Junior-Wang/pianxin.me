@@ -1,12 +1,12 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=3a8f362184';
-import { localZone } from '../../lib/time.js?v=3a8f362184';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=3a8f362184';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=3a8f362184';
-import { Icon } from '../icons.js?v=3a8f362184';
-import { Fit } from './fit.js?v=3a8f362184';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=6f1645891f';
+import { localZone } from '../../lib/time.js?v=6f1645891f';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=6f1645891f';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=6f1645891f';
+import { Icon } from '../icons.js?v=6f1645891f';
+import { Fit } from './fit.js?v=6f1645891f';
 
 // ---------- meals ----------
 const MEALS = [['🌅', '早饭'], ['🍱', '午饭'], ['🌙', '晚饭'], ['🍪', '加餐'], ['🌃', '夜宵']];
@@ -61,9 +61,8 @@ function Meals() {
   const days = [...new Set(all.map((x) => x.day))].sort().reverse();
   const order = MEALS.map((m) => m[1]);
   return html`<div class="stack">
-    <div class="card cta async-note"><${St} id=${stId(app.me, 'eat')} size=${64} title="" /><div><b>各自好好吃饭</b><small class="muted">吃完顺手留一张，不等同一顿、不催回复。</small></div></div>
     ${edit ? html`<${MealForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${MealForm} key="new" />`}
-    ${!days.length && html`<${Empty} st="eat" text="还没有记录，今天吃了什么好吃的？" />`}
+    ${!days.length && html`<${Empty} st="eat" text="暂无饮食记录" />`}
     ${days.slice(0, limit).map((d) => html`<section class="card meal-day" key=${d}>
       <div class="card-hd"><h3>${d} · 记录者当地日期</h3></div>
       <div class="meal-cols">
@@ -140,7 +139,7 @@ function RecipeCard({ x, open, onToggle, onEdit }) {
       <div class="recipe-meta"><${Avatar} who=${x.who} size=${24} />${(x.tags || []).map((t) => html`<em class="tag">${t}</em>`)}</div>
       <${Photos} list=${x.photos} />
       ${ings.length > 0 && html`<div class="recipe-sec"><h4>食材</h4><ul class="ing">${ings.map((l) => html`<li>${l}</li>`)}</ul></div>`}
-      ${steps.length > 0 ? html`<div class="recipe-sec"><h4>做法</h4><ol class="steps">${steps.map((l) => html`<li>${l}</li>`)}</ol></div>` : html`<p class="muted">还没写做法，补一下吧～</p>`}
+      ${steps.length > 0 ? html`<div class="recipe-sec"><h4>做法</h4><ol class="steps">${steps.map((l) => html`<li>${l}</li>`)}</ol></div>` : html`<p class="muted">暂无做法</p>`}
       <div class="recipe-ft">
         <small class="muted">${nameOf(x.who)} 分享的${x.editBy && x.editBy !== x.who ? ` · ${nameOf(x.editBy)} 改过` : ''}${cooked.length ? ` · 做过 ${cooked.length} 次，最近一次 ${fmtDay(cooked[0].day)}` : ''}</small>
         <span class="sp"></span>
@@ -184,7 +183,7 @@ function Recipes() {
     <p class="hint">点菜名展开做法，两个人都能编辑。</p>
     <div class="recipe-list card">
       ${list.length ? list.map((x) => html`<${RecipeCard} key=${x.id} x=${x} open=${open.has(x.id)} onToggle=${() => toggle(x.id)} onEdit=${(r) => setForm({ edit: r })} />`)
-        : html`<${Empty} st="idea" text=${ql ? '没找到这道菜' : '还没有菜谱，想到什么好吃的就放上来吧'} />`}
+        : html`<${Empty} st="idea" text=${ql ? '没找到这道菜' : '暂无菜谱'} />`}
     </div>
     ${form && html`<${RecipeForm} edit=${form.edit} onClose=${() => setForm(null)} />`}
   </div>`;
@@ -239,7 +238,7 @@ function Wishes() {
           </div>
           ${x.done && html`<${Reacts} target=${`wish/${x.id}`} set="food" />`}
         </article>`;
-      }) : html`<${Empty} st=${tab === 'todo' ? 'tea' : 'eat'} text=${tab === 'todo' ? '还没有想吃的？不可能！' : '吃到的会出现在这里'} />`}
+      }) : html`<${Empty} st=${tab === 'todo' ? 'tea' : 'eat'} text=${tab === 'todo' ? '暂无想吃的' : '暂无已吃记录'} />`}
     </div>
   </div>`;
 }
@@ -254,7 +253,7 @@ export const LIFE_TABS = [
 export function Life({ param }) {
   const tab = LIFE_TABS.some((t) => t.value === param) ? param : 'meal';
   return html`<div class="page life">
-    <div class="page-hd"><h2>生活</h2><small class="muted">各自生活，有空再分享和回应</small></div>
+    <div class="page-hd"><h2>生活</h2></div>
     <${Seg} value=${tab} onChange=${(v) => (location.hash = '#/life/' + v)} cls="big"
       options=${LIFE_TABS.map((t) => ({ value: t.value, label: t.label, st: stId(app.me, t.key) }))} />
     ${tab === 'meal' && html`<${Meals} />`}

@@ -1,11 +1,11 @@
 // 偏心我 · 日历 — 下次见面、重要的日子、一起的计划、点子罐
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=3a8f362184';
-import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=3a8f362184';
-import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=3a8f362184';
-import { Icon } from '../icons.js?v=3a8f362184';
-import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=3a8f362184';
+import { app, useCols, useNow, nameOf, zoneOf, toast, stId } from '../../lib/ctx.js?v=6f1645891f';
+import { uid, today, nextOccurrence, diffDays, fmtDay, fmtDayFull, dayKey, parseDay, pad2, addMonths, cx, pick } from '../../lib/util.js?v=6f1645891f';
+import { Avatar, Modal, Empty, St, confirmDel, AutoText, strip } from '../common.js?v=6f1645891f';
+import { Icon } from '../icons.js?v=6f1645891f';
+import { localZone, zonedStamp, wallInstant, meetInstant, meetUpcoming } from '../../lib/time.js?v=6f1645891f';
 
 const DAY_EMOJI = ['🎂', '🎓', '📝', '✈️', '🎉', '🏠', '🐾', '⭐', '🍰', '📅'];
 
@@ -38,7 +38,7 @@ function MeetCard() {
   }
   return html`<section class="card meet">
     <div class="card-hd"><h3>下次见面</h3><button class="btn xs" onClick=${() => setForm({})}><${Icon} n="plus" size=${14} /> 定个日子</button></div>
-    ${main || html`<${Empty} st="hi" text="下次什么时候见？定个日子，一起倒数" />`}
+    ${main || html`<${Empty} st="hi" text="暂无见面安排" />`}
     ${past.length > 0 && html`<div class="meet-past"><small class="muted">之前见过：${past.map((m) => fmtDay(m.date)).join('、')}</small></div>`}
     ${form && html`<${MeetForm} edit=${form.edit} onClose=${() => setForm(false)} />`}
   </section>`;
@@ -111,7 +111,7 @@ function Days() {
       </div>
       <span class="anniv-d">${a.days === 0 ? html`<em>今天</em>` : a.days > 0 ? html`<em>${a.days}</em><small>天后</small>` : html`<small>已过去</small>`}</span>
       <span class="anniv-ops"><button class="icon-btn xs" aria-label="编辑" onClick=${() => setForm({ edit: a })}><${Icon} n="edit" size=${14} /></button><button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel(`删除「${a.title}」？`) && app.store.del('anniv', a.id)}><${Icon} n="x" size=${14} /></button></span>
-    </li>`)}</ul>` : html`<${Empty} st="idea" text="生日、出发、重要安排…都可以记下来" />`}
+    </li>`)}</ul>` : html`<${Empty} st="idea" text="暂无重要日子" />`}
     ${form && html`<${DayForm} edit=${form.edit} onClose=${() => setForm(null)} />`}
   </section>`;
 }
@@ -128,9 +128,9 @@ function PlanForm({ edit, date0, onClose }) {
     onClose();
   };
   return html`<${Modal} title=${edit ? '改计划' : '一起的计划'} onClose=${onClose}>
-    <label class="lbl">想做的事</label><input class="inp" maxlength="60" placeholder="各自试一道新菜 / 分享一本书 / 见面时去爬山" value=${title} onInput=${(e) => setTitle(e.target.value)} />
+    <label class="lbl">想做的事</label><input class="inp" maxlength="60" placeholder="计划名称" value=${title} onInput=${(e) => setTitle(e.target.value)} />
     <label class="lbl">哪天（选填，不填就是“总有一天”）</label><input class="inp" type="date" value=${date} onInput=${(e) => setDate(e.target.value)} />
-    <label class="lbl">备注（选填）</label><${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${500} placeholder="各自完成，还是以后见面再做…" />
+    <label class="lbl">备注（选填）</label><${AutoText} value=${note} onInput=${setNote} rows=${2} maxLength=${500} placeholder="计划备注" />
     <div class="modal-ft"><button class="btn ghost" onClick=${onClose}>取消</button><button class="btn" disabled=${!title.trim()} onClick=${save}>好</button></div>
   <//>`;
 }
@@ -187,7 +187,7 @@ function Plans() {
   const toggle = (p) => app.store.put('plan', p.id, { ...strip(p), done: !p.done, doneAt: p.done ? 0 : Date.now() });
   return html`<section class="card plans">
     <div class="card-hd"><h3>一起的计划</h3><button class="btn xs" onClick=${() => setForm({})}><${Icon} n="plus" size=${14} /> 计划</button></div>
-    <p class="hint">可以各自完成，也可以留到见面。日期是计划，不是催促；这里只显示倒数，不保证到时推送。</p>
+    <p class="hint">仅显示倒数，不提供到时推送。</p>
     <${MonthGrid} ym=${ym} setYm=${setYm} marks=${marks} onPick=${(d) => setForm({ date: d })} />
     ${todo.length ? html`<ul class="plan-ul">${todo.map((p) => html`<li key=${p.id} class="plan">
       <label class="ck"><input type="checkbox" checked=${false} onChange=${() => toggle(p)} /><span class="ck-box"></span></label>
@@ -247,11 +247,11 @@ function IdeaJar() {
           ? html`<div class="jar-note"><small class="muted">${nameOf(drawn.who)} 写的：</small><b>${drawn.text}</b>
               <div class="row"><button class="btn xs" onClick=${() => { app.store.put('plan', uid(), { title: drawn.text, date: '', note: '从点子罐里摇出来的', who: app.me, done: false }); toast('放进一起的计划啦', { icon: stId(app.me, 'ok') }); setDrawn(null); }}>加进计划</button>
               <button class="btn xs ghost" onClick=${() => { app.store.put('idea', drawn.id, { ...strip(drawn), drawn: false, drawnAt: 0 }); setDrawn(null); }}>放回去</button></div></div>`
-          : html`<div class="jar-tip"><${St} id=${stId(app.me, inJar.length ? 'idea' : 'what')} size=${64} title="" /><p class="muted">${inJar.length ? '周末不知道做什么？点罐子摇一个！' : '罐子空空的，先放几个点子进去吧'}</p></div>`}
+          : html`<div class="jar-tip"><${St} id=${stId(app.me, inJar.length ? 'idea' : 'what')} size=${64} title="" /><p class="muted">${inJar.length ? '点击罐子随机抽取' : '暂无点子'}</p></div>`}
       </div>
     </div>
     <form class="row" onSubmit=${add}>
-      <input class="inp" maxlength="120" placeholder="写个点子：各自试一道菜 / 见面时拼乐高…" value=${text} onInput=${(e) => setText(e.target.value)} />
+      <input class="inp" maxlength="120" placeholder="输入点子" value=${text} onInput=${(e) => setText(e.target.value)} />
       <button class="btn" disabled=${!text.trim()}>放进去</button>
     </form>
     ${used.length > 0 && html`<button class="link sm" onClick=${() => setShowUsed(!showUsed)}>${showUsed ? '收起' : `摇出来过的 ${used.length} 个点子`}</button>`}
@@ -264,7 +264,7 @@ function IdeaJar() {
 
 export function Cal() {
   return html`<div class="page calpage">
-    <div class="page-hd"><h2>日历</h2><small class="muted">见面、重要的日子、一起的计划</small></div>
+    <div class="page-hd"><h2>日历</h2></div>
     <div class="cols">
       <div class="col-a">
         <${MeetCard} />

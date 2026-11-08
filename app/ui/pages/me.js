@@ -1,10 +1,10 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=3a8f362184';
-import { download, today, cx } from '../../lib/util.js?v=3a8f362184';
-import { St } from '../common.js?v=3a8f362184';
-import { installPlatform } from '../../lib/install.js?v=3a8f362184';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=6f1645891f';
+import { download, today, cx } from '../../lib/util.js?v=6f1645891f';
+import { St } from '../common.js?v=6f1645891f';
+import { installPlatform } from '../../lib/install.js?v=6f1645891f';
 
 function Profile() {
   useCols('profile');
@@ -50,7 +50,6 @@ function Prefs() {
     <label class="switch"><input type="checkbox" checked=${s.notify && perm === 'granted'} onChange=${(e) => (e.target.checked ? askNotify() : saveSettings({ notify: false }))} /><span></span> 页面在后台时弹系统通知</label>
     ${perm === 'denied' && html`<p class="hint">通知权限被拒绝了，需要在浏览器的网站设置里重新允许。</p>`}
     <p class="hint">选「想安静」时，消息、戳一下和计时切换都不响。网页关闭后不能保证系统提醒，重要安排请另设手机闹钟。</p>
-    <p class="hint">这里没有“已读”、没有连续打卡、也没有谁陪伴更久的比较。想回就回，不用有负担。</p>
   </section>`;
 }
 

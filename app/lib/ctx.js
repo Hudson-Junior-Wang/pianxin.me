@@ -1,7 +1,7 @@
 // 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
-import { localZone, validZone, zoneParts } from './time.js?v=3a8f362184';
+import { localZone, validZone, zoneParts } from './time.js?v=6f1645891f';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {

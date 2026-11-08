@@ -1,12 +1,12 @@
 // 偏心我 · 首页 — 最近分享为主，状态和打招呼轻轻放在后面
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=3a8f362184';
-import { poke, POKE_KINDS } from '../../lib/feed.js?v=3a8f362184';
-import { uid, today, cx, fmtDayFull } from '../../lib/util.js?v=3a8f362184';
-import { Recent } from '../recent.js?v=3a8f362184';
-import { Avatar, Dot, Modal, St, strip } from '../common.js?v=3a8f362184';
-import { Icon } from '../icons.js?v=3a8f362184';
+import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=6f1645891f';
+import { poke, POKE_KINDS } from '../../lib/feed.js?v=6f1645891f';
+import { uid, today, cx, fmtDayFull } from '../../lib/util.js?v=6f1645891f';
+import { Recent } from '../recent.js?v=6f1645891f';
+import { Avatar, Dot, Modal, St, strip } from '../common.js?v=6f1645891f';
+import { Icon } from '../icons.js?v=6f1645891f';
 
 // ---------- status card ----------
 function StatusCard({ who }) {
@@ -118,7 +118,7 @@ export function TaskList({ who, compact }) {
       <h3><${Avatar} who=${who} size=${28} /> ${mine ? '我的待办' : `${nameOf(who)} 的待办`}</h3>
       <span class="muted sm">${list.length ? `${doneN}/${list.length}` : ''}</span>
     </div>
-    <p class="hint">${localDayLabel(who, day)} · 按各自当地日期，不要求进度一致</p>
+    <p class="hint">${localDayLabel(who, day)}</p>
     <ul class="task-ul">
       ${list.map(
         (x) => html`<li key=${x.id} class=${cx('task', x.done && 'done')}>
@@ -128,7 +128,7 @@ export function TaskList({ who, compact }) {
         </li>`,
       )}
     </ul>
-    ${!list.length && html`<p class="hint">${mine ? '待办可写可不写，按自己的节奏来。' : '暂时没有分享待办，不代表没有在忙。'}</p>`}
+    ${!list.length && html`<p class="hint">暂无待办</p>`}
     ${mine && html`<form class="row add-row" onSubmit=${add}><input class="inp" maxlength="120" placeholder="加一项任务" value=${text} onInput=${(e) => setText(e.target.value)} /><button class="btn sm" disabled=${!text.trim()}>添加</button></form>`}
   </section>`;
 }
@@ -140,7 +140,7 @@ export function Home() {
   return html`<div class="page home">
     <div class="page-hd"><div><h2>${hi}，${nameOf(app.me)}</h2><span class="muted">${fmtDayFull(today())}</span></div></div>
     <${Recent} />
-    <details class="home-corner"><summary>彼此的近况与打招呼 <span class="muted">有空再看</span></summary>
+    <details class="home-corner"><summary>近况与打招呼</summary>
       <div class="grid2"><${StatusCard} who=${app.partner} /><${StatusCard} who=${app.me} /></div>
       <${PokeRow} />
     </details>

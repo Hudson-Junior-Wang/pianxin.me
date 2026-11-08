@@ -1,12 +1,12 @@
 // 偏心我 · 记录 — 日历形式的生活点滴：图片、文字、留言给 TA、只给自己看
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=3a8f362184';
-import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=3a8f362184';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=3a8f362184';
-import { Icon } from '../icons.js?v=3a8f362184';
-import { localZone } from '../../lib/time.js?v=3a8f362184';
-import { Comments } from '../shares.js?v=3a8f362184';
+import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=6f1645891f';
+import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=6f1645891f';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=6f1645891f';
+import { Icon } from '../icons.js?v=6f1645891f';
+import { localZone } from '../../lib/time.js?v=6f1645891f';
+import { Comments } from '../shares.js?v=6f1645891f';
 
 const TO = {
   day: { label: '生活点滴', st: 'read', hint: '两个人都能看到' },
@@ -174,7 +174,7 @@ export function Journal({ param }) {
   };
   const list = entriesFor(sel);
   return html`<div class="page journal">
-    <div class="page-hd"><h2>记录</h2><small class="muted">按记录者当地日期收好，不要求同一天写</small></div>
+    <div class="page-hd"><h2>记录</h2></div>
     <div class="chips journal-dates"><button class="chip" onClick=${() => { setYm(today().slice(0, 7)); pick(today()); }}>我的今天 · ${today()}</button>${app.store.get('tz', app.partner) && html`<button class="chip" onClick=${() => { const d = dayOf(app.partner); setYm(d.slice(0, 7)); pick(d); }}>${nameOf(app.partner)} 的今天 · ${dayOf(app.partner)}</button>`}</div>
     <div class="journal-wrap">
       <div class="journal-cal"><${Calendar} ym=${ym} setYm=${setYm} sel=${sel} onPick=${pick} /></div>
@@ -185,7 +185,7 @@ export function Journal({ param }) {
           : html`<${Composer} key=${'n' + sel} day=${sel} />`}
         ${list.length
           ? list.map((x) => html`<${Entry} key=${x.id} x=${x} onEdit=${setEditing} />`)
-          : html`<${Empty} st="read" text=${sel > today() ? '这一天还没到，可以先给未来的这天写点什么' : '这一天还是空白的，写点什么吧'} />`}
+          : html`<${Empty} st="read" text="当天暂无记录" />`}
       </div>
     </div>
   </div>`;

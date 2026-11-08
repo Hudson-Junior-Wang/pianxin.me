@@ -1,12 +1,12 @@
 // 偏心我 · 一起模式 — 同步计时 + 互相可见的草稿栏 + 今日任务（聊天在右栏 / 底部抽屉）
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState, useEffect, useRef } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=3a8f362184';
-import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=3a8f362184';
-import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=3a8f362184';
-import { Avatar, Dot, St, confirmDel } from '../common.js?v=3a8f362184';
-import { Icon } from '../icons.js?v=3a8f362184';
-import { TaskList } from './home.js?v=3a8f362184';
+import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=6f1645891f';
+import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=6f1645891f';
+import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=6f1645891f';
+import { Avatar, Dot, St, confirmDel } from '../common.js?v=6f1645891f';
+import { Icon } from '../icons.js?v=6f1645891f';
+import { TaskList } from './home.js?v=6f1645891f';
 
 const modeSticker = (m, who = app.me) => (m.st.startsWith('d-') ? m.st : stId(who, m.st));
 
@@ -68,7 +68,6 @@ function Setup({ initial }) {
   const total = cfg.rounds ? cfg.focus * cfg.rounds + (m.brk.length ? cfg.brk * Math.max(0, cfg.rounds - 1) : 0) : 0;
   return html`<section class="card setup">
     <div class="card-hd"><h3>专注计时</h3><${St} id=${stId(app.me, 'study')} size=${56} title="" /></div>
-    <p class="hint">各学各的、各做各的。不限定专业、任务或进度，也可以一个人先开始。</p>
     <div class="setup-opts">
       <${Pick} key=${mode + 'f'} label=${mode === 'study' || mode === 'read' ? '专注' : '时长'} value=${cfg.focus} options=${m.focus} onChange=${(v) => setCfg({ ...cfg, focus: v })} />
       ${m.brk.length > 0 && html`<${Pick} key=${mode + 'b'} label="休息" value=${cfg.brk} options=${m.brk} zero="不休息" onChange=${(v) => setCfg({ ...cfg, brk: v })} />`}
@@ -76,7 +75,6 @@ function Setup({ initial }) {
     </div>
     <p class="hint">${m.quiet ? '专注时聊天自动收起、静音，只能发表情；休息时再展开。' : '这个模式聊天一直开着，边做边聊。'}${total ? ` 大约 ${fmtMin(total)}。` : ''}</p>
     <button class="btn big" onClick=${go}>开始专注</button>
-    <p class="hint center">不需要等对方上线。${nameOf(app.partner)} 有空时可自愿加入，没加入不受静音影响。</p>
   </section>`;
 }
 
@@ -303,7 +301,7 @@ function MyDraft() {
       </div>
     </div>
     ${tab === 'text'
-      ? html`<textarea ref=${ref} class="inp pad-ta" maxlength="20000" placeholder="随手记：灵感、提纲、片段、想法…（TA 能实时看到）" value=${text}
+      ? html`<textarea ref=${ref} class="inp pad-ta" maxlength="20000" placeholder="输入草稿（对方实时可见）" value=${text}
           onInput=${(e) => { setText(e.target.value); save.current(e.target.value); }}></textarea>`
       : html`<${InkPad} />`}
   </div>`;
@@ -344,7 +342,7 @@ function Memories() {
   if (!list.length) return null;
   return html`<section class="card memories">
     <div class="card-hd"><h3>最近的计时记录</h3></div>
-    <p class="hint">记录整段时段，含休息与暂停，不是学习时长排名。</p>
+    <p class="hint">时段包含休息与暂停。</p>
     <ul class="mem-ul">
       ${list.map((x) => {
         const m = MODES[x.mode] || MODES.study;
@@ -364,7 +362,7 @@ export function Together({ param }) {
   const d = derive(s, Date.now());
   const running = d.state === 'run';
   return html`<div class=${cx('page together', app.focus && 'is-focus')}>
-    <div class="page-hd"><div><a class="link sm" href="#/learn">‹ 返回学习分享</a><h2>学习小工具</h2><small class="muted">专注计时只是可选工具，学到的东西可以回到学习页分享。</small></div></div>
+    <div class="page-hd"><div><a class="link sm" href="#/learn">‹ 返回学习分享</a><h2>学习小工具</h2></div></div>
     ${param === 'drafts' && !running ? null : running ? html`<${Running} />` : html`<${Setup} key=${param || 'x'} initial=${param} />`}
     <${Drafts} />
     <div class="grid2">

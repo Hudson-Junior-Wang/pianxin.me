@@ -1,12 +1,12 @@
 // Folder-like Recent: shared content only, newest updated first.
-import { html } from './h.js?v=3a8f362184';
+import { html } from './h.js?v=6f1645891f';
 import { useState, useEffect } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=3a8f362184';
-import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=3a8f362184';
-import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=3a8f362184';
-import { Img, Empty } from './common.js?v=3a8f362184';
-import { ShareDetail } from './shares.js?v=3a8f362184';
-import { Icon } from './icons.js?v=3a8f362184';
+import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=6f1645891f';
+import { fmtDay, fmtHM, dayKey, cx } from '../lib/util.js?v=6f1645891f';
+import { SHARE_TYPES, SHARE_COLS, recentShares, shareTitle, sharePreview } from '../lib/shares.js?v=6f1645891f';
+import { Img, Empty } from './common.js?v=6f1645891f';
+import { ShareDetail } from './shares.js?v=6f1645891f';
+import { Icon } from './icons.js?v=6f1645891f';
 
 export function Recent() {
   useCols([...SHARE_COLS,'profile','tz']);
@@ -14,13 +14,13 @@ export function Recent() {
   useEffect(()=>setLimit(20),[group,who,query]);
   const list=recentShares(app.store,{group,who,query});
   return html`<section class="recent-shares">
-    <div class="recent-heading"><div><h3><${Icon} n="folder" /> 最近分享 <small>Recent</small></h3><p class="hint">像文件夹的「最近项目」一样，最近更新的小东西都放在这里。</p></div><a class="btn sm" href="#/journal">留点小东西 <${Icon} n="plus" size=${16} /></a></div>
+    <div class="recent-heading"><div><h3><${Icon} n="folder" /> 最近分享 <small>Recent</small></h3></div><a class="btn sm" href="#/journal">留点小东西 <${Icon} n="plus" size=${16} /></a></div>
     <div class="recent-tools"><div class="chips" role="group" aria-label="分享类型">${[['all','全部'],['learn','学习'],['life','生活'],['cal','安排']].map(([k,label])=>html`<button class=${cx('chip',group===k&&'on')} aria-pressed=${group===k} onClick=${()=>setGroup(k)}>${label}</button>`)}</div><div class="row"><label class="search"><${Icon} n="search" size=${18} /><input class="inp" aria-label="搜索最近分享" placeholder="找分享过的内容…" value=${query} onInput=${(e)=>setQuery(e.target.value)} /></label><select class="inp share-who" aria-label="分享者" value=${who} onChange=${(e)=>setWho(e.target.value)}><option value="">两个人的</option><option value=${app.me}>我分享的</option><option value=${app.partner}>${nameOf(app.partner)} 分享的</option></select></div></div>
     ${list.length ? html`<div class="recent-list"><div class="recent-columns" aria-hidden="true"><span>分享的内容</span><span>最近更新</span></div>${list.slice(0,limit).map(({col,x,key,updated})=>html`<button class="recent-row" key=${key} data-share=${key} onClick=${()=>setSelected({col,id:x.id})}>
       <span class=${cx('recent-type','type-'+SHARE_TYPES[col].group)}>${x.photos?.length ? html`<${Img} id=${x.photos[0].th||x.photos[0].id} cls="recent-thumb" />` : html`<${Icon} n=${SHARE_TYPES[col].icon} size=${24} />`}</span>
       <span class="recent-main"><strong>${shareTitle(col,x)}</strong><span class="recent-preview">${sharePreview(col,x)}</span><small>${SHARE_TYPES[col].label} · ${nameOf(x.who||x._by)}${x.day ? ' · '+localDayLabel(x.who||x._by,x.day) : ''}${x.photos?.length ? ' · '+x.photos.length+' 张图片' : ''}</small></span>
       <time class="recent-updated" dateTime=${new Date(updated).toISOString()}>${fmtDay(dayKey(new Date(updated)))}<small>${fmtHM(updated)}</small></time><${Icon} n="right" cls="recent-arrow" size=${16} />
-    </button>`)}</div>` : html`<${Empty} st="read" text=${group!=='all'||who||query ? '这里暂时没有匹配的分享，换个类型或关键词试试' : '还没有收进来的分享。学习笔记、生活文字、照片和菜谱，都可以慢慢放在这里。'} />`}
+    </button>`)}</div>` : html`<${Empty} st="read" text=${group!=='all'||who||query ? '没有匹配的分享' : '暂无分享'} />`}
     ${list.length>limit && html`<button class="btn ghost block" onClick=${()=>setLimit(limit+20)}>看看更早的分享</button>`}
     ${selected && html`<${ShareDetail} col=${selected.col} id=${selected.id} onClose=${()=>setSelected(null)} />`}
   </section>`;

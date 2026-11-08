@@ -1,11 +1,11 @@
 // 偏心我 · 运动 — 各自记录，方便时再回应，不比较、不要求同时进行
-import { html } from '../h.js?v=3a8f362184';
+import { html } from '../h.js?v=6f1645891f';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=3a8f362184';
-import { localZone } from '../../lib/time.js?v=3a8f362184';
-import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=3a8f362184';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=3a8f362184';
-import { Icon } from '../icons.js?v=3a8f362184';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=6f1645891f';
+import { localZone } from '../../lib/time.js?v=6f1645891f';
+import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=6f1645891f';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=6f1645891f';
+import { Icon } from '../icons.js?v=6f1645891f';
 
 export const SPORTS = [
   ['🏃', '跑步'], ['🚶', '散步'], ['🚴', '骑车'], ['🏊', '游泳'], ['🧘', '瑜伽'], ['🏋️', '力量'],
@@ -90,7 +90,6 @@ function WeekStrip({ list }) {
         </div>`;
       })}
     </div>
-    <p class="hint">按记录者的当地日期留个脚印。不要求同一天运动，也不比较。</p>
   </section>`;
 }
 
@@ -120,12 +119,11 @@ export function Fit() {
   const list = app.store.list('workout').sort((a, b) => (b.day > a.day ? 1 : b.day < a.day ? -1 : (b.at || b._t) - (a.at || a._t)));
   return html`<div class="cols">
     <div class="col-a">
-      <div class="card cta async-note"><${St} id=${stId(app.me, 'run')} size=${64} title="" /><div><b>按自己的节奏动一动</b><small class="muted">运动后再分享。无需同一时间，也不需要相同项目。</small></div></div>
       ${edit ? html`<${LogForm} key=${edit.id} edit=${edit} onDone=${() => setEdit(null)} />` : html`<${LogForm} key="new" />`}
       <${WeekStrip} list=${list} />
     </div>
     <div class="col-b">
-      ${list.length ? list.slice(0, limit).map((x) => html`<${Item} key=${x.id} x=${x} onEdit=${setEdit} />`) : html`<${Empty} st="run" text="还没有运动记录，散步十分钟也算哦" />`}
+      ${list.length ? list.slice(0, limit).map((x) => html`<${Item} key=${x.id} x=${x} onEdit=${setEdit} />`) : html`<${Empty} st="run" text="暂无运动记录" />`}
       ${list.length > limit && html`<button class="btn ghost block" onClick=${() => setLimit(limit + 20)}>再看看更早的</button>`}
     </div>
   </div>`;

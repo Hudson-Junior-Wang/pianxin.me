@@ -3,7 +3,6 @@
   "name": "偏心我",
   "short_name": "偏心我",
   "lang": "zh-CN",
-  "description": "各做各的，也有人作伴。不催回复，不用打卡。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,11 +1,11 @@
 // 偏心我 · chat (lives in the right column on wide screens, in a bottom sheet on phones)
-import { html } from './h.js?v=3a8f362184';
+import { html } from './h.js?v=6f1645891f';
 import { useState, useEffect, useRef, useLayoutEffect, useMemo } from '../vendor/hooks.js';
-import { app, useCols, useBus, useForce, nameOf, stId, isSt, stLabel, CHARS, chOf } from '../lib/ctx.js?v=3a8f362184';
-import { markChatRead } from '../lib/feed.js?v=3a8f362184';
-import { uid, fmtHM, cx, dayKey, fmtDay } from '../lib/util.js?v=3a8f362184';
-import { Avatar, St, StickerPanel, confirmDel } from './common.js?v=3a8f362184';
-import { Icon } from './icons.js?v=3a8f362184';
+import { app, useCols, useBus, useForce, nameOf, stId, isSt, stLabel, CHARS, chOf } from '../lib/ctx.js?v=6f1645891f';
+import { markChatRead } from '../lib/feed.js?v=6f1645891f';
+import { uid, fmtHM, cx, dayKey, fmtDay } from '../lib/util.js?v=6f1645891f';
+import { Avatar, St, StickerPanel, confirmDel } from './common.js?v=6f1645891f';
+import { Icon } from './icons.js?v=6f1645891f';
 
 // quick stickers allowed while focusing (my own character)
 const QUIET_KEYS = ['cheer', 'ok', 'study', 'tea', 'yawn', 'dizzy', 'salute', 'done', 'pat', 'okay', 'sleep', 'hi'];
@@ -51,7 +51,7 @@ function Messages({ list }) {
     const el = e.currentTarget;
     stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   }}>
-    ${!list.length && html`<div class="msgs-empty"><${St} id=${stId(app.me, 'hi')} size=${96} /><p>还没有消息，打个招呼吧</p></div>`}
+    ${!list.length && html`<div class="msgs-empty"><${St} id=${stId(app.me, 'hi')} size=${96} /><p>暂无消息</p></div>`}
     ${list.map((m) => {
       const day = dayKey(m.at || m._t);
       const out = [];
