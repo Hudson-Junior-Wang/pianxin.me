@@ -789,6 +789,69 @@ body, .shell, .boot, .lock { min-height: 100svh; }
   }
 }
 
+/* Recent shared items and learning shelf (content first, tools second). */
+.recent-shares { min-width: 0; }
+.recent-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 16px; flex-wrap: wrap; }
+.recent-heading h3 { display: flex; align-items: center; gap: 8px; font-size: 21px; }
+.recent-heading h3 small { font-size: 12px; font-weight: 400; color: var(--ink-3); letter-spacing: .06em; }
+.recent-tools { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.recent-tools > .row { align-items: stretch; }
+.share-who { width: auto; min-width: 0; max-width: 42%; flex: 0 1 180px; text-overflow: ellipsis; }
+.recent-list { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--card); }
+.recent-columns { display: grid; grid-template-columns: 1fr 112px; gap: 12px; padding: 10px 46px 10px 76px; background: var(--soft); font-size: 12px; color: var(--ink-3); }
+.recent-row { width: 100%; min-width: 0; display: grid; grid-template-columns: 44px minmax(0,1fr) 96px 16px; align-items: center; gap: 14px; padding: 16px; border: 0; border-bottom: 1px solid var(--line); background: var(--card); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.recent-row:last-child { border-bottom: 0; }
+.recent-row:hover { background: var(--soft); }
+.recent-type { display: grid; place-items: center; width: 44px; height: 48px; background: var(--soft); border-radius: 10px; overflow: hidden; color: var(--accent-2); }
+.recent-type.type-learn { background: var(--focus-soft); color: var(--focus); }
+.recent-type.type-cal { color: var(--break); }
+.recent-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.recent-main { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.recent-main strong, .recent-preview { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.recent-main strong { font-size: 15px; font-weight: 650; }
+.recent-preview { font-size: 13px; color: var(--ink-2); }
+.recent-main > small { color: var(--ink-3); font-size: 11.5px; overflow-wrap: anywhere; }
+.recent-updated { font-size: 12px; color: var(--ink-3); display: flex; flex-direction: column; }
+.recent-updated small { font-size: 11px; }
+.home-corner { margin-top: 24px; }
+.home-corner > summary { cursor: pointer; padding: 12px 0; min-height: 44px; font-weight: 600; }
+.home-corner > summary span { font-weight: 400; font-size: 12px; margin-left: 8px; }
+.home-corner > * + * { margin-top: 14px; }
+.learning .page-hd { justify-content: space-between; align-items: center; }
+.learning .page-hd p { font-size: 13px; margin-top: 4px; }
+.learning-list { display: flex; flex-direction: column; gap: 14px; }
+.learn-card { border-left: 3px solid var(--p); }
+.learn-open { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0 0; width: 100%; min-width: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.learn-open > span { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.learn-open strong { font-size: 17px; line-height: 1.5; overflow-wrap: anywhere; }
+.learn-open small { font-size: 13px; color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.learn-open em { font-style: normal; font-size: 12px; color: var(--accent-2); }
+.learn-open em .ic { display: inline-block; vertical-align: middle; }
+.learn-thumb { width: 76px; height: 86px; object-fit: cover; flex-shrink: 0; border-radius: 10px; }
+.learning-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; box-shadow: none; margin-top: 24px; background: var(--soft); }
+.learning-tools > div { flex: 1 1 240px; }
+.learning-tools h3 { font-size: 14px; }
+.share-title { margin: 16px 0 10px; font-size: 20px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.share-reader h4 { margin: 14px 0 4px; }
+.share-link { display: flex; align-items: flex-start; gap: 8px; overflow-wrap: anywhere; margin: 14px 0; padding: 10px; border-radius: 10px; background: var(--soft); }
+.share-link .ic { flex-shrink: 0; margin-top: 3px; }
+.learn-editor .pp { margin-top: 8px; }
+@media (max-width: 480px) {
+  .recent-columns { display: none; }
+  .recent-row { grid-template-columns: 38px minmax(0,1fr) 12px; gap: 10px; padding: 14px 12px; }
+  .recent-type { width: 38px; height: 44px; }
+  .recent-updated { grid-column: 2; grid-row: 2; flex-direction: row; gap: 5px; margin-top: -8px; font-size: 11px; }
+  .recent-arrow { grid-column: 3; grid-row: 1; }
+  .recent-main > small { font-size: 11px; }
+  .recent-tools .row { flex-wrap: wrap; }
+  .recent-tools .search { flex: 1 1 160px; }
+  .share-who { flex: 1 1 120px; max-width: 100%; }
+  .learning .page-hd .btn { min-height: 44px; }
+  .learn-toolbar .search { flex: 1 1 100%; }
+  .learn-toolbar .share-who { width: 100%; }
+  .learn-thumb { width: 58px; height: 66px; }
+}
+
 /* Respond to usable content width, not just the full viewport beside the rails. */
 @container (max-width: 750px) {
   .grid2, .cols, .journal-wrap, .pads { grid-template-columns: minmax(0, 1fr); }

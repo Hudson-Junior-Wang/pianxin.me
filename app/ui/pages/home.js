@@ -1,13 +1,12 @@
-// 偏心我 · 今天 — 各自的状态、当地时间、专注入口与可选待办
-import { html } from '../h.js?v=1209cb3091';
+// 偏心我 · 首页 — 最近分享为主，状态和打招呼轻轻放在后面
+import { html } from '../h.js?v=3a8f362184';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=1209cb3091';
-import { derive, session, members, isMember, join, phaseText } from '../../lib/together.js?v=1209cb3091';
-import { poke, POKE_KINDS } from '../../lib/feed.js?v=1209cb3091';
-import { uid, today, fmtClock, nextOccurrence, cx, fmtDayFull } from '../../lib/util.js?v=1209cb3091';
-import { Avatar, Dot, Modal, St, strip } from '../common.js?v=1209cb3091';
-import { Icon } from '../icons.js?v=1209cb3091';
-import { meetUpcoming, meetInstant } from '../../lib/time.js?v=1209cb3091';
+import { app, useCols, useNow, useSyncEvent, nameOf, MOODS, moodOf, NEEDS, dayOf, timeOf, zoneOf, localDayLabel, toast, stId, openChat } from '../../lib/ctx.js?v=3a8f362184';
+import { poke, POKE_KINDS } from '../../lib/feed.js?v=3a8f362184';
+import { uid, today, cx, fmtDayFull } from '../../lib/util.js?v=3a8f362184';
+import { Recent } from '../recent.js?v=3a8f362184';
+import { Avatar, Dot, Modal, St, strip } from '../common.js?v=3a8f362184';
+import { Icon } from '../icons.js?v=3a8f362184';
 
 // ---------- status card ----------
 function StatusCard({ who }) {
@@ -39,22 +38,8 @@ function StatusCard({ who }) {
     ${mine && !need && html`<div class="need-row">${NEEDS.map((n) => html`<button class="chip" onClick=${() => app.store.patch('status', app.me, { need: n.k, at: Date.now() })}>${n.label}</button>`)}</div>`}
     ${mine && need && html`<div class="need-row"><button class="chip" onClick=${() => app.store.patch('status', app.me, { need: null })}>不需要了</button></div>`}
     ${!mine && need && need.k !== 'quiet' && html`<${NeedActions} need=${need.k} />`}
-    ${!mine && html`<${TaGlance} />`}
     ${edit && html`<${StatusEditor} onClose=${() => setEdit(false)} />`}
   </section>`;
-}
-
-/** what the other person is up to right now (never a score) */
-function TaGlance() {
-  useCols(['together', 'tjoin']);
-  useNow(30000);
-  const s = session();
-  const d = derive(s, Date.now());
-  const inS = d.state === 'run' && members(s).includes(app.partner);
-  if (!inS) return null;
-  return html`<div class="ta-glance">
-    ${inS && html`<a class="tg-row" href="#/together"><${Icon} n="together" size=${16} /> 正在${members(s).length > 1 ? '和你一起' : ''}${d.mode.label} · ${phaseText(d)}</a>`}
-  </div>`;
 }
 
 function NeedActions({ need }) {
@@ -107,30 +92,6 @@ export function PokeRow() {
   </section>`;
 }
 
-// ---------- together entry ----------
-function TogetherCard() {
-  useCols(['together', 'tjoin']);
-  const now = useNow(1000);
-  const s = session();
-  const d = derive(s, now);
-  if (d.state !== 'run') {
-    return html`<section class="card together-card idle">
-      <div class="card-hd"><h3>有空时一起专注</h3><a class="link sm" href="#/together">设置时长 <${Icon} n="right" size=${14} /></a></div>
-      <a class="focus-entry" href="#/together"><${St} id=${stId(app.me, 'study')} size=${72} title="" /><div><b>开一段专注时间</b><small>独自开始，或在空闲重叠时作伴</small></div><${Icon} n="right" /></a>
-      <p class="hint">专业不同也没关系，各做各的。可以自己先开始，不要求同时上线。</p>
-      <div class="async-links"><a class="chip" href="#/life/meal">各自的饭</a><a class="chip" href="#/life/fit">运动记录</a><a class="chip" href="#/journal">留点生活碎片</a></div>
-    </section>`;
-  }
-  const who = members(s);
-  const me = isMember(s);
-  return html`<a class=${cx('card together-card live', d.phase)} href="#/together">
-    <${St} id=${d.mode.st.startsWith('d-') ? d.mode.st : stId(app.me, d.mode.st)} size=${72} title="" />
-    <div class="tc-m"><b>一起${d.mode.label} · ${phaseText(d)}</b><small>${who.length === 2 ? '两个人都在' : who.includes(app.me) ? `你先专注，${nameOf(app.partner)} 有空再来` : `${nameOf(app.partner)} 在专注，有空再加入`}</small></div>
-    <span class="tc-c">${fmtClock(d.remaining)}</span>
-    ${!me && html`<button class="btn sm" onClick=${(e) => { e.preventDefault(); join(s.sid); location.hash = '#/together'; }}>加入</button>`}
-  </a>`;
-}
-
 // ---------- optional, subject-neutral tasks ----------
 
 export function TaskList({ who, compact }) {
@@ -172,38 +133,16 @@ export function TaskList({ who, compact }) {
   </section>`;
 }
 
-// ---------- calendar glance ----------
-function CalGlance() {
-  useCols(['meet', 'anniv']);
-  useNow(30000);
-  const now = Date.now();
-  const meets = app.store.list('meet').filter((m) => meetUpcoming(m, now)).map((m) => ({ ...m, days: meetInstant(m) == null ? nextOccurrence(m.date, false).days : Math.floor((m.when - now) / 864e5) })).sort((a, b) => a.days - b.days);
-  const annivs = app.store.list('anniv').map((a) => ({ ...a, ...nextOccurrence(a.date, a.yearly !== false) })).filter((a) => a.days >= 0).sort((a, b) => a.days - b.days);
-  const meet = meets[0];
-  const ann = annivs[0];
-  if (!meet && !ann) return null;
-  return html`<a class="card cal-glance" href="#/cal">
-    ${meet && html`<div class="cg"><${St} id="d-five" size=${56} title="" /><div><small>下次见面</small><b>${meet.time && meetInstant(meet) == null ? '时区待确认' : meet.days === 0 ? (meetInstant(meet) == null ? '就是今天' : '不到 1 天') : html`还有 <em>${meet.days}</em> 天`}</b><small class="muted">${meet.note || fmtDayFull(meet.date)}</small></div></div>`}
-    ${ann && html`<div class="cg"><${St} id=${stId(app.me, 'cheer')} size=${56} title="" /><div><small>${ann.title}</small><b>${ann.days === 0 ? '就是今天' : html`还有 <em>${ann.days}</em> 天`}</b>${ann.years > 0 && html`<small class="muted">第 ${ann.years} 年</small>`}</div></div>`}
-  </a>`;
-}
-
 export function Home() {
   useNow(30000);
   const hour = new Date().getHours();
   const hi = hour < 5 ? '夜深了' : hour < 11 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
   return html`<div class="page home">
     <div class="page-hd"><div><h2>${hi}，${nameOf(app.me)}</h2><span class="muted">${fmtDayFull(today())}</span></div></div>
-    <div class="grid2">
-      <${StatusCard} who=${app.partner} />
-      <${StatusCard} who=${app.me} />
-    </div>
-    <${TogetherCard} />
-    <${PokeRow} />
-    <${CalGlance} />
-    <div class="grid2">
-      <${TaskList} who=${app.me} />
-      <${TaskList} who=${app.partner} />
-    </div>
+    <${Recent} />
+    <details class="home-corner"><summary>彼此的近况与打招呼 <span class="muted">有空再看</span></summary>
+      <div class="grid2"><${StatusCard} who=${app.partner} /><${StatusCard} who=${app.me} /></div>
+      <${PokeRow} />
+    </details>
   </div>`;
 }

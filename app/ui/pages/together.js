@@ -1,12 +1,12 @@
 // 偏心我 · 一起模式 — 同步计时 + 互相可见的草稿栏 + 今日任务（聊天在右栏 / 底部抽屉）
-import { html } from '../h.js?v=1209cb3091';
+import { html } from '../h.js?v=3a8f362184';
 import { useState, useEffect, useRef } from '../../vendor/hooks.js';
-import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=1209cb3091';
-import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=1209cb3091';
-import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=1209cb3091';
-import { Avatar, Dot, St, confirmDel } from '../common.js?v=1209cb3091';
-import { Icon } from '../icons.js?v=1209cb3091';
-import { TaskList } from './home.js?v=1209cb3091';
+import { app, useCols, useNow, useBus, useSyncEvent, useForce, useSecondTick, nameOf, toast, moodOf, stId } from '../../lib/ctx.js?v=3a8f362184';
+import { MODES, MODE_KEYS, derive, session, members, isMember, phaseText, start, join, leave, pause, resume, skip, end } from '../../lib/together.js?v=3a8f362184';
+import { fmtClock, fmtHM, fmtMin, throttle, cx, fmtDay } from '../../lib/util.js?v=3a8f362184';
+import { Avatar, Dot, St, confirmDel } from '../common.js?v=3a8f362184';
+import { Icon } from '../icons.js?v=3a8f362184';
+import { TaskList } from './home.js?v=3a8f362184';
 
 const modeSticker = (m, who = app.me) => (m.st.startsWith('d-') ? m.st : stId(who, m.st));
 
@@ -364,8 +364,8 @@ export function Together({ param }) {
   const d = derive(s, Date.now());
   const running = d.state === 'run';
   return html`<div class=${cx('page together', app.focus && 'is-focus')}>
-    <div class="page-hd"><h2>专注</h2><small class="muted">时间合适就一起，忙的时候各自来</small></div>
-    ${running ? html`<${Running} />` : html`<${Setup} key=${param || 'x'} initial=${param} />`}
+    <div class="page-hd"><div><a class="link sm" href="#/learn">‹ 返回学习分享</a><h2>学习小工具</h2><small class="muted">专注计时只是可选工具，学到的东西可以回到学习页分享。</small></div></div>
+    ${param === 'drafts' && !running ? null : running ? html`<${Running} />` : html`<${Setup} key=${param || 'x'} initial=${param} />`}
     <${Drafts} />
     <div class="grid2">
       <${TaskList} who=${app.me} />

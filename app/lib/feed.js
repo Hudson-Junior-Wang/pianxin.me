@@ -2,9 +2,9 @@
 // plus the "一起模式" watcher (phase changes, quiet state, auto-logging).
 // Nothing here keeps score: no streaks, no read receipts, no comparisons.
 
-import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=1209cb3091';
-import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=1209cb3091';
-import { pick } from './util.js?v=1209cb3091';
+import { app, bus, toast, chime, vibrate, notify, nameOf, NEEDS, moodOf, stId, stLabel, isSt } from './ctx.js?v=3a8f362184';
+import { derive, session, isMember, quietOf, logSession, MODES } from './together.js?v=3a8f362184';
+import { pick } from './util.js?v=3a8f362184';
 
 const short = (s, n = 18) => {
   s = String(s || '').replace(/\s+/g, ' ').trim();
@@ -128,6 +128,9 @@ function onLive(r, prev) {
       }
       break;
     }
+    case 'learn':
+      if (!px && x.to !== 'me' && !x.private && !x._private && !x._local) toast(`${ta()} 分享了学到的东西「${short(x.title || x.text || '学习笔记', 16)}」`, { icon: taSt('read'), action: { label: '看看', fn: go('#/learn/' + encodeURIComponent(r.i)) } });
+      break;
     case 'journal':
       if (!px) {
         const toMe = x.to === 'ta';
@@ -189,6 +192,7 @@ const AWAY = {
   chat: (n) => `发了 ${n} 条消息`,
   journalTa: (n) => `给你留了 ${n} 段话`,
   journal: (n) => `记录了 ${n} 件小事`,
+  learn: (n) => `分享了 ${n} 条学习笔记`,
   poke: () => '戳过你',
   workout: (n) => `运动了 ${n} 次`,
   meal: (n) => `记了 ${n} 顿饭`,
@@ -207,6 +211,7 @@ function summarize(since, countUnread) {
     const fresh = (x.at || r.t) > since;
     switch (r.c) {
       case 'chat': if (fresh && x.who === app.partner) inc('chat'); break;
+      case 'learn': if (fresh && x.to !== 'me' && !x.private && !x._private && !x._local) inc('learn'); break;
       case 'journal': if (fresh) inc(x.to === 'ta' ? 'journalTa' : 'journal'); break;
       case 'poke': if (fresh) inc('poke'); break;
       case 'workout': case 'meal': case 'recipe': case 'wish': case 'idea': if (fresh) inc(r.c); break;
@@ -221,7 +226,7 @@ function summarize(since, countUnread) {
   if (!c.size) return;
   const parts = [];
   for (const k of Object.keys(AWAY)) if (c.has(k)) parts.push(AWAY[k](c.get(k)));
-  const fn = c.has('journalTa') || c.has('journal') ? go('#/journal') : c.has('chat') ? () => bus.emit('chat:open') : c.has('cal') ? go('#/cal') : null;
+  const fn = c.has('learn') ? go('#/learn') : c.has('journalTa') || c.has('journal') ? go('#/journal') : c.has('chat') ? () => bus.emit('chat:open') : c.has('cal') ? go('#/cal') : null;
   toast(`欢迎回来～你不在的时候，${ta()} ${parts.join('、')}`, { icon: taSt('hi'), ms: 9000, action: fn ? { label: '去看看', fn } : null });
 }
 

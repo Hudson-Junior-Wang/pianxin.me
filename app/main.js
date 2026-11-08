@@ -1,36 +1,37 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=1209cb3091';
+import { html, render } from './ui/h.js?v=3a8f362184';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=1209cb3091';
-import { Store } from './lib/store.js?v=1209cb3091';
-import { initViewport } from './lib/viewport.js?v=1209cb3091';
-import { Sync } from './lib/sync.js?v=1209cb3091';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=1209cb3091';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=1209cb3091';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=1209cb3091';
-import { cx, fmtClock } from './lib/util.js?v=1209cb3091';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=1209cb3091';
-import { Icon } from './ui/icons.js?v=1209cb3091';
-import { Chat } from './ui/chat.js?v=1209cb3091';
-import { Home } from './ui/pages/home.js?v=1209cb3091';
-import { Together } from './ui/pages/together.js?v=1209cb3091';
-import { Journal } from './ui/pages/journal.js?v=1209cb3091';
-import { Life } from './ui/pages/food.js?v=1209cb3091';
-import { Cal } from './ui/pages/cal.js?v=1209cb3091';
-import { Me } from './ui/pages/me.js?v=1209cb3091';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=3a8f362184';
+import { Store } from './lib/store.js?v=3a8f362184';
+import { initViewport } from './lib/viewport.js?v=3a8f362184';
+import { Sync } from './lib/sync.js?v=3a8f362184';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=3a8f362184';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=3a8f362184';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=3a8f362184';
+import { cx, fmtClock } from './lib/util.js?v=3a8f362184';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=3a8f362184';
+import { Icon } from './ui/icons.js?v=3a8f362184';
+import { Chat } from './ui/chat.js?v=3a8f362184';
+import { Home } from './ui/pages/home.js?v=3a8f362184';
+import { Learn } from './ui/pages/learn.js?v=3a8f362184';
+import { Together } from './ui/pages/together.js?v=3a8f362184';
+import { Journal } from './ui/pages/journal.js?v=3a8f362184';
+import { Life } from './ui/pages/food.js?v=3a8f362184';
+import { Cal } from './ui/pages/cal.js?v=3a8f362184';
+import { Me } from './ui/pages/me.js?v=3a8f362184';
 
 initViewport();
 
 const NAV = [
-  { k: 'home', label: '今天', icon: 'today', C: Home },
-  { k: 'together', label: '专注', icon: 'together', C: Together },
+  { k: 'home', label: '首页', icon: 'today', C: Home },
+  { k: 'learn', label: '学习', icon: 'learn', C: Learn },
   { k: 'journal', label: '记录', icon: 'journal', C: Journal },
   { k: 'life', label: '生活', icon: 'life', C: Life },
   { k: 'cal', label: '日历', icon: 'cal', C: Cal },
 ];
-const PAGES = Object.fromEntries([...NAV.map((n) => [n.k, n]), ['me', { k: 'me', label: '设置', icon: 'gear', C: Me }]]);
+const PAGES = Object.fromEntries([...NAV.map((n) => [n.k, n]), ['me', { k: 'me', label: '设置', icon: 'gear', C: Me }], ['together', { k: 'together', label: '专注小工具', icon: 'clock', C: Together }]]);
 // old links keep working
 const ALIAS = { food: ['life', null], fit: ['life', 'fit'] };
 
@@ -43,7 +44,7 @@ function parseHash() {
     param = fixed || param;
     page = p;
   }
-  if (page === 'together' && param && !['study', 'read'].includes(param)) {
+  if (page === 'together' && param && !['study', 'read', 'drafts'].includes(param)) {
     if (param === 'eat' || param === 'sport') return { page: 'life', param: param === 'eat' ? 'meal' : 'fit' };
     return { page: 'journal', param: '' };
   }
@@ -110,8 +111,8 @@ function Sidebar({ route }) {
   return html`<aside class="side">
     <a class="brand" href="#/"><img src="/app/icon-192.png" alt="" /><span>偏心我</span></a>
     <nav class="side-nav">
-      ${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('sn', route.page === n.k && 'on')}>
-        <${Icon} n=${n.icon} size=${22} /><span>${n.label}</span>${n.k === 'together' ? html`<${LiveDot} />` : null}
+      ${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('sn', (route.page === n.k || (n.k === 'learn' && route.page === 'together')) && 'on')}>
+        <${Icon} n=${n.icon} size=${22} /><span>${n.label}</span>${n.k === 'learn' ? html`<${LiveDot} />` : null}
       </a>`)}
     </nav>
     <span class="sp"></span>
@@ -142,8 +143,8 @@ function TopBar({ route }) {
 }
 
 function TabBar({ route }) {
-  return html`<nav class="tabbar" aria-label="主要导航">${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('tb', route.page === n.k && 'on')} aria-current=${route.page === n.k ? 'page' : undefined}>
-    <span class="tb-i"><${Icon} n=${n.icon} size=${24} />${n.k === 'together' ? html`<${LiveDot} />` : null}</span><small>${n.label}</small>
+  return html`<nav class="tabbar" aria-label="主要导航">${NAV.map((n) => html`<a href=${'#/' + (n.k === 'home' ? '' : n.k)} class=${cx('tb', (route.page === n.k || (n.k === 'learn' && route.page === 'together')) && 'on')} aria-current=${route.page === n.k || (n.k === 'learn' && route.page === 'together') ? 'page' : undefined}>
+    <span class="tb-i"><${Icon} n=${n.icon} size=${24} />${n.k === 'learn' ? html`<${LiveDot} />` : null}</span><small>${n.label}</small>
   </a>`)}</nav>`;
 }
 
@@ -198,7 +199,7 @@ function App() {
   return html`<div class=${cx('shell', wide ? 'wide' : mid ? 'mid' : 'narrow', app.focus && 'focus-mode', 'me-' + app.me, 'ch-' + chOf(app.me))}>
     ${mid ? html`<${Sidebar} route=${route} />` : html`<${TopBar} route=${route} />`}
     <main class="main">
-      ${mid && html`<div class="main-top"><span class="sp"></span><${TimerPill} /><${NetPill} /><${PokeBtn} />${!wide && html`<button class="icon-btn chat-btn" aria-label="聊天" onClick=${() => setSheet(true)}><${Icon} n="chat" /><${UnreadBadge} /></button>`}</div>`}
+      ${mid && html`<div class="main-top"><span class="sp"></span>${route.page !== 'home' && html`<${TimerPill} />`}<${NetPill} /><${PokeBtn} />${!wide && html`<button class="icon-btn chat-btn" aria-label="聊天" onClick=${() => setSheet(true)}><${Icon} n="chat" /><${UnreadBadge} /></button>`}</div>`}
       <${P} param=${route.param} />
     </main>
     ${wide && html`<${ChatColumn} />`}

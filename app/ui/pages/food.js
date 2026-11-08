@@ -1,12 +1,12 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=1209cb3091';
+import { html } from '../h.js?v=3a8f362184';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=1209cb3091';
-import { localZone } from '../../lib/time.js?v=1209cb3091';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=1209cb3091';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=1209cb3091';
-import { Icon } from '../icons.js?v=1209cb3091';
-import { Fit } from './fit.js?v=1209cb3091';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=3a8f362184';
+import { localZone } from '../../lib/time.js?v=3a8f362184';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=3a8f362184';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=3a8f362184';
+import { Icon } from '../icons.js?v=3a8f362184';
+import { Fit } from './fit.js?v=3a8f362184';
 
 // ---------- meals ----------
 const MEALS = [['🌅', '早饭'], ['🍱', '午饭'], ['🌙', '晚饭'], ['🍪', '加餐'], ['🌃', '夜宵']];

@@ -2,8 +2,8 @@
 // A record is { k, c (collection), i (id), t (hybrid clock), d (device), by, x (data|null) }.
 // Last writer wins per record; x === null is a tombstone.
 
-import { openDB, reqP, txDone } from './idb.js?v=1209cb3091';
-import { uid } from './util.js?v=1209cb3091';
+import { openDB, reqP, txDone } from './idb.js?v=3a8f362184';
+import { uid } from './util.js?v=3a8f362184';
 
 // "state" collections keep exactly one copy at a fixed topic; everything else is a dated log.
 export const STATE_COLS = new Set(['profile', 'status', 'draft', 'ink', 'together', 'tjoin', 'poke', 'tz']);
@@ -207,13 +207,21 @@ export class Store {
   async flush() {
     clearTimeout(this.flushTimer);
     this.flushTimer = null;
-    if (!this.pending.size) return;
+    if (!this.pending.size) return true;
     const batch = [...this.pending.values()];
     this.pending.clear();
-    const t = this.db.transaction('rec', 'readwrite');
-    const os = t.objectStore('rec');
-    for (const r of batch) os.put(r);
-    try { await txDone(t); } catch (e) { console.error('[store] save failed', e); }
+    try {
+      const t = this.db.transaction('rec', 'readwrite');
+      const os = t.objectStore('rec');
+      for (const r of batch) os.put(r);
+      await txDone(t);
+      return true;
+    } catch (e) {
+      // Keep unsaved revisions for an explicit retry or the next local write.
+      for (const r of batch) if (!this.pending.has(r.k)) this.pending.set(r.k, this.recs.get(r.k) || r);
+      console.error('[store] save failed', e);
+      return false;
+    }
   }
 
   // ---------- meta & blobs ----------

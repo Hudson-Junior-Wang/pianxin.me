@@ -1,11 +1,12 @@
 // 偏心我 · 记录 — 日历形式的生活点滴：图片、文字、留言给 TA、只给自己看
-import { html } from '../h.js?v=1209cb3091';
+import { html } from '../h.js?v=3a8f362184';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=1209cb3091';
-import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=1209cb3091';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=1209cb3091';
-import { Icon } from '../icons.js?v=1209cb3091';
-import { localZone } from '../../lib/time.js?v=1209cb3091';
+import { app, useCols, useNow, nameOf, dayOf, localDayLabel, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=3a8f362184';
+import { uid, today, addMonths, pad2, fmtDayFull, cx } from '../../lib/util.js?v=3a8f362184';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=3a8f362184';
+import { Icon } from '../icons.js?v=3a8f362184';
+import { localZone } from '../../lib/time.js?v=3a8f362184';
+import { Comments } from '../shares.js?v=3a8f362184';
 
 const TO = {
   day: { label: '生活点滴', st: 'read', hint: '两个人都能看到' },
@@ -73,24 +74,6 @@ function Calendar({ ym, setYm, sel, onPick }) {
     </div>
     <p class="hint cal-legend"><i class=${'dot-p p-' + app.me}></i> 我 <i class=${'dot-p p-' + app.partner}></i> ${nameOf(app.partner)} <em class="cal-msg"></em> 给我的留言</p>
   </section>`;
-}
-
-function Comments({ target }) {
-  useCols('cmt');
-  const list = app.store.list('cmt', (x) => x.t === target).sort((a, b) => a.at - b.at);
-  const [text, setText] = useState('');
-  const send = (e) => {
-    e.preventDefault();
-    const t = text.trim();
-    if (!t) return;
-    app.store.put('cmt', uid(), { t: target, who: app.me, text: t.slice(0, 500), at: Date.now() });
-    setText('');
-  };
-  return html`<div class="cmts">
-    ${list.map((c) => html`<div class="cmt" key=${c.id}><${Avatar} who=${c.who} size=${22} /><span class="cmt-t">${c.text}</span>
-      ${c.who === app.me && html`<button class="icon-btn xs" aria-label="删除" onClick=${() => confirmDel('删除这条回复？') && app.store.del('cmt', c.id)}><${Icon} n="x" size=${12} /></button>`}</div>`)}
-    <form class="cmt-in" onSubmit=${send}><input class="inp sm" maxlength="500" placeholder="回一句…" value=${text} onInput=${(e) => setText(e.target.value)} />${text.trim() && html`<button class="btn xs">回复</button>`}</form>
-  </div>`;
 }
 
 function Entry({ x, onEdit }) {

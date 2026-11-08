@@ -1,8 +1,8 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=1209cb3091';
+import { html, render } from './h.js?v=3a8f362184';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=1209cb3091';
-import { compressPair, cx } from '../lib/util.js?v=1209cb3091';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=3a8f362184';
+import { compressPair, cx } from '../lib/util.js?v=3a8f362184';
 
 /** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
 export function St({ id, size = 48, cls = '', title, onClick }) {
@@ -177,16 +177,16 @@ export function Img({ id, cls, onClick, alt = '' }) {
       图片还在路上<br />点我重试
     </button>`;
   if (!src) return html`<div class=${cx('img ph', cls)}></div>`;
-  return html`<img class=${cx('img', cls)} src=${src} alt=${alt} onClick=${onClick} draggable="false" />`;
+  return html`<img class=${cx('img', cls)} src=${src} alt=${alt} role=${onClick ? 'button' : undefined} tabIndex=${onClick ? 0 : undefined} aria-label=${onClick ? (alt || '查看图片') : undefined} onClick=${onClick} onKeyDown=${onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e); } } : undefined} draggable="false" />`;
 }
 
 export function Lightbox({ list, index, onClose }) {
   const [i, setI] = useState(index);
   const close = useRef(onClose);
   close.current = onClose;
+  useDialog('.lightbox', onClose);
   useEffect(() => {
     const k = (e) => {
-      if (e.key === 'Escape') close.current();
       if (e.key === 'ArrowRight') setI((v) => Math.min(list.length - 1, v + 1));
       if (e.key === 'ArrowLeft') setI((v) => Math.max(0, v - 1));
     };
@@ -194,13 +194,13 @@ export function Lightbox({ list, index, onClose }) {
     return () => removeEventListener('keydown', k);
   }, []);
   return html`<${Portal}>
-    <div class="lightbox" onClick=${() => close.current()}>
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="查看图片" tabIndex=${-1} onClick=${() => close.current()}>
       <${Img} id=${list[i].id} cls="lb-img" onClick=${(e) => e.stopPropagation()} />
       ${list.length > 1 &&
       html`<div class="lb-nav" onClick=${(e) => e.stopPropagation()}>
-        <button disabled=${i === 0} onClick=${() => setI(i - 1)}>‹</button>
+        <button aria-label="上一张图片" disabled=${i === 0} onClick=${() => setI(i - 1)}>‹</button>
         <span>${i + 1} / ${list.length}</span>
-        <button disabled=${i === list.length - 1} onClick=${() => setI(i + 1)}>›</button>
+        <button aria-label="下一张图片" disabled=${i === list.length - 1} onClick=${() => setI(i + 1)}>›</button>
       </div>`}
       <button class="lb-x" aria-label="关闭">✕</button>
     </div>
@@ -236,16 +236,25 @@ export async function uploadPhotos(files, onProgress, local = false) {
   return out;
 }
 
-export function PhotoPicker({ value, onChange, max = 9, local = false }) {
+export function PhotoPicker({ value, onChange, max = 9, local = false, onBusy }) {
   const [busy, setBusy] = useState('');
-  const inp = useRef();
+  const inp = useRef(), latest = useRef(value), mounted = useRef(true), working = useRef(false);
+  latest.current = value;
+  useEffect(() => () => { mounted.current = false; }, []);
   const pick = async (e) => {
-    const files = [...e.target.files].slice(0, Math.max(0, max - value.length));
+    const files = [...e.target.files].slice(0, Math.max(0, max - latest.current.length));
     e.target.value = '';
-    if (!files.length) return;
-    const got = await uploadPhotos(files, (i, n) => setBusy(`${i}/${n}`), local);
-    setBusy('');
-    onChange([...value, ...got]);
+    if (!files.length || working.current) return;
+    working.current = true;
+    onBusy?.(true);
+    setBusy('…');
+    try {
+      const got = await uploadPhotos(files, (i, n) => mounted.current && setBusy(`${i}/${n}`), local);
+      if (mounted.current) onChange([...latest.current, ...got].slice(0, max));
+    } finally {
+      working.current = false;
+      if (mounted.current) { setBusy(''); onBusy?.(false); }
+    }
   };
   return html`<div class="pp">
     ${value.map(
@@ -296,7 +305,7 @@ export function Reacts({ target, set = 'def' }) {
   </div>`;
 }
 
-export function AutoText({ value, onInput, placeholder, rows = 3, maxLength = 4000, cls, onKeyDown, autoFocus }) {
+export function AutoText({ value, onInput, placeholder, rows = 3, maxLength = 4000, cls, onKeyDown, autoFocus, id }) {
   const ref = useRef();
   useLayoutEffect(() => {
     const el = ref.current;
@@ -307,7 +316,7 @@ export function AutoText({ value, onInput, placeholder, rows = 3, maxLength = 40
   useEffect(() => {
     if (autoFocus && ref.current) ref.current.focus();
   }, []);
-  return html`<textarea ref=${ref} class=${cx('inp', 'ta', cls)} rows=${rows} maxlength=${maxLength} placeholder=${placeholder} value=${value}
+  return html`<textarea id=${id} ref=${ref} class=${cx('inp', 'ta', cls)} rows=${rows} maxlength=${maxLength} placeholder=${placeholder} value=${value}
     onInput=${(e) => onInput(e.target.value)} onKeyDown=${onKeyDown}></textarea>`;
 }
 

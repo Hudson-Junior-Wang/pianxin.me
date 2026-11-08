@@ -1,7 +1,10 @@
 // 偏心我 · small rounded line icons (24×24, stroke = currentColor)
-import { html } from './h.js?v=1209cb3091';
+import { html } from './h.js?v=3a8f362184';
 
 const P = {
+  learn: '<path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zM12 6v14"/>',
+  folder: '<path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
+  link: '<path d="m10 14 4-4M8.5 15.5l-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0M15.5 8.5l1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0"/>',
   today: '<path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.2V19a1 1 0 0 0 1 1h3.5v-5h3v5H17a1 1 0 0 0 1-1V9.2"/>',
   together: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 2"/><path d="M9.5 3h5"/><path d="M18.5 6.5l1.2-1.2"/>',
   journal: '<rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 3.5v17"/><path d="M12 8.5h4M12 12h4"/>',
