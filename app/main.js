@@ -1,25 +1,25 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=baab30bfc4';
+import { html, render } from './ui/h.js?v=1209cb3091';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=baab30bfc4';
-import { Store } from './lib/store.js?v=baab30bfc4';
-import { initViewport } from './lib/viewport.js?v=baab30bfc4';
-import { Sync } from './lib/sync.js?v=baab30bfc4';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=baab30bfc4';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=baab30bfc4';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=baab30bfc4';
-import { cx, fmtClock } from './lib/util.js?v=baab30bfc4';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=baab30bfc4';
-import { Icon } from './ui/icons.js?v=baab30bfc4';
-import { Chat } from './ui/chat.js?v=baab30bfc4';
-import { Home } from './ui/pages/home.js?v=baab30bfc4';
-import { Together } from './ui/pages/together.js?v=baab30bfc4';
-import { Journal } from './ui/pages/journal.js?v=baab30bfc4';
-import { Life } from './ui/pages/food.js?v=baab30bfc4';
-import { Cal } from './ui/pages/cal.js?v=baab30bfc4';
-import { Me } from './ui/pages/me.js?v=baab30bfc4';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=1209cb3091';
+import { Store } from './lib/store.js?v=1209cb3091';
+import { initViewport } from './lib/viewport.js?v=1209cb3091';
+import { Sync } from './lib/sync.js?v=1209cb3091';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=1209cb3091';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=1209cb3091';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=1209cb3091';
+import { cx, fmtClock } from './lib/util.js?v=1209cb3091';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=1209cb3091';
+import { Icon } from './ui/icons.js?v=1209cb3091';
+import { Chat } from './ui/chat.js?v=1209cb3091';
+import { Home } from './ui/pages/home.js?v=1209cb3091';
+import { Together } from './ui/pages/together.js?v=1209cb3091';
+import { Journal } from './ui/pages/journal.js?v=1209cb3091';
+import { Life } from './ui/pages/food.js?v=1209cb3091';
+import { Cal } from './ui/pages/cal.js?v=1209cb3091';
+import { Me } from './ui/pages/me.js?v=1209cb3091';
 
 initViewport();
 
@@ -326,7 +326,7 @@ function boot() {
   loadSettings();
   const root = document.getElementById('app');
   if (!window.crypto || !crypto.subtle || !window.indexedDB) {
-    root.innerHTML = '<div class="lock"><div class="lock-card"><h1>偏心我</h1><p>这个浏览器太旧啦，换一个新一点的浏览器（Chrome / Safari / Edge）再打开吧。</p></div></div>';
+    root.innerHTML = '<div class="lock"><div class="lock-card"><h1>偏心我</h1><p>这个浏览器缺少安全存储或加密功能。请先更新华为浏览器 / Safari / Chrome / Edge，再重新打开；不要清除原浏览器的网站数据。</p></div></div>';
     return;
   }
   const seed = localStorage.getItem(`px:${me}:kr`);

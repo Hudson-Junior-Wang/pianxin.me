@@ -1,9 +1,10 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=baab30bfc4';
+import { html } from '../h.js?v=1209cb3091';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=baab30bfc4';
-import { download, today, cx } from '../../lib/util.js?v=baab30bfc4';
-import { St } from '../common.js?v=baab30bfc4';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=1209cb3091';
+import { download, today, cx } from '../../lib/util.js?v=1209cb3091';
+import { St } from '../common.js?v=1209cb3091';
+import { installPlatform } from '../../lib/install.js?v=1209cb3091';
 
 function Profile() {
   useCols('profile');
@@ -114,11 +115,33 @@ function Backup() {
 
 function Install() {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const platform = installPlatform();
+  const copyEntry = async () => {
+    const url = `${location.origin}/${app.me}/`;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+      await navigator.clipboard.writeText(url);
+      toast('入口链接已复制', { icon: stId(app.me, 'ok') });
+    } catch { prompt('长按或选中复制自己的入口链接', url); }
+  };
   return html`<section class="card install-card">
     <div class="card-hd"><h3>${standalone ? '已从桌面打开' : '放到手机桌面'}</h3><img src="/app/icons/icon-180-v2.png" width="44" height="44" alt="偏心我，小熊和小兔图标" style="border-radius:11px" /></div>
-    ${standalone ? html`<p class="hint">这个图标打开的是 ${nameOf(app.me)} 的入口。仍需要联网加载页面和同步，不是离线应用。</p>` : html`<p class="hint">在 iPhone / iPad 的 Safari 里，先打开自己的专属入口，再添加到主屏幕。</p><ol class="install-guide"><li>点 Safari 的「分享」按钮。</li><li>选择「添加到主屏幕」（部分版本在「更多」里）。</li><li>保留名称「偏心我」，点「添加」。若有「作为 Web App 打开」，可保持开启。</li></ol>`}
-    <p class="hint">当前入口：<b>pianxin.me/${app.me}/</b>。添加后会保留这个入口，不会变成对方的身份。</p>
-    <p class="hint">旧图标若没有更新，先导出备份、另存照片，再考虑移除旧快捷方式重加。不要清除 Safari 网站数据；桌面版若要求暗号，输入原来的即可。私人记录只在原设备与浏览器中保存，不会自动搬到桌面版。</p>
+    ${standalone ? html`<p class="hint">这个图标打开的是 ${nameOf(app.me)} 的入口。仍需要联网加载页面和同步，不是离线应用。</p>` : html`<p class="hint">先用手机浏览器打开自己的入口，再从浏览器菜单添加。网页不能替你创建系统桌面图标。</p>`}
+    <p class="hint">自己的入口：<a class="install-entry" href=${'/' + app.me + '/'}>pianxin.me/${app.me}/</a></p>
+    <button class="btn ghost sm" type="button" onClick=${copyEntry}>复制自己的入口链接</button>
+    <details class="install-help" data-platform="huawei" open=${!standalone && platform !== 'safari'}>
+      <summary>华为浏览器 / HarmonyOS</summary>
+      <ol class="install-guide"><li>在华为浏览器里打开上面的入口，不要停留在微信等应用的内置网页。</li><li>HarmonyOS 5.0 及以上：点菜单「∷（四个点）」→「添加至桌面」。更早的鸿蒙 / EMUI：点「∷」→「添加至」→「桌面」。</li><li>确认名称「偏心我」及自己的入口，再点「✔」或「添加」。添加后会保留自己的入口。</li></ol>
+      <p class="hint">这可能只是网页快捷方式，打开时仍有浏览器工具栏，不一定是独立 App。菜单名称、图标外观由系统版本决定。</p>
+      <p class="hint">没有这个菜单？先更新华为浏览器和系统。鸿蒙 5.0 及以上还可在「我的 → 书签收藏 → 书签」长按已收藏的网址，选择「添加至桌面」。官方当前说明该版本的浏览器桌面快捷方式上限为 10 个。</p>
+      <p class="hint"><a href="https://consumer.huawei.com/cn/support/content/zh-cn16032141/" target="_blank" rel="noopener noreferrer">华为官方：鸿蒙 5.0 及以上</a> · <a href="https://consumer.huawei.com/cn/support/content/zh-cn00448896/" target="_blank" rel="noopener noreferrer">较早版本指引</a></p>
+    </details>
+    <details class="install-help" data-platform="safari" open=${!standalone && platform === 'safari'}>
+      <summary>iPhone / iPad 的 Safari</summary>
+      <ol class="install-guide"><li>在 Safari 里打开自己的专属入口，点「分享」。</li><li>选择「添加到主屏幕」（部分版本在「更多」里）。</li><li>保留名称「偏心我」，点「添加」。若有「作为 Web App 打开」，可保持开启。</li></ol>
+    </details>
+    <p class="hint">其他浏览器：在菜单中找「添加到主屏幕」「安装应用」或类似选项；没有时可先保存书签。是否提供安装，由浏览器决定。</p>
+    <p class="hint">添加桌面不会变成离线应用，也不能保证关闭网页后提醒。旧图标若没有更新，先导出备份、另存照片，再考虑移除旧快捷方式重加。不要清除浏览器网站数据；更换浏览器或独立桌面环境时，私人记录不会自动搬家；若要求暗号，使用原来的暗号。</p>
   </section>`;
 }
 

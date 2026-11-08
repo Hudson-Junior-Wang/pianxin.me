@@ -1,12 +1,12 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=baab30bfc4';
+import { html } from '../h.js?v=1209cb3091';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=baab30bfc4';
-import { localZone } from '../../lib/time.js?v=baab30bfc4';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=baab30bfc4';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=baab30bfc4';
-import { Icon } from '../icons.js?v=baab30bfc4';
-import { Fit } from './fit.js?v=baab30bfc4';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=1209cb3091';
+import { localZone } from '../../lib/time.js?v=1209cb3091';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=1209cb3091';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=1209cb3091';
+import { Icon } from '../icons.js?v=1209cb3091';
+import { Fit } from './fit.js?v=1209cb3091';
 
 // ---------- meals ----------
 const MEALS = [['🌅', '早饭'], ['🍱', '午饭'], ['🌙', '晚饭'], ['🍪', '加餐'], ['🌃', '夜宵']];
@@ -40,7 +40,7 @@ function MealForm({ edit, onDone }) {
   return html`<section class="card meal-form">
     <div class="meal-form-hd"><${St} id=${stId(app.me, 'eat')} size=${56} title="" /><b>今天吃了什么？</b></div>
     <div class="chips">${MEALS.map(([e, l]) => html`<button type="button" class=${cx('chip', meal === l && 'on')} onClick=${() => setMeal(l)}><span class="chip-i">${e}</span>${l}</button>`)}</div>
-    <div class="row">
+    <div class="row date-row">
       <input class="inp" maxlength="500" placeholder="比如：番茄牛腩饭 + 冰美式" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${(e) => e.key === 'Enter' && !e.isComposing && e.keyCode !== 229 && save()} />
       <input class="inp date" type="date" value=${day} max=${today()} onInput=${(e) => e.target.value && setDay(e.target.value)} />
     </div>

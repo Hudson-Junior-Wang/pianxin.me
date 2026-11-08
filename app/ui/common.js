@@ -1,8 +1,8 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=baab30bfc4';
+import { html, render } from './h.js?v=1209cb3091';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=baab30bfc4';
-import { compressPair, cx } from '../lib/util.js?v=baab30bfc4';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=1209cb3091';
+import { compressPair, cx } from '../lib/util.js?v=1209cb3091';
 
 /** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
 export function St({ id, size = 48, cls = '', title, onClick }) {
@@ -62,33 +62,48 @@ export function useDialog(selector, onClose) {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
-    const node = [...document.querySelectorAll(selector)].at(-1);
+    const nodes = [...document.querySelectorAll(selector)];
+    const node = nodes[nodes.length - 1];
     if (!node) return;
     const opener = document.activeElement;
     const layer = [...document.body.children].find((el) => el.contains(node));
-    const background = [...document.body.children].filter((el) => el !== layer).map((el) => [el, el.inert]);
-    background.forEach(([el]) => { el.inert = true; });
+    const hasInert = 'inert' in HTMLElement.prototype;
+    const background = [...document.body.children].filter((el) => el !== layer).map((el) => [el, el.inert, el.getAttribute('aria-hidden')]);
+    background.forEach(([el]) => { if (hasInert) el.inert = true; else el.setAttribute('aria-hidden', 'true'); });
     const focusable = () => [...node.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]')].filter((el) => el.getClientRects().length);
     const frame = requestAnimationFrame(() => {
       if (node.contains(document.activeElement) && document.activeElement !== opener) return;
       (node.querySelector('[aria-label^="关闭"]') || node).focus({ preventScroll: true });
     });
+    const isTop = () => {
+      const dialogs = [...document.querySelectorAll('[role="dialog"]')];
+      return dialogs[dialogs.length - 1] === node;
+    };
+    const guardFocus = (e) => {
+      if (!hasInert && isTop() && !node.contains(e.target)) (focusable()[0] || node).focus({ preventScroll: true });
+    };
     const k = (e) => {
-      if ([...document.querySelectorAll('[role="dialog"]')].at(-1) !== node) return;
+      if (!isTop()) return;
       if (e.key === 'Escape') { e.preventDefault(); close.current(); }
       if (e.key !== 'Tab') return;
-      const items = focusable(), first = items[0], last = items.at(-1);
+      const items = focusable(), first = items[0], last = items[items.length - 1];
       if (!first) { e.preventDefault(); node.focus(); }
       else if (e.shiftKey && (document.activeElement === first || !node.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && (document.activeElement === last || !node.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
     };
     addEventListener('keydown', k);
+    document.addEventListener('focusin', guardFocus);
     openModals++;
     document.body.classList.add('noscroll');
     return () => {
       cancelAnimationFrame(frame);
       removeEventListener('keydown', k);
-      background.forEach(([el, inert]) => { el.inert = inert; });
+      document.removeEventListener('focusin', guardFocus);
+      background.forEach(([el, inert, aria]) => {
+        if (hasInert) el.inert = inert;
+        else if (aria === null) el.removeAttribute('aria-hidden');
+        else el.setAttribute('aria-hidden', aria);
+      });
       if (--openModals <= 0) document.body.classList.remove('noscroll');
       if (opener?.isConnected) opener.focus({ preventScroll: true });
     };

@@ -59,7 +59,8 @@
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(76px + env(safe-area-inset-top, 0px)); scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
-:root { --visual-h: 100dvh; --visual-top: 0px; }
+:root { --visual-h: 100vh; --visual-top: 0px; }
+@supports (height: 100dvh) { :root { --visual-h: 100dvh; } }
 body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
 body.noscroll { overflow: hidden; }
 a { color: var(--accent-2); text-decoration: none; }
@@ -770,6 +771,23 @@ body, .shell, .boot, .lock { min-height: 100svh; }
   .chat-col { padding-top: env(safe-area-inset-top, 0px); padding-right: env(safe-area-inset-right, 0px); }
 }
 .install-guide { padding-left: 20px; margin-top: 8px; line-height: 1.8; }
+.install-help { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 4px; }
+.install-help summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 650; overflow-wrap: anywhere; }
+.install-help .hint { margin-top: 8px; }
+.install-entry { overflow-wrap: anywhere; }
+.install-card .card-hd img { flex-shrink: 0; }
+/* Readable controls/rails on browser versions without newer CSS features. */
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .ck-box { border-color: var(--ink-3); }
+  .jar-glass { border-color: var(--accent); }
+}
+@supports not (container-type: inline-size) {
+  @media (min-width: 1100px) and (max-width: 1500px) {
+    .pads { grid-template-columns: minmax(0, 1fr); }
+    .sport-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .setup .mode-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+}
 
 /* Respond to usable content width, not just the full viewport beside the rails. */
 @container (max-width: 750px) {
@@ -784,7 +802,7 @@ body, .shell, .boot, .lock { min-height: 100svh; }
   .pm-t b { max-width: 142px; overflow: hidden; }
   .sc-main { gap: 8px; flex-wrap: wrap; }
   .sc-edit { margin-left: auto; }
-  .row:has(> .inp.date) { flex-wrap: wrap; }
+  .date-row { flex-wrap: wrap; }
 }
 .sheet { height: min(calc(var(--visual-h) * .92), 760px); }
 .keyboard-open .sheet { height: 100%; }
