@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>偏心我 · pianxin.me</title>
-<meta name="description" content="一起学习，顺手分享生活。两个人的小空间，不催回复，也不用打卡。">
+<meta name="description" content="偏心我 · pianxin.me">
 <meta name="theme-color" content="#fbf6f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1c1715" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,24 +33,25 @@
   .domain { color: var(--muted); font-size: 11px; letter-spacing: .3em; margin: 0 0 20px; }
   .scene { width: clamp(160px, 30vw, 230px); height: auto; margin: 0 0 12px; animation: rise .8s both; }
   h1 { font: 400 clamp(48px, 10vw, 76px)/1.2 "ZCOOL KuaiLe", "PingFang SC", sans-serif; letter-spacing: .06em; margin: 0; }
-  .tagline { font-size: clamp(17px, 3vw, 21px); margin: 20px 0 6px; }
-  .sub { color: var(--muted); margin: 0; font-size: 13px; }
-  .doors { display: flex; gap: 16px; margin: 30px 0 26px; }
+  .doors { display: flex; gap: 16px; margin: 36px 0 20px; }
   .door { min-width: 190px; padding: 14px 20px 14px 12px; display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 6px 20px #845b3410; transition: transform .2s, border-color .2s; }
   .door:hover { transform: translateY(-3px); border-color: var(--accent); }
   .door:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
   .door img { width: 52px; height: 52px; object-fit: contain; }
   .door span { display: flex; flex-direction: column; }
   .door b { font-size: 16px; }
-  .door small { color: var(--muted); font-size: 11px; }
   .door em { margin-left: auto; font-size: 20px; color: var(--accent); font-style: normal; }
-  .features { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-  .features span { background: var(--soft); color: var(--muted); padding: 4px 12px; border-radius: 30px; font-size: 12px; }
-  footer { color: var(--muted); font-size: 11px; margin-top: 32px; }
+  .install-help { width: 100%; max-width: 420px; color: var(--muted); font-size: 13px; }
+  .install-help summary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 24px; background: transparent; list-style: none; cursor: pointer; }
+  .install-help summary::-webkit-details-marker { display: none; }
+  .install-help summary::after { content: '+'; font-size: 16px; }
+  .install-help[open] summary::after { content: '−'; }
+  .install-help summary:hover { color: var(--ink); border-color: var(--accent); }
+  .install-help summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .install-help p { margin: 14px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); text-align: left; overflow-wrap: anywhere; }
   @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
   @media (max-width: 480px) { main { padding: 24px 20px; } .doors { width: 100%; flex-direction: column; gap: 10px; margin: 24px 0; } .door { min-width: 0; } .scene { width: 160px; } }
   main { padding-top: max(36px, env(safe-area-inset-top, 0px)); padding-bottom: max(28px, env(safe-area-inset-bottom, 0px)); padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
-  .install-tip { margin-top: 18px; max-width: 420px; }
   @media (max-width: 480px) { main { padding-top: max(24px, env(safe-area-inset-top, 0px)); padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); } }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -60,15 +61,14 @@
   <p class="domain">PIANXIN.ME</p>
   <img class="scene" src="/app/stickers/d-study.webp" width="230" height="230" alt="小熊和小兔一起学习">
   <h1>偏心我</h1>
-  <p class="tagline">一起学习，顺手分享生活。</p>
-  <p class="sub">各做各的，也有人作伴。不催回复，不用打卡。</p>
   <nav class="doors" aria-label="选择自己的入口">
-    <a class="door" href="/zhengwang/"><img src="/app/stickers/av-bunny.webp" width="52" height="52" alt=""><span><b>小郑王</b><small>zhengwang · 从这里进入</small></span><em aria-hidden="true">›</em></a>
-    <a class="door" href="/xiaoha/"><img src="/app/stickers/av-bear.webp" width="52" height="52" alt=""><span><b>小哈森</b><small>xiaoha · 从这里进入</small></span><em aria-hidden="true">›</em></a>
+    <a class="door" href="/zhengwang/"><img src="/app/stickers/av-bunny.webp" width="52" height="52" alt=""><span><b>小郑王</b></span><em aria-hidden="true">›</em></a>
+    <a class="door" href="/xiaoha/"><img src="/app/stickers/av-bear.webp" width="52" height="52" alt=""><span><b>小哈森</b></span><em aria-hidden="true">›</em></a>
   </nav>
-  <div class="features"><span>最近分享</span><span>学习笔记</span><span>生活记录</span><span>共享计划</span></div>
-  <p class="sub install-tip">想放到手机桌面？先进入自己的页面。华为浏览器：菜单「∷ → 添加至桌面」（旧版为「添加至 → 桌面」）；Safari：「分享 → 添加到主屏幕」。详细步骤在页面的「设置」里。</p>
-  <footer>两个人用同一个暗号，进入同一个小空间。</footer>
+  <details class="install-help">
+    <summary>添加到手机桌面</summary>
+    <p>先进入自己的页面。华为浏览器：菜单「∷ → 添加至桌面」（旧版为「添加至 → 桌面」）；Safari：「分享 → 添加到主屏幕」。详细步骤在页面的「设置」里。</p>
+  </details>
 </main>
 </body>
 </html>
