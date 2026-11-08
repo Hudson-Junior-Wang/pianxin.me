@@ -1,25 +1,26 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=6970b80344';
-import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=6970b80344';
-import { Store } from './lib/store.js?v=6970b80344';
-import { initViewport } from './lib/viewport.js?v=6970b80344';
-import { Sync } from './lib/sync.js?v=6970b80344';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=6970b80344';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=6970b80344';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=6970b80344';
-import { cx, fmtClock } from './lib/util.js?v=6970b80344';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=6970b80344';
-import { Icon } from './ui/icons.js?v=6970b80344';
-import { Chat } from './ui/chat.js?v=6970b80344';
-import { Home } from './ui/pages/home.js?v=6970b80344';
-import { Learn } from './ui/pages/learn.js?v=6970b80344';
-import { Together } from './ui/pages/together.js?v=6970b80344';
-import { Journal } from './ui/pages/journal.js?v=6970b80344';
-import { Life } from './ui/pages/food.js?v=6970b80344';
-import { Me } from './ui/pages/me.js?v=6970b80344';
+import { html, render } from './ui/h.js?v=0cc8a63665';
+import { useState, useEffect, useRef } from './vendor/hooks.js';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, isSt, chOf, syncTimezone } from './lib/ctx.js?v=0cc8a63665';
+import { Store } from './lib/store.js?v=0cc8a63665';
+import { initViewport } from './lib/viewport.js?v=0cc8a63665';
+import { Sync } from './lib/sync.js?v=0cc8a63665';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=0cc8a63665';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=0cc8a63665';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=0cc8a63665';
+import { cx, fmtClock } from './lib/util.js?v=0cc8a63665';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=0cc8a63665';
+import { Icon } from './ui/icons.js?v=0cc8a63665';
+import { Chat } from './ui/chat.js?v=0cc8a63665';
+import { Home } from './ui/pages/home.js?v=0cc8a63665';
+import { Learn } from './ui/pages/learn.js?v=0cc8a63665';
+import { Together } from './ui/pages/together.js?v=0cc8a63665';
+import { Journal } from './ui/pages/journal.js?v=0cc8a63665';
+import { Life } from './ui/pages/food.js?v=0cc8a63665';
+import { Me } from './ui/pages/me.js?v=0cc8a63665';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=0cc8a63665';
 
 initViewport();
 
@@ -149,10 +150,11 @@ function TabBar({ route }) {
 function ChatSheet({ onClose }) {
   const force = useForce();
   useBus('quiet', force, []);
-  useDialog('.sheet', onClose);
+  const close = useLayerClose('.sheet', onClose, 'sheet');
+  useDialog('.sheet', close);
   return html`<${Portal}>
-    <div class="sheet-bg" onClick=${(e) => e.target === e.currentTarget && onClose()}>
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="聊天" tabIndex=${-1}><${Chat} quiet=${app.focus} onClose=${onClose} /></div>
+    <div class="sheet-bg" onClick=${(e) => e.target === e.currentTarget && close()}>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="聊天" tabIndex=${-1}><${Chat} quiet=${app.focus} onClose=${close} /></div>
     </div>
   <//>`;
 }
@@ -172,6 +174,8 @@ function App() {
   useCols('profile');
   const [route, setRoute] = useState(parseHash());
   const [sheet, setSheet] = useState(false);
+  const mainRef = useRef(null);
+  useRouteMotion(mainRef, route.page + '/' + route.param);
   const force = useForce();
   useBus('quiet', force, []);
   const wide = useMedia('(min-width: 1100px)');
@@ -196,7 +200,7 @@ function App() {
   const P = PAGES[route.page].C;
   return html`<div class=${cx('shell', wide ? 'wide' : mid ? 'mid' : 'narrow', app.focus && 'focus-mode', 'me-' + app.me, 'ch-' + chOf(app.me))}>
     ${mid ? html`<${Sidebar} route=${route} />` : html`<${TopBar} route=${route} />`}
-    <main class="main">
+    <main class="main" ref=${mainRef}>
       ${mid && html`<div class="main-top"><span class="sp"></span>${route.page !== 'home' && html`<${TimerPill} />`}<${NetPill} /><${PokeBtn} />${!wide && html`<button class="icon-btn chat-btn" aria-label="聊天" onClick=${() => setSheet(true)}><${Icon} n="chat" /><${UnreadBadge} /></button>`}</div>`}
       <${P} param=${route.param} />
     </main>

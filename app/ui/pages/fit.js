@@ -1,15 +1,15 @@
 // 偏心我 · 运动 — 各自记录，方便时再回应，不比较、不要求同时进行
-import { html } from '../h.js?v=6970b80344';
+import { html } from '../h.js?v=0cc8a63665';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=6970b80344';
-import { localZone } from '../../lib/time.js?v=6970b80344';
-import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=6970b80344';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=6970b80344';
-import { Icon } from '../icons.js?v=6970b80344';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=0cc8a63665';
+import { localZone } from '../../lib/time.js?v=0cc8a63665';
+import { uid, today, addDays, weekStart, WEEK, parseDay, cx } from '../../lib/util.js?v=0cc8a63665';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=0cc8a63665';
+import { Icon } from '../icons.js?v=0cc8a63665';
 
-import { SPORTS, sportOf } from '../../lib/sports.js?v=6970b80344';
-import { SportIcon } from '../sport-icons.js?v=6970b80344';
-export { SPORTS } from '../../lib/sports.js?v=6970b80344';
+import { SPORTS, sportOf } from '../../lib/sports.js?v=0cc8a63665';
+import { SportIcon } from '../sport-icons.js?v=0cc8a63665';
+export { SPORTS } from '../../lib/sports.js?v=0cc8a63665';
 const FEELS = [['easy', '轻松', 'thanks'], ['ok', '刚好', 'ok'], ['tired', '好累', 'dizzy'], ['fire', '超爽', 'cheer']];
 const OLD_FEEL = { '😌': 'easy', '🙂': 'ok', '🥵': 'tired', '🔥': 'fire' };
 const feelOf = (f) => FEELS.find((x) => x[0] === (OLD_FEEL[f] || f));

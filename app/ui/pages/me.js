@@ -1,10 +1,10 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=6970b80344';
+import { html } from '../h.js?v=0cc8a63665';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=6970b80344';
-import { download, today, cx } from '../../lib/util.js?v=6970b80344';
-import { St } from '../common.js?v=6970b80344';
-import { installPlatform } from '../../lib/install.js?v=6970b80344';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=0cc8a63665';
+import { download, today, cx } from '../../lib/util.js?v=0cc8a63665';
+import { St } from '../common.js?v=0cc8a63665';
+import { installPlatform } from '../../lib/install.js?v=0cc8a63665';
 
 function Profile() {
   useCols('profile');

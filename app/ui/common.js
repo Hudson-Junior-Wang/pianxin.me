@@ -1,8 +1,9 @@
 // 偏心我 · shared UI pieces
-import { html, render } from './h.js?v=6970b80344';
+import { html, render } from './h.js?v=0cc8a63665';
 import { useState, useEffect, useRef, useLayoutEffect } from '../vendor/hooks.js';
-import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=6970b80344';
-import { compressPair, cx } from '../lib/util.js?v=6970b80344';
+import { app, nameOf, setReaction, useCols, toast, isSt, stUrl, stLabel, stId, avId, chOf, CHARS, DUO, ST_LABEL } from '../lib/ctx.js?v=0cc8a63665';
+import { compressPair, cx } from '../lib/util.js?v=0cc8a63665';
+import { useLayerClose } from './motion.js?v=0cc8a63665';
 
 /** a sticker image (id like 'b-cheer') or, for old data, a plain emoji */
 export function St({ id, size = 48, cls = '', title, onClick }) {
@@ -110,11 +111,12 @@ export function useDialog(selector, onClose) {
   }, []);
 }
 export function Modal({ title, onClose, children, cls }) {
-  useDialog('.modal', onClose);
+  const close = useLayerClose('.modal', onClose);
+  useDialog('.modal', close);
   return html`<${Portal}>
-    <div class="modal-bg" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}>
+    <div class="modal-bg" onMouseDown=${(e) => e.target === e.currentTarget && close()}>
       <div class=${cx('modal', cls)} role="dialog" aria-modal="true" aria-label=${title} tabIndex=${-1}>
-        <div class="modal-hd"><h3>${title}</h3><button class="icon-btn" aria-label="关闭" onClick=${onClose}>✕</button></div>
+        <div class="modal-hd"><h3>${title}</h3><button class="icon-btn" aria-label="关闭" onClick=${close}>✕</button></div>
         <div class="modal-bd">${children}</div>
       </div>
     </div>
@@ -182,9 +184,8 @@ export function Img({ id, cls, onClick, alt = '' }) {
 
 export function Lightbox({ list, index, onClose }) {
   const [i, setI] = useState(index);
-  const close = useRef(onClose);
-  close.current = onClose;
-  useDialog('.lightbox', onClose);
+  const close = useLayerClose('.lightbox', onClose, 'lightbox');
+  useDialog('.lightbox', close);
   useEffect(() => {
     const k = (e) => {
       if (e.key === 'ArrowRight') setI((v) => Math.min(list.length - 1, v + 1));
@@ -194,7 +195,7 @@ export function Lightbox({ list, index, onClose }) {
     return () => removeEventListener('keydown', k);
   }, []);
   return html`<${Portal}>
-    <div class="lightbox" role="dialog" aria-modal="true" aria-label="查看图片" tabIndex=${-1} onClick=${() => close.current()}>
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="查看图片" tabIndex=${-1} onClick=${close}>
       <${Img} id=${list[i].id} cls="lb-img" onClick=${(e) => e.stopPropagation()} />
       ${list.length > 1 &&
       html`<div class="lb-nav" onClick=${(e) => e.stopPropagation()}>

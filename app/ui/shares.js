@@ -1,12 +1,12 @@
 // Shared content reader used by Home Recent and the Learning shelf.
-import { html } from './h.js?v=6970b80344';
+import { html } from './h.js?v=0cc8a63665';
 import { useState } from '../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=6970b80344';
-import { uid, cx } from '../lib/util.js?v=6970b80344';
-import { SHARE_TYPES, safeLink, shareTitle, shareRoute } from '../lib/shares.js?v=6970b80344';
-import { planScope, planOwner } from '../lib/plans.js?v=6970b80344';
-import { Avatar, Modal, Photos, Reacts, confirmDel } from './common.js?v=6970b80344';
-import { Icon } from './icons.js?v=6970b80344';
+import { app, useCols, nameOf, localDayLabel } from '../lib/ctx.js?v=0cc8a63665';
+import { uid, cx } from '../lib/util.js?v=0cc8a63665';
+import { SHARE_TYPES, safeLink, shareTitle, shareRoute } from '../lib/shares.js?v=0cc8a63665';
+import { planScope, planOwner } from '../lib/plans.js?v=0cc8a63665';
+import { Avatar, Modal, Photos, Reacts, confirmDel } from './common.js?v=0cc8a63665';
+import { Icon } from './icons.js?v=0cc8a63665';
 
 export function Comments({ target }) {
   useCols('cmt');
