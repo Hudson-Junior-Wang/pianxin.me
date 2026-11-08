@@ -1,11 +1,11 @@
 // 偏心我 · 运动（生活 › 运动）— 记录运动、这一周的小脚印、一起运动（不比较、不打分）
-import { html } from '../h.js?v=d7c13ae0f9';
+import { html } from '../h.js?v=575a878181';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, toast, stId } from '../../lib/ctx.js?v=d7c13ae0f9';
-import { quickStart } from '../../lib/together.js?v=d7c13ae0f9';
-import { uid, today, addDays, weekStart, WEEK, parseDay, fmtDay, fmtHM, cx } from '../../lib/util.js?v=d7c13ae0f9';
-import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=d7c13ae0f9';
-import { Icon } from '../icons.js?v=d7c13ae0f9';
+import { app, useCols, nameOf, toast, stId } from '../../lib/ctx.js?v=575a878181';
+import { quickStart } from '../../lib/together.js?v=575a878181';
+import { uid, today, addDays, weekStart, WEEK, parseDay, fmtDay, fmtHM, cx } from '../../lib/util.js?v=575a878181';
+import { Photos, PhotoPicker, Reacts, AutoText, Empty, St, confirmDel, strip } from '../common.js?v=575a878181';
+import { Icon } from '../icons.js?v=575a878181';
 
 export const SPORTS = [
   ['🏃', '跑步'], ['🚶', '散步'], ['🚴', '骑车'], ['🏊', '游泳'], ['🧘', '瑜伽'], ['🏋️', '力量'],

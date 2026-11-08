@@ -4,8 +4,8 @@ import { useState, useEffect } from '../vendor/hooks.js';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
-  zhengwang: { name: 'zhengwang', ch: 'bear' },
-  xiaoha: { name: 'xiaoha', ch: 'bunny' },
+  zhengwang: { name: '小郑王', ch: 'bear' },
+  xiaoha: { name: '小哈森', ch: 'bunny' },
 };
 
 export const app = {
@@ -125,7 +125,10 @@ export function useMedia(q) {
 
 // ---------- people ----------
 export function profileOf(who) {
-  return { ...DEFAULT_PROFILE[who], ...((app.store && app.store.get('profile', who)) || {}) };
+  const p = { ...DEFAULT_PROFILE[who], ...((app.store && app.store.get('profile', who)) || {}) };
+  // Old profiles saved the URL identifier as their default name. Keep custom nicknames.
+  if (!p.name || p.name === who) p.name = DEFAULT_PROFILE[who]?.name || who;
+  return p;
 }
 export const nameOf = (who) => profileOf(who).name || who;
 export const myName = () => nameOf(app.me);

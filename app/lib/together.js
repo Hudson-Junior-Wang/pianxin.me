@@ -1,7 +1,7 @@
 // 偏心我 · "一起模式": one synced timer shared by every kind of companionship.
 
-import { app, WHO } from './ctx.js?v=d7c13ae0f9';
-import { uid, dayKey } from './util.js?v=d7c13ae0f9';
+import { app, WHO } from './ctx.js?v=575a878181';
+import { uid, dayKey } from './util.js?v=575a878181';
 
 // st = sticker shown for the mode (duo sticker when there is one, else my own character)
 export const MODES = {

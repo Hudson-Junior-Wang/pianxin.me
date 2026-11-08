@@ -1,24 +1,24 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=d7c13ae0f9';
+import { html, render } from './ui/h.js?v=575a878181';
 import { useState, useEffect } from './vendor/hooks.js';
-import { app, WHO, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf } from './lib/ctx.js?v=d7c13ae0f9';
-import { Store } from './lib/store.js?v=d7c13ae0f9';
-import { Sync } from './lib/sync.js?v=d7c13ae0f9';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=d7c13ae0f9';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=d7c13ae0f9';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=d7c13ae0f9';
-import { cx, fmtClock } from './lib/util.js?v=d7c13ae0f9';
-import { Avatar, Dot, St, Portal } from './ui/common.js?v=d7c13ae0f9';
-import { Icon } from './ui/icons.js?v=d7c13ae0f9';
-import { Chat } from './ui/chat.js?v=d7c13ae0f9';
-import { Home } from './ui/pages/home.js?v=d7c13ae0f9';
-import { Together } from './ui/pages/together.js?v=d7c13ae0f9';
-import { Journal } from './ui/pages/journal.js?v=d7c13ae0f9';
-import { Life } from './ui/pages/food.js?v=d7c13ae0f9';
-import { Cal } from './ui/pages/cal.js?v=d7c13ae0f9';
-import { Me } from './ui/pages/me.js?v=d7c13ae0f9';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, NEEDS, moodOf, stId, isSt, chOf } from './lib/ctx.js?v=575a878181';
+import { Store } from './lib/store.js?v=575a878181';
+import { Sync } from './lib/sync.js?v=575a878181';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=575a878181';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=575a878181';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=575a878181';
+import { cx, fmtClock } from './lib/util.js?v=575a878181';
+import { Avatar, Dot, St, Portal } from './ui/common.js?v=575a878181';
+import { Icon } from './ui/icons.js?v=575a878181';
+import { Chat } from './ui/chat.js?v=575a878181';
+import { Home } from './ui/pages/home.js?v=575a878181';
+import { Together } from './ui/pages/together.js?v=575a878181';
+import { Journal } from './ui/pages/journal.js?v=575a878181';
+import { Life } from './ui/pages/food.js?v=575a878181';
+import { Cal } from './ui/pages/cal.js?v=575a878181';
+import { Me } from './ui/pages/me.js?v=575a878181';
 
 const NAV = [
   { k: 'home', label: '今天', icon: 'today', C: Home },
@@ -239,12 +239,12 @@ function Lock({ onDone }) {
     <div class="lock-card">
       <${St} id=${res ? `${ch}-ok` : busy ? `${ch}-study` : `${ch}-hi`} size=${120} title="" />
       <h1>偏心我</h1>
-      <p class="lock-hi">你好呀，<b>${app.me}</b></p>
+      <p class="lock-hi">你好呀，<b>${nameOf(app.me)}</b></p>
       ${res
         ? html`<div class="fp-box">
             <p>这是你们这把钥匙的指纹：</p>
             <div class="fp">${res.fp}</div>
-            <p class="hint">和 ${app.partner} 那边看到的一样，就说明暗号对上啦。</p>
+            <p class="hint">和 ${nameOf(app.partner)} 那边看到的一样，就说明暗号对上啦。</p>
             <button class="btn big" onClick=${enter}>进入</button>
             <button class="link sm" onClick=${() => setRes(null)}>重新输入</button>
           </div>`
@@ -289,8 +289,14 @@ async function start(seed) {
   const o = new Date().getTimezoneOffset();
   if (store.get('tz', app.me)?.o !== o) store.put('tz', app.me, { o });
   const prof = store.get('profile', app.me);
-  if (!prof) store.put('profile', app.me, { name: app.me, ch: app.me === 'xiaoha' ? 'bunny' : 'bear' });
-  else if (!prof.ch) store.put('profile', app.me, { ...prof, ch: app.me === 'xiaoha' ? 'bunny' : 'bear' });
+  const defaults = DEFAULT_PROFILE[app.me];
+  if (!prof || !prof.ch || !prof.name || prof.name === app.me) {
+    store.put('profile', app.me, {
+      ...defaults, ...prof,
+      name: !prof?.name || prof.name === app.me ? defaults.name : prof.name,
+      ch: prof?.ch || defaults.ch,
+    });
+  }
 
   startFeed();
   startWatcher();

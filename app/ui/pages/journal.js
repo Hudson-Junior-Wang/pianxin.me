@@ -1,10 +1,10 @@
 // 偏心我 · 记录 — 日历形式的生活点滴：图片、文字、留言给 TA、只给自己看
-import { html } from '../h.js?v=d7c13ae0f9';
+import { html } from '../h.js?v=575a878181';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=d7c13ae0f9';
-import { uid, today, addMonths, pad2, fmtDayFull, fmtHM, cx } from '../../lib/util.js?v=d7c13ae0f9';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=d7c13ae0f9';
-import { Icon } from '../icons.js?v=d7c13ae0f9';
+import { app, useCols, nameOf, MOODS, moodOf, toast, stId } from '../../lib/ctx.js?v=575a878181';
+import { uid, today, addMonths, pad2, fmtDayFull, fmtHM, cx } from '../../lib/util.js?v=575a878181';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, St, Seg, confirmDel, Img, strip } from '../common.js?v=575a878181';
+import { Icon } from '../icons.js?v=575a878181';
 
 const TO = {
   day: { label: '生活点滴', st: 'read', hint: '两个人都能看到' },
