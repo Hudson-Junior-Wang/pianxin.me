@@ -3,7 +3,7 @@
 // storage overrides. Deployment pins the owner's existing desktop key.
 // Empty means provisioning: only already-unlocked devices may open to export
 // their records and obtain the desktop binding code; new rooms stay disabled.
-export const OFFICIAL_VERIFIER = '';
+export const OFFICIAL_VERIFIER = 'PX1-d19147527d966549bbc8009b550bbb43134b6030fc226df4537765869c03a842';
 const PREFIX = 'PX1-';
 
 export async function roomBindingCode(kr) {

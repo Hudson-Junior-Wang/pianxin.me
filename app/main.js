@@ -1,28 +1,29 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=2b526ea3b9';
+import { html, render } from './ui/h.js?v=e87ea75755';
 import { useState, useEffect, useRef } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=2b526ea3b9';
-import { Store } from './lib/store.js?v=2b526ea3b9';
-import { initViewport } from './lib/viewport.js?v=2b526ea3b9';
-import { Sync } from './lib/sync.js?v=2b526ea3b9';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=2b526ea3b9';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=2b526ea3b9';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=2b526ea3b9';
-import { cx, fmtClock } from './lib/util.js?v=2b526ea3b9';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=2b526ea3b9';
-import { Icon } from './ui/icons.js?v=2b526ea3b9';
-import { Chat } from './ui/chat.js?v=2b526ea3b9';
-import { Home } from './ui/pages/home.js?v=2b526ea3b9';
-import { Learn } from './ui/pages/learn.js?v=2b526ea3b9';
-import { Together } from './ui/pages/together.js?v=2b526ea3b9';
-import { Journal } from './ui/pages/journal.js?v=2b526ea3b9';
-import { Life } from './ui/pages/food.js?v=2b526ea3b9';
-import { Me } from './ui/pages/me.js?v=2b526ea3b9';
-import { useLayerClose, useRouteMotion } from './ui/motion.js?v=2b526ea3b9';
-import { Fingerprint } from './ui/pictograms.js?v=2b526ea3b9';
-import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=2b526ea3b9';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=e87ea75755';
+import { Store } from './lib/store.js?v=e87ea75755';
+import { initViewport } from './lib/viewport.js?v=e87ea75755';
+import { Sync } from './lib/sync.js?v=e87ea75755';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=e87ea75755';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=e87ea75755';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=e87ea75755';
+import { cx, fmtClock } from './lib/util.js?v=e87ea75755';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=e87ea75755';
+import { Icon } from './ui/icons.js?v=e87ea75755';
+import { Chat } from './ui/chat.js?v=e87ea75755';
+import { Home } from './ui/pages/home.js?v=e87ea75755';
+import { Learn } from './ui/pages/learn.js?v=e87ea75755';
+import { Together } from './ui/pages/together.js?v=e87ea75755';
+import { Journal } from './ui/pages/journal.js?v=e87ea75755';
+import { Life } from './ui/pages/food.js?v=e87ea75755';
+import { Me } from './ui/pages/me.js?v=e87ea75755';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=e87ea75755';
+import { Fingerprint } from './ui/pictograms.js?v=e87ea75755';
+import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=e87ea75755';
+import { RoomRecovery } from './ui/room-recovery.js?v=e87ea75755';
 
 initViewport();
 
@@ -217,7 +218,7 @@ function App() {
 }
 
 // ---------- lock screen ----------
-function Lock({ onDone, issue = '' }) {
+function Lock({ onDone, issue = '', recovery = null }) {
   const [pw, setPw] = useState('');
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -271,12 +272,13 @@ function Lock({ onDone, issue = '' }) {
             <p class="hint small">所有内容都会先用这个暗号加密，再离开你的设备。暗号本身不会被上传，忘了就找不回，请记好。</p>
           </form>`}
     </div>
+    ${recovery && html`<${RoomRecovery} oldKr=${recovery.oldKr} />`}
   </div>`;
 }
 
 // ---------- boot ----------
-function showLock(issue = '') {
-  render(html`<${Lock} key=${issue} issue=${issue} onDone=${(seed) => start(seed).catch(showStartError)} />`, document.getElementById('app'));
+function showLock(issue = '', recovery = null) {
+  render(html`<${Lock} key=${issue} issue=${issue} recovery=${recovery} onDone=${(seed) => start(seed).catch(showStartError)} />`, document.getElementById('app'));
 }
 
 function showStartError(e) {
@@ -300,17 +302,24 @@ async function openApp(seed, { existing = false } = {}) {
     return;
   }
   const issue = await roomAccessIssue(kr, { existing });
-  if (issue) { showLock(issue); return; }
-  const store = new Store(app.me);
-  await store.open();
+  if (issue) { showLock(issue, existing ? { oldKr: kr } : null); return; }
+  const dbRoom = localStorage.getItem(`px:${app.me}:dbroom`);
+  let store = new Store(app.me, dbRoom === kr.room ? kr.room : '');
+  // Probe the legacy source without updating its metadata. Only the verified
+  // official key may create an absent DB or initialize metadata afterwards.
+  try { await store.open({ readOnly: true }); }
+  catch { store = new Store(app.me, dbRoom === kr.room ? kr.room : ''); await store.open(); }
   const room = await store.getMeta('room');
   // Never rekey a device's surviving history merely because a different
   // passphrase was entered. Migration requires an explicit recovery flow.
   if (room && room !== kr.room) {
     store.db.close();
-    showLock('这台设备的记录属于另一把钥匙，已停止切换空间。原记录与照片均保留；请先在原设备导出备份，再确认合并。');
+    let oldKr = null;
+    try { const saved = localStorage.getItem(`px:${app.me}:kr`); if (saved) { const old = await keyringFromSeed(saved); if (old.room === room) oldKr = old; } } catch {}
+    showLock('这台设备的记录属于另一把钥匙，已停止自动切换空间。请先用下方本机恢复入口备份，再确认迁入；原记录保留。', { oldKr });
     return;
   }
+  if (!await store.getMeta('dev')) await store.setMeta('dev', store.dev);
   if (room !== kr.room) await store.setMeta('room', kr.room);
   localStorage.setItem(`px:${app.me}:kr`, seed);
   app.kr = kr;
@@ -342,6 +351,12 @@ async function openApp(seed, { existing = false } = {}) {
     if (type === 'live' && h.e === 'toast') toast(h.text, { icon: h.icon || stId(app.partner, 'hi') });
   });
   await sync.start();
+  if (await store.getMeta('recoveryResult')) {
+    const result = await store.getMeta('recoveryResult');
+    toast(`旧记录已复制到固定空间，原件仍在本机保留。${result.missingPhotos ? `有 ${result.missingPhotos} 份原图本机未保存；现存缩略图已保留。` : ''}`, { icon: stId(app.me, 'done'), ms: 10000 });
+    await store.setMeta('lastRecoveryResult', result);
+    await store.setMeta('recoveryResult', null);
+  }
   render(html`<${App} />`, root);
   window.__px = app;
 }

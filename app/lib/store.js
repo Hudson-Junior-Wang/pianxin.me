@@ -2,8 +2,8 @@
 // A record is { k, c (collection), i (id), t (hybrid clock), d (device), by, x (data|null) }.
 // Last writer wins per record; x === null is a tombstone.
 
-import { openDB, reqP, txDone } from './idb.js?v=2b526ea3b9';
-import { uid } from './util.js?v=2b526ea3b9';
+import { openDB, reqP, txDone } from './idb.js?v=e87ea75755';
+import { uid } from './util.js?v=e87ea75755';
 
 // "state" collections keep exactly one copy at a fixed topic; everything else is a dated log.
 export const STATE_COLS = new Set(['profile', 'status', 'draft', 'ink', 'together', 'tjoin', 'poke', 'tz']);
@@ -18,8 +18,10 @@ export function newer(a, b) {
 }
 
 export class Store {
-  constructor(me) {
+  constructor(me, room = '') {
+    if (room && !/^[a-f0-9]{24}$/.test(room)) throw new Error('bad room');
     this.me = me;
+    this.dbName = 'pianxin-' + me + (room ? '-' + room : '');
     this.recs = new Map();
     this.byCol = new Map();
     this.subs = new Set();
@@ -31,8 +33,9 @@ export class Store {
     this.dev = '';
   }
 
-  async open() {
-    this.db = await openDB('pianxin-' + this.me, 1, (db) => {
+  async open({ readOnly = false } = {}) {
+    this.db = await openDB(this.dbName, 1, (db, oldVersion, tx) => {
+      if (readOnly) { tx.abort(); return; }
       db.createObjectStore('rec', { keyPath: 'k' });
       db.createObjectStore('blob');
       db.createObjectStore('meta');
@@ -46,7 +49,7 @@ export class Store {
     this.dev = await this.getMeta('dev');
     if (!this.dev) {
       this.dev = uid(8);
-      await this.setMeta('dev', this.dev);
+      if (!readOnly) await this.setMeta('dev', this.dev);
     }
   }
 
@@ -251,7 +254,7 @@ export class Store {
   async destroy() {
     try { this.db.close(); } catch {}
     await new Promise((res) => {
-      const r = indexedDB.deleteDatabase('pianxin-' + this.me);
+      const r = indexedDB.deleteDatabase(this.dbName);
       r.onsuccess = r.onerror = r.onblocked = () => res();
     });
   }

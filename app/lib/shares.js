@@ -1,5 +1,5 @@
 // Explicit shared-content allowlist. Never scan private collections, drafts or chat.
-import { planScope } from './plans.js?v=2b526ea3b9';
+import { planScope } from './plans.js?v=e87ea75755';
 export const SHARE_TYPES = {
   learn: { label: '学习', icon: 'learn', group: 'learn' },
   journal: { label: '生活记录', icon: 'journal', group: 'life' },

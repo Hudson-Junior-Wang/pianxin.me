@@ -1,12 +1,12 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=2b526ea3b9';
+import { html } from '../h.js?v=e87ea75755';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=2b526ea3b9';
-import { download, today, cx } from '../../lib/util.js?v=2b526ea3b9';
-import { St } from '../common.js?v=2b526ea3b9';
-import { Fingerprint } from '../pictograms.js?v=2b526ea3b9';
-import { installPlatform } from '../../lib/install.js?v=2b526ea3b9';
-import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=2b526ea3b9';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=e87ea75755';
+import { download, today, cx } from '../../lib/util.js?v=e87ea75755';
+import { St } from '../common.js?v=e87ea75755';
+import { Fingerprint } from '../pictograms.js?v=e87ea75755';
+import { installPlatform } from '../../lib/install.js?v=e87ea75755';
+import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=e87ea75755';
 
 function Profile() {
   useCols('profile');
@@ -109,6 +109,10 @@ function Backup() {
     try {
       const data = JSON.parse(await f.text());
       if (data.app !== 'pianxin.me' || !Array.isArray(data.recs)) throw new Error('bad file');
+      if (data.kind === 'local-recovery' || data.v > 1) {
+        toast('这是完整本地档案或不受支持的新版备份，不是普通文字备份；请在锁屏页使用「本地恢复」进行来源迁移。', { icon: stId(app.me, 'idea') });
+        return;
+      }
       let n = 0;
       for (const r of data.recs) {
         if (r.c && r.c[0] === '_' && data.me !== app.me) continue;
@@ -174,7 +178,7 @@ function Danger() {
   };
   const wipe = async () => {
     if (!roomIsBound()) return toast('正在保留两台设备的记录，请先完成空间绑定与备份。', { icon: stId(app.me, 'idea') });
-    if (!confirm('清除这台设备上的所有数据？（已经同步到 TA 那边的不会受影响）')) return;
+    if (!confirm('仅清除这台设备上当前空间的本地数据？旧记录恢复原件和已下载的备份仍会保留，已同步到 TA 那边的数据不会受影响。')) return;
     localStorage.removeItem(`px:${app.me}:kr`);
     await app.store.destroy();
     location.reload();
@@ -183,9 +187,10 @@ function Danger() {
     <div class="card-hd"><h3>这台设备</h3></div>
     <div class="row wrap">
       <button class="btn ghost sm" disabled=${!roomIsBound()} onClick=${lock}>退出（下次重新输入暗号）</button>
-      <button class="btn ghost sm danger" disabled=${!roomIsBound()} onClick=${wipe}>清除本机数据</button>
+      <button class="btn ghost sm danger" disabled=${!roomIsBound()} onClick=${wipe}>清除当前空间的本地数据</button>
     </div>
     ${!roomIsBound() && html`<p class="hint">固定空间绑定前暂不退出或清除数据，以便先备份手机和电脑各自的历史。</p>`}
+    <p class="hint">清除后需要重新输入原来的暗号。此操作只清除当前空间的本地数据；旧记录恢复原件与已下载的备份仍会保留。</p>
     <p class="hint">${nameOf(app.partner)} 的页面是 <a href=${'/' + app.partner}>pianxin.me/${app.partner}</a>，两个人用同一个暗号。</p>
   </section>`;
 }

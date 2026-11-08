@@ -1,15 +1,15 @@
 // Learning is about what we share, not elapsed time or matching progress.
-import { html } from '../h.js?v=2b526ea3b9';
+import { html } from '../h.js?v=e87ea75755';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=2b526ea3b9';
-import { uid, today, cx } from '../../lib/util.js?v=2b526ea3b9';
-import { localZone } from '../../lib/time.js?v=2b526ea3b9';
-import { safeLink, recentShares, shareTitle, sharePreview } from '../../lib/shares.js?v=2b526ea3b9';
-import { Avatar, PhotoPicker, AutoText, Modal, Empty, Img, strip, confirmDel } from '../common.js?v=2b526ea3b9';
-import { ShareDetail } from '../shares.js?v=2b526ea3b9';
-import { Icon } from '../icons.js?v=2b526ea3b9';
-import { Drafts } from './together.js?v=2b526ea3b9';
-import { TaskList } from './home.js?v=2b526ea3b9';
+import { app, useCols, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=e87ea75755';
+import { uid, today, cx } from '../../lib/util.js?v=e87ea75755';
+import { localZone } from '../../lib/time.js?v=e87ea75755';
+import { safeLink, recentShares, shareTitle, sharePreview } from '../../lib/shares.js?v=e87ea75755';
+import { Avatar, PhotoPicker, AutoText, Modal, Empty, Img, strip, confirmDel } from '../common.js?v=e87ea75755';
+import { ShareDetail } from '../shares.js?v=e87ea75755';
+import { Icon } from '../icons.js?v=e87ea75755';
+import { Drafts } from './together.js?v=e87ea75755';
+import { TaskList } from './home.js?v=e87ea75755';
 
 function LearningForm({ edit, onClose, onSaved }) {
   const [id] = useState(() => edit?.id || uid());

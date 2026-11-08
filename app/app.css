@@ -825,6 +825,14 @@ body, .shell, .boot, .lock { min-height: 100svh; }
 }
 
 /* Recent shared items and learning shelf (content first, tools second). */
+.lock:has(.room-recovery) { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 20px; }
+.lock:has(.room-recovery) .lock-card { margin-top: 20px; }
+.room-recovery { width: min(100%, 480px); padding: 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--card); box-shadow: var(--sh); }
+.room-recovery > * + *, .recovery-form > * + * { margin-top: 12px; }
+.room-recovery h2 { font-size: 21px; }
+.room-recovery .check { display: flex; align-items: flex-start; gap: 8px; white-space: normal; }
+.room-recovery .check input { flex: none; margin-top: 4px; }
+.room-recovery .btn { white-space: normal; }
 .room-binding { padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--soft); margin: 14px 0; }
 .room-binding-code { width: 100%; min-width: 0; font: 16px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; resize: vertical; }
 .recent-shares { min-width: 0; }

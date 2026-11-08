@@ -10,10 +10,10 @@
 //   p/<who>.<device>   presence (cleared by the broker's last-will when we drop)
 //   i                  room info
 
-import { MqttClient } from './mqtt.js?v=2b526ea3b9';
-import { seal, unseal, keyedHash } from './crypto.js?v=2b526ea3b9';
-import { STATE_COLS, LINK_MASK } from './store.js?v=2b526ea3b9';
-import { utcDay, sleep, uid } from './util.js?v=2b526ea3b9';
+import { MqttClient } from './mqtt.js?v=e87ea75755';
+import { seal, unseal, keyedHash } from './crypto.js?v=e87ea75755';
+import { STATE_COLS, LINK_MASK } from './store.js?v=e87ea75755';
+import { utcDay, sleep, uid } from './util.js?v=e87ea75755';
 
 export const LINKS = [
   { name: 'EMQX', urls: ['wss://broker.emqx.io:8084/mqtt', 'wss://broker-cn.emqx.io:8084/mqtt'], rate: 6, burst: 6 },
@@ -196,7 +196,10 @@ export class Sync {
   /** s/<h> for state, r/YYYY/MM/DD/<author>/<h> for log records */
   async topicFor(r) {
     const h = await this._hash(r.k);
-    if (STATE_COLS.has(r.c)) return `s/${h}`;
+    // Explicitly recovered history keeps its original revision time, but must
+    // be discoverable by already-synced desktops without rescanning old dates.
+    // Keep these records (and later edits/deletions) in the permanent feed.
+    if (STATE_COLS.has(r.c) || r.tp?.startsWith('s/') || r.ptp?.startsWith('s/')) return `s/${h}`;
     return `r/${utcDay(r.t)}/${await this._atag(r.by)}/${h}`;
   }
 
@@ -567,7 +570,7 @@ export class Sync {
   _sharedBlobIds() {
     const ids = new Set();
     for (const r of this.store.recs.values()) {
-      if (r.c.startsWith('_') || !r.x || !Array.isArray(r.x.photos)) continue;
+      if (r.c.startsWith('_') || !r.x || r.x.to === 'me' || r.x.private || r.x._private || r.x._local || !Array.isArray(r.x.photos)) continue;
       for (const p of r.x.photos) if (!p.loc) {
         if (p.id) ids.add(p.id);
         if (p.th) ids.add(p.th);

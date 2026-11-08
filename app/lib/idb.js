@@ -23,7 +23,7 @@ export const reqP = (r) =>
 export const txDone = (t) =>
   new Promise((res, rej) => {
     t.oncomplete = () => res();
-    t.onerror = () => rej(t.error);
+    t.onerror = () => rej(t.error || new Error('transaction failed'));
     t.onabort = () => rej(t.error || new Error('transaction aborted'));
   });
 
