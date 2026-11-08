@@ -1,13 +1,15 @@
 // Learning is about what we share, not elapsed time or matching progress.
-import { html } from '../h.js?v=14a1b2f159';
+import { html } from '../h.js?v=94aaa224f0';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=14a1b2f159';
-import { uid, today, cx } from '../../lib/util.js?v=14a1b2f159';
-import { localZone } from '../../lib/time.js?v=14a1b2f159';
-import { safeLink, recentShares, shareTitle, sharePreview } from '../../lib/shares.js?v=14a1b2f159';
-import { Avatar, PhotoPicker, AutoText, Modal, Empty, Img, strip, confirmDel } from '../common.js?v=14a1b2f159';
-import { ShareDetail } from '../shares.js?v=14a1b2f159';
-import { Icon } from '../icons.js?v=14a1b2f159';
+import { app, useCols, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=94aaa224f0';
+import { uid, today, cx } from '../../lib/util.js?v=94aaa224f0';
+import { localZone } from '../../lib/time.js?v=94aaa224f0';
+import { safeLink, recentShares, shareTitle, sharePreview } from '../../lib/shares.js?v=94aaa224f0';
+import { Avatar, PhotoPicker, AutoText, Modal, Empty, Img, strip, confirmDel } from '../common.js?v=94aaa224f0';
+import { ShareDetail } from '../shares.js?v=94aaa224f0';
+import { Icon } from '../icons.js?v=94aaa224f0';
+import { Drafts } from './together.js?v=94aaa224f0';
+import { TaskList } from './home.js?v=94aaa224f0';
 
 function LearningForm({ edit, onClose, onSaved }) {
   const [id] = useState(() => edit?.id || uid());
@@ -72,7 +74,14 @@ export function Learn({ param }) {
       <button class="learn-open" onClick=${()=>setSelected(x.id)}>${x.photos?.length ? html`<${Img} id=${x.photos[0].th||x.photos[0].id} cls="learn-thumb" />` : null}<span><strong>${shareTitle('learn',x)}</strong><small>${sharePreview('learn',x)}</small><em>${x.link ? '含资料链接 · ' : ''}${x.photos?.length ? x.photos.length+' 张图片 · ' : ''}打开看看 <${Icon} n="right" size=${14} /></em></span></button>
     </article>`)}</div>` : html`<${Empty} st="read" text=${query||who ? '没有匹配的学习分享' : '暂无学习分享'} />`}
     ${list.length>limit && html`<button class="btn ghost block" onClick=${()=>setLimit(limit+20)}>再看看更早的</button>`}
-    <section class="card learning-tools"><div><h3>学习小工具</h3></div><a class="chip" href="#/together"><${Icon} n="clock" size=${16} /> 专注计时</a><a class="chip" href="#/together/drafts"><${Icon} n="pen" size=${16} /> 草稿纸与待办</a></section>
+    <section class="learning-tools">
+      <div class="card learning-tools-hd"><h3>学习小工具</h3><a class="chip" href="#/together"><${Icon} n="clock" size=${16} /> 专注计时</a></div>
+      <details class="learning-drafts" open>
+        <summary>草稿纸与待办</summary>
+        <${Drafts} />
+        <div class="grid2"><${TaskList} who=${app.me} /><${TaskList} who=${app.partner} /></div>
+      </details>
+    </section>
     ${selected && html`<${ShareDetail} col="learn" id=${selected} onClose=${closeDetail} />`}
     ${form && html`<${LearningForm} key=${form.edit?.id||'new'} edit=${form.edit} onClose=${()=>{setForm(null);if(param==='new')location.hash='#/learn';}} onSaved=${saved} />`}
   </div>`;

@@ -828,9 +828,11 @@ body, .shell, .boot, .lock { min-height: 100svh; }
 .learn-open em { font-style: normal; font-size: 12px; color: var(--accent-2); }
 .learn-open em .ic { display: inline-block; vertical-align: middle; }
 .learn-thumb { width: 76px; height: 86px; object-fit: cover; flex-shrink: 0; border-radius: 10px; }
-.learning-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; box-shadow: none; margin-top: 24px; background: var(--soft); }
-.learning-tools > div { flex: 1 1 240px; }
-.learning-tools h3 { font-size: 14px; }
+.learning-tools { margin-top: 24px; }
+.learning-tools-hd { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; box-shadow: none; background: var(--soft); }
+.learning-tools-hd h3 { flex: 1 1 180px; font-size: 14px; }
+.learning-drafts > summary { cursor: pointer; padding: 12px 0; min-height: 44px; font-weight: 600; }
+.learning-drafts > * + * { margin-top: 14px; }
 .share-title { margin: 16px 0 10px; font-size: 20px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .share-reader h4 { margin: 14px 0 4px; }
 .share-link { display: flex; align-items: flex-start; gap: 8px; overflow-wrap: anywhere; margin: 14px 0; padding: 10px; border-radius: 10px; background: var(--soft); }
