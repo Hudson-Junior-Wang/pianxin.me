@@ -1,7 +1,7 @@
 // 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
-import { localZone, validZone, zoneParts } from './time.js?v=6f1645891f';
+import { localZone, validZone, zoneParts } from './time.js?v=14a1b2f159';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
@@ -327,5 +327,5 @@ export function notify(title, body, timer = false) {
   if (!app.settings.notify || (app.quiet && !timer) || app.store?.get('status', app.me)?.need === 'quiet') return;
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return;
-  try { new Notification(title, { body, tag: 'pianxin-' + Date.now(), icon: '/app/icon-192.png' }); } catch {}
+  try { new Notification(title, { body, tag: 'pianxin-' + Date.now(), icon: '/app/icons/icon-192-v3.png' }); } catch {}
 }

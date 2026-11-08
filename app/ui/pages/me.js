@@ -1,10 +1,10 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=6f1645891f';
+import { html } from '../h.js?v=14a1b2f159';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=6f1645891f';
-import { download, today, cx } from '../../lib/util.js?v=6f1645891f';
-import { St } from '../common.js?v=6f1645891f';
-import { installPlatform } from '../../lib/install.js?v=6f1645891f';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=14a1b2f159';
+import { download, today, cx } from '../../lib/util.js?v=14a1b2f159';
+import { St } from '../common.js?v=14a1b2f159';
+import { installPlatform } from '../../lib/install.js?v=14a1b2f159';
 
 function Profile() {
   useCols('profile');
@@ -124,7 +124,7 @@ function Install() {
     } catch { prompt('长按或选中复制自己的入口链接', url); }
   };
   return html`<section class="card install-card">
-    <div class="card-hd"><h3>${standalone ? '已从桌面打开' : '放到手机桌面'}</h3><img src="/app/icons/icon-180-v2.png" width="44" height="44" alt="偏心我，小熊和小兔图标" style="border-radius:11px" /></div>
+    <div class="card-hd"><h3>${standalone ? '已从桌面打开' : '放到手机桌面'}</h3><img src="/app/icons/icon-180-v3.png" width="44" height="44" alt="偏心我，小熊和小兔图标" style="border-radius:11px" /></div>
     ${standalone ? html`<p class="hint">这个图标打开的是 ${nameOf(app.me)} 的入口。仍需要联网加载页面和同步，不是离线应用。</p>` : html`<p class="hint">先用手机浏览器打开自己的入口，再从浏览器菜单添加。网页不能替你创建系统桌面图标。</p>`}
     <p class="hint">自己的入口：<a class="install-entry" href=${'/' + app.me + '/'}>pianxin.me/${app.me}/</a></p>
     <button class="btn ghost sm" type="button" onClick=${copyEntry}>复制自己的入口链接</button>
