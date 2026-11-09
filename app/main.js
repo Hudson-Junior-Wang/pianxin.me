@@ -1,30 +1,30 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=ef34bd8a76';
+import { html, render } from './ui/h.js?v=4420681d90';
 import { useState, useEffect, useRef } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=ef34bd8a76';
-import { Store } from './lib/store.js?v=ef34bd8a76';
-import { initViewport } from './lib/viewport.js?v=ef34bd8a76';
-import { Sync } from './lib/sync.js?v=ef34bd8a76';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=ef34bd8a76';
-import { unlockRoomSeed } from './lib/room-unlock.js?v=ef34bd8a76';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=ef34bd8a76';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=ef34bd8a76';
-import { cx, fmtClock } from './lib/util.js?v=ef34bd8a76';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=ef34bd8a76';
-import { Icon } from './ui/icons.js?v=ef34bd8a76';
-import { Chat } from './ui/chat.js?v=ef34bd8a76';
-import { Home } from './ui/pages/home.js?v=ef34bd8a76';
-import { Learn } from './ui/pages/learn.js?v=ef34bd8a76';
-import { Together } from './ui/pages/together.js?v=ef34bd8a76';
-import { Journal } from './ui/pages/journal.js?v=ef34bd8a76';
-import { Life } from './ui/pages/food.js?v=ef34bd8a76';
-import { Me } from './ui/pages/me.js?v=ef34bd8a76';
-import { useLayerClose, useRouteMotion } from './ui/motion.js?v=ef34bd8a76';
-import { Fingerprint } from './ui/pictograms.js?v=ef34bd8a76';
-import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=ef34bd8a76';
-import { RoomRecovery } from './ui/room-recovery.js?v=ef34bd8a76';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=4420681d90';
+import { Store } from './lib/store.js?v=4420681d90';
+import { initViewport } from './lib/viewport.js?v=4420681d90';
+import { Sync } from './lib/sync.js?v=4420681d90';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=4420681d90';
+import { unlockRoomSeed } from './lib/room-unlock.js?v=4420681d90';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=4420681d90';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=4420681d90';
+import { cx, fmtClock } from './lib/util.js?v=4420681d90';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=4420681d90';
+import { Icon } from './ui/icons.js?v=4420681d90';
+import { Chat } from './ui/chat.js?v=4420681d90';
+import { Home } from './ui/pages/home.js?v=4420681d90';
+import { Learn } from './ui/pages/learn.js?v=4420681d90';
+import { Together } from './ui/pages/together.js?v=4420681d90';
+import { Journal } from './ui/pages/journal.js?v=4420681d90';
+import { Life } from './ui/pages/food.js?v=4420681d90';
+import { Me } from './ui/pages/me.js?v=4420681d90';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=4420681d90';
+import { Fingerprint } from './ui/pictograms.js?v=4420681d90';
+import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=4420681d90';
+import { RoomRecovery } from './ui/room-recovery.js?v=4420681d90';
 
 initViewport();
 

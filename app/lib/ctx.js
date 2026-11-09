@@ -1,8 +1,8 @@
 // 偏心我 · app-wide context: identity, stickers, reactive hooks, toasts, sounds.
 
 import { useState, useEffect } from '../vendor/hooks.js';
-import { localZone, validZone, zoneParts } from './time.js?v=ef34bd8a76';
-import { emojiText } from './pictograms.js?v=ef34bd8a76';
+import { localZone, validZone, zoneParts } from './time.js?v=4420681d90';
+import { emojiText } from './pictograms.js?v=4420681d90';
 
 export const WHO = ['zhengwang', 'xiaoha'];
 export const DEFAULT_PROFILE = {
@@ -139,13 +139,18 @@ export const myName = () => nameOf(app.me);
 export const taName = () => nameOf(app.partner);
 
 // ---------- stickers (小熊 & 小兔) ----------
-const KEYS = ['hi', 'cheer', 'ok', 'okay', 'thanks', 'what', 'study', 'read', 'done', 'idea', 'tea', 'eat', 'run', 'yawn', 'sleep', 'morning',
+const NEW_STICKER_KEYS = ['nope', 'deaf', 'headpat', 'bliss', 'night', 'proud', 'hehe', 'peek', 'wait',
+  'shocked', 'speechless', 'laugh', 'please', 'grumpy', 'confused', 'comfy', 'snack', 'go'];
+// Existing IDs stay readable in saved chats; new artwork is versioned separately.
+const KEYS = [...NEW_STICKER_KEYS, 'hi', 'cheer', 'ok', 'okay', 'thanks', 'what', 'study', 'read', 'done', 'idea', 'tea', 'eat', 'run', 'yawn', 'sleep', 'morning',
   'poke', 'pat', 'listen', 'salute', 'dizzy', 'pout', 'facepalm', 'sorry', 'cry'];
 export const CHARS = {
   bear: { p: 'b', name: '小熊', keys: KEYS },
   bunny: { p: 'r', name: '小兔', keys: [...KEYS, 'gym'] },
 };
 export const ST_LABEL = {
+  nope: '不中', deaf: '听不见', headpat: '摸摸头', bliss: '幸福', night: '晚安', proud: '哼哼', hehe: '嘿嘿', peek: '探头', wait: '等一下',
+  shocked: '震惊', speechless: '呆住', laugh: '笑死', please: '拜托', grumpy: '气鼓鼓', confused: '迷惑', comfy: '舒坦', snack: '来点零食', go: '出发',
   hi: '嗨', cheer: '冲呀', ok: '棒', okay: 'OK', thanks: '谢谢', what: '啊？', study: '学习中', read: '看书', done: '搞定',
   idea: '有了', tea: '喝奶茶', eat: '干饭', run: '跑起来', gym: '举铁', yawn: '好困', sleep: '晚安', morning: '早安',
   poke: '戳', pat: '拍拍', listen: '我在听', salute: '收到', dizzy: '晕了', pout: '哼', facepalm: '无语', sorry: '抱歉', cry: '哭哭',
@@ -169,7 +174,9 @@ export function stId(who, key) {
 }
 export const avId = (who) => (chOf(who) === 'bunny' ? 'av-bunny' : 'av-bear');
 export const isSt = (s) => typeof s === 'string' && /^(?:[bdr]|av)-[a-z]+$/.test(s);
-export const stUrl = (id) => `/app/stickers/${id}.webp`;
+const ST_ART = { 'r-morning': 'r-morning-v2' };
+for (const p of ['r', 'b']) for (const k of NEW_STICKER_KEYS) ST_ART[`${p}-${k}`] = `${p}-${k}-v1`;
+export const stUrl = (id) => `/app/stickers/${ST_ART[id] || id}.webp`;
 export function stLabel(id) {
   if (!isSt(id)) return '';
   if (id.startsWith('d-')) return DUO_LABEL[id] || '';
