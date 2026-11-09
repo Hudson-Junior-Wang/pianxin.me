@@ -18,6 +18,6 @@ export const roomIsBound = () => /^PX1-[a-f0-9]{64}$/.test(OFFICIAL_VERIFIER);
 export async function roomAccessIssue(kr, { existing = false } = {}) {
   if (OFFICIAL_VERIFIER && !roomIsBound()) return '固定空间校验配置异常，已暂停解锁。原有记录保留，请联系维护者。';
   if (!roomIsBound()) return existing ? '' : '正在绑定电脑上的固定暗号，暂不开放新解锁，也不会创建新空间。请先从仍已登录的电脑「设置 → 连接」复制固定空间校验码。';
-  if (await roomBindingCode(kr) !== OFFICIAL_VERIFIER) return '暗号不正确，无法解锁这个网站。这里只使用电脑确认的固定空间，不会另建空间；本机原有记录仍然保留。';
+  if (!kr || await roomBindingCode(kr) !== OFFICIAL_VERIFIER) return '暗号不正确，无法解锁这个网站。这里只使用电脑确认的固定空间，不会另建空间；本机原有记录仍然保留。';
   return '';
 }

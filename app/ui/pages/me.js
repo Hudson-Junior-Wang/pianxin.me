@@ -1,12 +1,12 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=e87ea75755';
+import { html } from '../h.js?v=ef34bd8a76';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=e87ea75755';
-import { download, today, cx } from '../../lib/util.js?v=e87ea75755';
-import { St } from '../common.js?v=e87ea75755';
-import { Fingerprint } from '../pictograms.js?v=e87ea75755';
-import { installPlatform } from '../../lib/install.js?v=e87ea75755';
-import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=e87ea75755';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=ef34bd8a76';
+import { download, today, cx } from '../../lib/util.js?v=ef34bd8a76';
+import { St } from '../common.js?v=ef34bd8a76';
+import { Fingerprint } from '../pictograms.js?v=ef34bd8a76';
+import { installPlatform } from '../../lib/install.js?v=ef34bd8a76';
+import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=ef34bd8a76';
 
 function Profile() {
   useCols('profile');
@@ -173,12 +173,14 @@ function Danger() {
   const lock = () => {
     if (!roomIsBound()) return toast('固定空间绑定前请保留当前登录，先复制电脑校验码并导出备份。', { icon: stId(app.me, 'idea') });
     if (!confirm('退出后，这台设备需要重新输入原来的暗号才能进来（记录还在）。确定吗？')) return;
+    localStorage.removeItem(`px:${app.me}:unlock`);
     localStorage.removeItem(`px:${app.me}:kr`);
     location.reload();
   };
   const wipe = async () => {
     if (!roomIsBound()) return toast('正在保留两台设备的记录，请先完成空间绑定与备份。', { icon: stId(app.me, 'idea') });
     if (!confirm('仅清除这台设备上当前空间的本地数据？旧记录恢复原件和已下载的备份仍会保留，已同步到 TA 那边的数据不会受影响。')) return;
+    localStorage.removeItem(`px:${app.me}:unlock`);
     localStorage.removeItem(`px:${app.me}:kr`);
     await app.store.destroy();
     location.reload();

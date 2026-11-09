@@ -1,12 +1,13 @@
 // A locked device may back up its OWN surviving bytes locally. No old-room
 // network is started and no alternate key is allowed into the app.
-import { html } from './h.js?v=e87ea75755';
+import { html } from './h.js?v=ef34bd8a76';
 import { useState, useRef } from '../vendor/hooks.js';
-import { app } from '../lib/ctx.js?v=e87ea75755';
-import { deriveSeed, keyringFromSeed } from '../lib/crypto.js?v=e87ea75755';
-import { roomAccessIssue } from '../lib/room-access.js?v=e87ea75755';
-import { Store } from '../lib/store.js?v=e87ea75755';
-import { openRecoverySource, recoveryCounts, exportRecoveryArchive, mergeRecoverySource } from '../lib/room-recovery.js?v=e87ea75755';
+import { app } from '../lib/ctx.js?v=ef34bd8a76';
+import { deriveSeed, keyringFromSeed } from '../lib/crypto.js?v=ef34bd8a76';
+import { roomAccessIssue } from '../lib/room-access.js?v=ef34bd8a76';
+import { unlockRoomSeed } from '../lib/room-unlock.js?v=ef34bd8a76';
+import { Store } from '../lib/store.js?v=ef34bd8a76';
+import { openRecoverySource, recoveryCounts, exportRecoveryArchive, mergeRecoverySource } from '../lib/room-recovery.js?v=ef34bd8a76';
 
 export function RoomRecovery({ oldKr = null }) {
   const sourceRef = useRef(null), working = useRef(false);
@@ -35,7 +36,9 @@ export function RoomRecovery({ oldKr = null }) {
     e.preventDefault();
     if (!backup || !confirmed || !password.trim()) return;
     run(async () => {
-      const seed = await deriveSeed(password), kr = await keyringFromSeed(seed);
+      const credential = await deriveSeed(password);
+      const seed = await unlockRoomSeed(credential);
+      const kr = seed ? await keyringFromSeed(seed) : null;
       const issue = await roomAccessIssue(kr);
       if (issue) throw new Error(issue);
       const s = await source();
@@ -49,6 +52,7 @@ export function RoomRecovery({ oldKr = null }) {
         // committed. Source remains a separate full local archive afterwards.
         // Switch DB first: a crash/failed write must leave the old seed intact.
         localStorage.setItem(`px:${app.me}:dbroom`, kr.room);
+        localStorage.setItem(`px:${app.me}:unlock`, credential);
         localStorage.setItem(`px:${app.me}:kr`, seed);
       } finally { target.db.close(); }
       location.reload();

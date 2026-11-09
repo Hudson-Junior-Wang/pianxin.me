@@ -1,29 +1,30 @@
 // 偏心我 · app entry & shell
 // wide screens: sidebar (nav) | page | chat column
 // phones:       top bar + page + bottom tabs, chat in a bottom sheet
-import { html, render } from './ui/h.js?v=e87ea75755';
+import { html, render } from './ui/h.js?v=ef34bd8a76';
 import { useState, useEffect, useRef } from './vendor/hooks.js';
-import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=e87ea75755';
-import { Store } from './lib/store.js?v=e87ea75755';
-import { initViewport } from './lib/viewport.js?v=e87ea75755';
-import { Sync } from './lib/sync.js?v=e87ea75755';
-import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=e87ea75755';
-import { startFeed, startWatcher, poke } from './lib/feed.js?v=e87ea75755';
-import { derive, session, isMember, phaseText } from './lib/together.js?v=e87ea75755';
-import { cx, fmtClock } from './lib/util.js?v=e87ea75755';
-import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=e87ea75755';
-import { Icon } from './ui/icons.js?v=e87ea75755';
-import { Chat } from './ui/chat.js?v=e87ea75755';
-import { Home } from './ui/pages/home.js?v=e87ea75755';
-import { Learn } from './ui/pages/learn.js?v=e87ea75755';
-import { Together } from './ui/pages/together.js?v=e87ea75755';
-import { Journal } from './ui/pages/journal.js?v=e87ea75755';
-import { Life } from './ui/pages/food.js?v=e87ea75755';
-import { Me } from './ui/pages/me.js?v=e87ea75755';
-import { useLayerClose, useRouteMotion } from './ui/motion.js?v=e87ea75755';
-import { Fingerprint } from './ui/pictograms.js?v=e87ea75755';
-import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=e87ea75755';
-import { RoomRecovery } from './ui/room-recovery.js?v=e87ea75755';
+import { app, WHO, DEFAULT_PROFILE, bus, loadSettings, useBus, useForce, useToasts, dismissToast, useSyncEvent, useCols, useNow, useMedia, nameOf, toast, needOf, moodOf, stId, chOf, syncTimezone } from './lib/ctx.js?v=ef34bd8a76';
+import { Store } from './lib/store.js?v=ef34bd8a76';
+import { initViewport } from './lib/viewport.js?v=ef34bd8a76';
+import { Sync } from './lib/sync.js?v=ef34bd8a76';
+import { deriveSeed, keyringFromSeed } from './lib/crypto.js?v=ef34bd8a76';
+import { unlockRoomSeed } from './lib/room-unlock.js?v=ef34bd8a76';
+import { startFeed, startWatcher, poke } from './lib/feed.js?v=ef34bd8a76';
+import { derive, session, isMember, phaseText } from './lib/together.js?v=ef34bd8a76';
+import { cx, fmtClock } from './lib/util.js?v=ef34bd8a76';
+import { Avatar, Dot, St, Portal, useDialog } from './ui/common.js?v=ef34bd8a76';
+import { Icon } from './ui/icons.js?v=ef34bd8a76';
+import { Chat } from './ui/chat.js?v=ef34bd8a76';
+import { Home } from './ui/pages/home.js?v=ef34bd8a76';
+import { Learn } from './ui/pages/learn.js?v=ef34bd8a76';
+import { Together } from './ui/pages/together.js?v=ef34bd8a76';
+import { Journal } from './ui/pages/journal.js?v=ef34bd8a76';
+import { Life } from './ui/pages/food.js?v=ef34bd8a76';
+import { Me } from './ui/pages/me.js?v=ef34bd8a76';
+import { useLayerClose, useRouteMotion } from './ui/motion.js?v=ef34bd8a76';
+import { Fingerprint } from './ui/pictograms.js?v=ef34bd8a76';
+import { roomIsBound, roomAccessIssue } from './lib/room-access.js?v=ef34bd8a76';
+import { RoomRecovery } from './ui/room-recovery.js?v=ef34bd8a76';
 
 initViewport();
 
@@ -233,11 +234,12 @@ function Lock({ onDone, issue = '', recovery = null }) {
     setErr('');
     setBusy(true);
     try {
-      const seed = await deriveSeed(pw);
-      const kr = await keyringFromSeed(seed);
+      const credential = await deriveSeed(pw);
+      const seed = await unlockRoomSeed(credential);
+      const kr = seed ? await keyringFromSeed(seed) : null;
       const issue = await roomAccessIssue(kr);
       if (issue) { setErr(issue); setBusy(false); return; }
-      setRes({ seed, fp: kr.fp });
+      setRes({ seed, credential, fp: kr.fp });
     } catch (x) {
       setErr('这个浏览器不支持加密功能，换个新一点的浏览器试试');
     }
@@ -246,7 +248,7 @@ function Lock({ onDone, issue = '', recovery = null }) {
   const enter = async () => {
     if (busy) return;
     setBusy(true);
-    try { await onDone(res.seed); } finally { setBusy(false); }
+    try { await onDone(res.seed, res.credential); } finally { setBusy(false); }
   };
   return html`<div class="lock">
     <div class="lock-card">
@@ -278,7 +280,7 @@ function Lock({ onDone, issue = '', recovery = null }) {
 
 // ---------- boot ----------
 function showLock(issue = '', recovery = null) {
-  render(html`<${Lock} key=${issue} issue=${issue} recovery=${recovery} onDone=${(seed) => start(seed).catch(showStartError)} />`, document.getElementById('app'));
+  render(html`<${Lock} key=${issue} issue=${issue} recovery=${recovery} onDone=${(seed, credential) => start(seed, { credential }).catch(showStartError)} />`, document.getElementById('app'));
 }
 
 function showStartError(e) {
@@ -292,8 +294,17 @@ function start(seed, options = {}) {
   return starting;
 }
 
-async function openApp(seed, { existing = false } = {}) {
+async function openApp(seed, { existing = false, credential = null } = {}) {
   const root = document.getElementById('app');
+  // A surviving data key is not proof of the current login password. Validate
+  // the current wrapped credential before opening any DB or network connection.
+  if (!credential || await unlockRoomSeed(credential) !== seed) {
+    let oldKr = null;
+    try { oldKr = await keyringFromSeed(seed); } catch {}
+    const oldIssue = oldKr ? await roomAccessIssue(oldKr, { existing }) : '';
+    showLock(oldIssue, oldIssue ? { oldKr } : null);
+    return;
+  }
   let kr;
   try {
     kr = await keyringFromSeed(seed);
@@ -321,6 +332,7 @@ async function openApp(seed, { existing = false } = {}) {
   }
   if (!await store.getMeta('dev')) await store.setMeta('dev', store.dev);
   if (room !== kr.room) await store.setMeta('room', kr.room);
+  localStorage.setItem(`px:${app.me}:unlock`, credential);
   localStorage.setItem(`px:${app.me}:kr`, seed);
   app.kr = kr;
   app.store = store;
@@ -361,7 +373,7 @@ async function openApp(seed, { existing = false } = {}) {
   window.__px = app;
 }
 
-function boot() {
+async function boot() {
   const me = window.PX_ME;
   if (!WHO.includes(me)) {
     location.href = '/';
@@ -376,12 +388,14 @@ function boot() {
     root.innerHTML = '<div class="lock"><div class="lock-card"><h1>偏心我</h1><p>这个浏览器缺少安全存储或加密功能。请先更新华为浏览器 / Safari / Chrome / Edge，再重新打开；不要清除原浏览器的网站数据。</p></div></div>';
     return;
   }
-  const seed = localStorage.getItem(`px:${me}:kr`);
+  const credential = localStorage.getItem(`px:${me}:unlock`);
+  const saved = localStorage.getItem(`px:${me}:kr`);
+  const seed = saved || (credential && await unlockRoomSeed(credential));
   if (!seed) {
     showLock();
     return;
   }
-  start(seed, { existing: true }).catch(showStartError);
+  start(seed, { existing: true, credential }).catch(showStartError);
 }
 
-boot();
+boot().catch(showStartError);

@@ -1,7 +1,7 @@
 // 偏心我 · optional shared focus timer. Life activities are asynchronous records.
 
-import { app, WHO } from './ctx.js?v=e87ea75755';
-import { uid, dayKey } from './util.js?v=e87ea75755';
+import { app, WHO } from './ctx.js?v=ef34bd8a76';
+import { uid, dayKey } from './util.js?v=ef34bd8a76';
 
 // st = sticker shown for the mode (duo sticker when there is one, else my own character)
 export const MODES = {

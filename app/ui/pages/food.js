@@ -1,13 +1,13 @@
 // 偏心我 · 生活 — 吃了啥、共享菜谱（可展开）、想吃的、运动
-import { html } from '../h.js?v=e87ea75755';
+import { html } from '../h.js?v=ef34bd8a76';
 import { useState } from '../../vendor/hooks.js';
-import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=e87ea75755';
-import { localZone } from '../../lib/time.js?v=e87ea75755';
-import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=e87ea75755';
-import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=e87ea75755';
-import { Icon } from '../icons.js?v=e87ea75755';
-import { Fit } from './fit.js?v=e87ea75755';
-import { Pic } from '../pictograms.js?v=e87ea75755';
+import { app, useCols, useNow, nameOf, localDayLabel, toast, stId } from '../../lib/ctx.js?v=ef34bd8a76';
+import { localZone } from '../../lib/time.js?v=ef34bd8a76';
+import { uid, today, fmtDay, cx, pick } from '../../lib/util.js?v=ef34bd8a76';
+import { Avatar, Photos, PhotoPicker, Reacts, AutoText, Empty, Seg, St, confirmDel, Modal, strip } from '../common.js?v=ef34bd8a76';
+import { Icon } from '../icons.js?v=ef34bd8a76';
+import { Fit } from './fit.js?v=ef34bd8a76';
+import { Pic } from '../pictograms.js?v=ef34bd8a76';
 
 // ---------- meals ----------
 const MEALS = [['breakfast', '早饭'], ['lunch', '午饭'], ['dinner', '晚饭'], ['snack', '加餐'], ['supper', '夜宵']];

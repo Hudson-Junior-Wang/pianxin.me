@@ -2,11 +2,11 @@
 // sockets or old-room requests are created here. Source DB is never rekeyed,
 // modified or deleted. Migration only runs after the official key is verified
 // and the person explicitly opts in; old data remains available for backups.
-import { Store, isLocalCol, LINK_MASK } from './store.js?v=e87ea75755';
-import { seal, keyedHash } from './crypto.js?v=e87ea75755';
-import { roomAccessIssue } from './room-access.js?v=e87ea75755';
-import { download } from './util.js?v=e87ea75755';
-import { reqP, txDone } from './idb.js?v=e87ea75755';
+import { Store, isLocalCol, LINK_MASK } from './store.js?v=ef34bd8a76';
+import { seal, keyedHash } from './crypto.js?v=ef34bd8a76';
+import { roomAccessIssue } from './room-access.js?v=ef34bd8a76';
+import { download } from './util.js?v=ef34bd8a76';
+import { reqP, txDone } from './idb.js?v=ef34bd8a76';
 
 const HISTORY = new Set(['learn', 'journal', 'meal', 'recipe', 'workout', 'wish', 'plan', 'meet', 'anniv', 'idea', 'chat', 'react', 'cmt', 'task', 'tsess', 'rcook']);
 const privateData = (x) => !!x && (x.to === 'me' || x.private || x._private || x._local);
