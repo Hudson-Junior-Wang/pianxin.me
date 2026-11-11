@@ -1,6 +1,6 @@
-import { html } from './h.js?v=4420681d90';
-import { pictogramOf } from '../lib/pictograms.js?v=4420681d90';
-import { FP_EMOJI } from '../lib/crypto.js?v=4420681d90';
+import { html } from './h.js?v=085b725ac5';
+import { pictogramOf } from '../lib/pictograms.js?v=085b725ac5';
+import { FP_EMOJI } from '../lib/crypto.js?v=085b725ac5';
 
 export function Pic({ name, size = 28, cls = '', label = '', fallback = 'star', onClick }) {
   const art = pictogramOf(name, fallback);

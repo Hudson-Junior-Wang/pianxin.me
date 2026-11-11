@@ -1,12 +1,12 @@
 // 偏心我 · 设置 — 昵称和角色、声音与通知、连接状态、备份
-import { html } from '../h.js?v=4420681d90';
+import { html } from '../h.js?v=085b725ac5';
 import { useState, useEffect } from '../../vendor/hooks.js';
-import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=4420681d90';
-import { download, today, cx } from '../../lib/util.js?v=4420681d90';
-import { St } from '../common.js?v=4420681d90';
-import { Fingerprint } from '../pictograms.js?v=4420681d90';
-import { installPlatform } from '../../lib/install.js?v=4420681d90';
-import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=4420681d90';
+import { app, useCols, useSyncEvent, profileOf, saveSettings, useBus, useForce, toast, nameOf, chOf, CHARS, stId } from '../../lib/ctx.js?v=085b725ac5';
+import { download, today, cx } from '../../lib/util.js?v=085b725ac5';
+import { St } from '../common.js?v=085b725ac5';
+import { Fingerprint } from '../pictograms.js?v=085b725ac5';
+import { installPlatform } from '../../lib/install.js?v=085b725ac5';
+import { roomBindingCode, roomIsBound } from '../../lib/room-access.js?v=085b725ac5';
 
 function Profile() {
   useCols('profile');

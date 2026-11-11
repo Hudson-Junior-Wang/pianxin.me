@@ -867,7 +867,7 @@ body, .shell, .boot, .lock { min-height: 100svh; }
 .recent-updated { margin-left: auto; font-size: 11px; line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
 .recent-updated > span { color: var(--ink-3); margin-right: 3px; }
 .recent-arrow { color: var(--ink-3); }
-.home-corner { margin-top: 24px; }
+.home-corner + .recent-shares { margin-top: 24px; }
 .home-corner > summary { cursor: pointer; padding: 12px 0; min-height: 44px; font-weight: 600; }
 .home-corner > summary span { font-weight: 400; font-size: 12px; margin-left: 8px; }
 .home-corner > * + * { margin-top: 14px; }

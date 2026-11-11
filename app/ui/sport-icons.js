@@ -1,8 +1,8 @@
 // Sports use the same warm die-cut sticker style as the original bear/bunny pack.
 // Characters are fixed by sport, never by the current user's avatar preference.
-import { html } from './h.js?v=4420681d90';
-import { sportArtOf } from '../lib/sports.js?v=4420681d90';
-import { Pic } from './pictograms.js?v=4420681d90';
+import { html } from './h.js?v=085b725ac5';
+import { sportArtOf } from '../lib/sports.js?v=085b725ac5';
+import { Pic } from './pictograms.js?v=085b725ac5';
 
 export function SportIcon({ sport, size = 58 }) {
   const s = sportArtOf(sport);

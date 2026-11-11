@@ -1,6 +1,6 @@
 import { h as createElement, render, Fragment } from '../vendor/preact.js';
 import htm from '../vendor/htm.js';
-import { emojiParts, emojiText, symbolCode } from '../lib/pictograms.js?v=4420681d90';
+import { emojiParts, emojiText, symbolCode } from '../lib/pictograms.js?v=085b725ac5';
 
 // Substitute rendered text and human-facing labels only. Never touch stored
 // records, editable form values, URLs, IDs or cryptographic material. Native

@@ -1,13 +1,13 @@
 // A locked device may back up its OWN surviving bytes locally. No old-room
 // network is started and no alternate key is allowed into the app.
-import { html } from './h.js?v=4420681d90';
+import { html } from './h.js?v=085b725ac5';
 import { useState, useRef } from '../vendor/hooks.js';
-import { app } from '../lib/ctx.js?v=4420681d90';
-import { deriveSeed, keyringFromSeed } from '../lib/crypto.js?v=4420681d90';
-import { roomAccessIssue } from '../lib/room-access.js?v=4420681d90';
-import { unlockRoomSeed } from '../lib/room-unlock.js?v=4420681d90';
-import { Store } from '../lib/store.js?v=4420681d90';
-import { openRecoverySource, recoveryCounts, exportRecoveryArchive, mergeRecoverySource } from '../lib/room-recovery.js?v=4420681d90';
+import { app } from '../lib/ctx.js?v=085b725ac5';
+import { deriveSeed, keyringFromSeed } from '../lib/crypto.js?v=085b725ac5';
+import { roomAccessIssue } from '../lib/room-access.js?v=085b725ac5';
+import { unlockRoomSeed } from '../lib/room-unlock.js?v=085b725ac5';
+import { Store } from '../lib/store.js?v=085b725ac5';
+import { openRecoverySource, recoveryCounts, exportRecoveryArchive, mergeRecoverySource } from '../lib/room-recovery.js?v=085b725ac5';
 
 export function RoomRecovery({ oldKr = null }) {
   const sourceRef = useRef(null), working = useRef(false);
